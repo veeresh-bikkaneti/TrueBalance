@@ -1,0 +1,44 @@
+# IDEs
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln.docstates
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# .NET
+bin/
+obj/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specifics
+tmp_refactor.py
+_scripts/*.txt
+_scripts/*.json
+!_scripts/package.json
+
+# Financial / Bank Statements & Data
+*.csv
+*.tsv
+*.pdf
+*.xls
+*.xlsx
+*.ofx
+*.qfx
+*.qbo
+*.ofx

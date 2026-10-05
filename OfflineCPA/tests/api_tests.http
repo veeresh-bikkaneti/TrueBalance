@@ -1,0 +1,24 @@
+### 1. Get All OfflineCPA Transactions (Local Ledger)
+GET http://localhost:8080/api/transactions
+Accept: application/json
+
+###
+
+### 2. Upload Offline Receipt to Local User-Assets
+# Note: You can also use Postman natively importing this file
+POST http://localhost:8080/api/upload
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="dummy_upload.csv"
+Content-Type: text/csv
+
+Date,Description,Amount
+2025-01-01,Test Offline Sync,100.00
+--WebAppBoundary--
+
+###
+
+### 3. Export 1120-S Book to Offline Spreadsheet
+GET http://localhost:8080/api/export
+Accept: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet

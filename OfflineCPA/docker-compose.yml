@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  database:
+    image: postgres:15-alpine
+    container_name: pb-database
+    environment:
+      POSTGRES_USER: bookkeeping
+      POSTGRES_PASSWORD: secure_local_password
+      POSTGRES_DB: OfflineCPADb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pb-pgdata:/var/lib/postgresql/data
+    networks:
+      - pb-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./src
+      dockerfile: Backend/Dockerfile
+    container_name: pb-backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=database;Port=5432;Database=OfflineCPADb;Username=bookkeeping;Password=secure_local_password
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data/input:/app/data/input
+      - pb-userassets:/app/user-assets
+    depends_on:
+      - database
+    networks:
+      - pb-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pb-frontend
+    environment:
+      - VITE_API_URL=http://localhost:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - pb-network
+
+networks:
+  pb-network:
+    driver: bridge
+
+volumes:
+  pb-pgdata:
+  pb-userassets:
