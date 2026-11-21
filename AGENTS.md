@@ -7,9 +7,9 @@ A free, open-source, offline bookkeeping app for small businesses and households
 
 ## Where things stand (2026-11-21)
 - Code: one commit (`406eec1`), in `OfflineCPA/`. It builds, but a fresh install fails (no migrations) and it is not yet a ledger. Findings: `docs/research/review.md`.
-- Plan: 16 PRs in 3 phases, specified in `docs/specs/prompts/` (start with `INDEX.md`). Visual map: open `docs/roadmap/build-map.html` in a browser. Text roadmap: `docs/roadmap/roadmap.md`.
+- Plan: 17 PRs in 3 phases, specified in `docs/specs/prompts/` (start with `INDEX.md`). Visual map: open `docs/roadmap/build-map.html` in a browser. Text roadmap: `docs/roadmap/roadmap.md`.
 - Backlog with acceptance criteria and Definition of Ready/Done: `docs/backlog/product-backlog.md`.
-- Open decision: ADR 0010 (mask PII before import). Do not start prompt 05 until the owner decides.
+- ADR 0010 is accepted: prompt 04b (PII masking core) runs before 05. Do not run real statements before prompt 06 merges.
 - Next PR to build: prompt 00 (`docs/specs/prompts/00-baseline.md`).
 
 ## How to work (owner's rules, non-negotiable)
@@ -26,7 +26,6 @@ A free, open-source, offline bookkeeping app for small businesses and households
 
 ## Decisions only the owner makes
 - Merging each PR.
-- ADR 0010 (now).
 - Library picks in prompts 06 (encryption), 11 (encrypted store, packaging) and 14 (OCR).
 - Any screen that differs from the approved setup-wizard mockup.
 - Going past a token cap.

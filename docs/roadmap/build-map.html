@@ -64,8 +64,8 @@ summary:focus-visible{outline:2px solid var(--c);outline-offset:4px}
   <p class="sub">Top to bottom is the order. Cards side by side can run at the same time. Tap any card for detail.</p>
 
   <div class="phases">
-    <div class="ph p0"><b>P0 Make it work</b>6 PRs · cap 590k</div>
-    <div class="ph p1"><b>P1 CPA ready</b>6 PRs · cap 730k</div>
+    <div class="ph p0"><b>P0 Make it work</b>7 PRs · cap 680k</div>
+    <div class="ph p1"><b>P1 CPA ready</b>6 PRs · cap 700k</div>
     <div class="ph p2"><b>P2 Easy + extendable</b>4 PRs · cap 520k</div>
   </div>
   <div class="legend"><span class="pill you">You decide</span> a choice only you make <span class="pill cap">80k</span> token cap <span>You merge every PR yourself.</span></div>
@@ -97,25 +97,21 @@ summary:focus-visible{outline:2px solid var(--c);outline-offset:4px}
   </div>
   <div class="arrow">&#8595;</div>
 
-  <div class="fork">
-    <h2>You decide: when does PII masking start?</h2>
-    <div class="opts">
-      <div class="opt rec"><b>A. Mask first (my pick)</b>A small masking step runs before import, so raw account numbers and tax IDs are never stored. About 30k more in total.</div>
-      <div class="opt"><b>B. Keep the order</b>Import first and add full masking in 06. Cheaper now, but raw numbers sit unmasked for a while.</div>
-    </div>
+  <div class="row">
+    <details class="card p0"><summary><div class="top"><span class="num">04b</span><span class="pill cap">90k</span></div><span class="name">PII masking core</span><span class="meta">after 04 · ADR 0010 accepted</span></summary><p class="more">Masks account, routing and tax ID numbers before anything is stored. Keeps last 4 and a fingerprint for matching. A no-leak test must pass before import merges.</p></details>
   </div>
   <div class="arrow">&#8595;</div>
 
   <div class="par">run side by side</div>
   <div class="row">
-    <details class="card p0"><summary><div class="top"><span class="num">05</span><span class="pill cap">120k</span></div><span class="name">Statement import</span><span class="meta">after 03 + 04</span></summary>
+    <details class="card p0"><summary><div class="top"><span class="num">05</span><span class="pill cap">120k</span></div><span class="name">Statement import</span><span class="meta">after 03 + 04b</span></summary>
       <p class="more">Bank and card statements become ledger entries instead of a file dump. Duplicates are caught.</p></details>
     <details class="card p1"><summary><div class="top"><span class="num">10</span><span class="pill cap">150k</span></div><span class="name">Setup wizard</span><span class="meta">after 01, 02, 07 <span class="pill you">You decide</span></span></summary>
       <p class="more">The guided setup screens. You approve the mockup before any code. Later screens wait for 05, 08 and 09.</p></details>
   </div>
   <div class="arrow">&#8595;</div>
   <div class="row">
-    <details class="card p1"><summary><div class="top"><span class="num">06</span><span class="pill cap">150k</span></div><span class="name">Full PII protection</span><span class="meta">after 04 + 05 <span class="pill you">You decide</span></span></summary>
+    <details class="card p1"><summary><div class="top"><span class="num">06</span><span class="pill cap">120k</span></div><span class="name">Full PII protection</span><span class="meta">after 04b + 05 <span class="pill you">You decide</span></span></summary>
       <p class="more">Finds and masks SSNs, EINs, account and card numbers everywhere, including logs. You approve the libraries it uses.</p></details>
   </div>
   <div class="arrow">&#8595;</div>
