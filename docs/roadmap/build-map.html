@@ -1,0 +1,151 @@
+<title>TrueBalance build map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500&family=Inter:wght@400;500&display=swap">
+<style>
+/* Layout: one vertical track, top to bottom = build order; cards side by side run in parallel */
+:root{
+  --bg:#f5f7f8;--card:#ffffff;--fg:#17212b;--muted:#5b6876;--line:#d5dde3;
+  --p0:#d4553a;--p0bg:#fbebe6;--p1:#11866d;--p1bg:#e2f4ee;--p2:#5b4fc4;--p2bg:#ecebfc;
+  --you:#b26a00;--youbg:#fff3dc;
+  --display:"Space Grotesk",system-ui,sans-serif;--body:"Inter",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12171c;--card:#1b2229;--fg:#e8edf1;--muted:#9aa7b3;--line:#2e3943;
+  --p0:#f08b72;--p0bg:#3a221c;--p1:#4fcfab;--p1bg:#15332b;--p2:#a49bf2;--p2bg:#26234a;
+  --you:#f3b54a;--youbg:#3a2c10;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171c;--card:#1b2229;--fg:#e8edf1;--muted:#9aa7b3;--line:#2e3943;
+  --p0:#f08b72;--p0bg:#3a221c;--p1:#4fcfab;--p1bg:#15332b;--p2:#a49bf2;--p2bg:#26234a;
+  --you:#f3b54a;--youbg:#3a2c10;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--body);padding-block:20px 40px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1{font:500 1.5rem/1.2 var(--display);margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:0;font-size:.9rem}
+.phases{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ph{border-radius:10px;padding:10px 12px;font-size:.8rem;color:var(--muted)}
+.ph b{display:block;font:500 1rem var(--display)}
+.ph.p0{background:var(--p0bg)}.ph.p0 b{color:var(--p0)}
+.ph.p1{background:var(--p1bg)}.ph.p1 b{color:var(--p1)}
+.ph.p2{background:var(--p2bg)}.ph.p2 b{color:var(--p2)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--muted);align-items:center}
+.pill{display:inline-block;font-size:.72rem;font-weight:500;padding:1px 8px;border-radius:99px;white-space:nowrap}
+.you{background:var(--youbg);color:var(--you)}
+.cap{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.par{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;text-align:center}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.arrow{display:flex;justify-content:center;color:var(--line);font-size:1.1rem;line-height:1;height:14px}
+details.card{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--c);border-radius:0;padding:10px 12px;min-width:0}
+details.card[open]{box-shadow:0 0 0 2px var(--c) inset}
+.card.p0{--c:var(--p0)}.card.p1{--c:var(--p1)}.card.p2{--c:var(--p2)}
+summary{list-style:none;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+summary::-webkit-details-marker{display:none}
+summary:focus-visible{outline:2px solid var(--c);outline-offset:4px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.num{font:500 .8rem var(--display);color:var(--c)}
+.name{font:500 1rem/1.25 var(--display)}
+.meta{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:.75rem;color:var(--muted)}
+.more{font-size:.85rem;color:var(--muted);margin:8px 0 0}
+.fork{border:2px dashed var(--you);background:var(--youbg);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.fork h2{font:500 1.05rem var(--display);margin:0;color:var(--you)}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.opt{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:.85rem}
+.opt b{font:500 .95rem var(--display);display:block;margin-bottom:2px}
+.opt.rec{border:2px solid var(--you)}
+.done{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.done summary{font:500 .95rem var(--display)}
+.done ul{margin:8px 0 0;padding-left:18px;font-size:.88rem}
+.done li span{font-weight:500}
+@media (prefers-reduced-motion:no-preference){details.card{transition:box-shadow .15s}}
+</style>
+
+<div class="wrap">
+  <h1>TrueBalance build map</h1>
+  <p class="sub">Top to bottom is the order. Cards side by side can run at the same time. Tap any card for detail.</p>
+
+  <div class="phases">
+    <div class="ph p0"><b>P0 Make it work</b>6 PRs · cap 590k</div>
+    <div class="ph p1"><b>P1 CPA ready</b>6 PRs · cap 730k</div>
+    <div class="ph p2"><b>P2 Easy + extendable</b>4 PRs · cap 520k</div>
+  </div>
+  <div class="legend"><span class="pill you">You decide</span> a choice only you make <span class="pill cap">80k</span> token cap <span>You merge every PR yourself.</span></div>
+
+  <div class="row">
+    <details class="card p0"><summary><div class="top"><span class="num">00</span><span class="pill cap">60k</span></div><span class="name">Baseline check</span><span class="meta">start here</span></summary>
+      <p class="more">Records how the app behaves today, so every later PR can prove what it fixed.</p></details>
+  </div>
+  <div class="arrow">&#8595;</div>
+  <div class="row">
+    <details class="card p0"><summary><div class="top"><span class="num">01</span><span class="pill cap">80k</span></div><span class="name">Database + starter accounts</span><span class="meta">after 00</span></summary>
+      <p class="more">Adds database migrations so a fresh install stops crashing, seeds starter accounts, fixes the API address.</p></details>
+  </div>
+  <div class="arrow">&#8595;</div>
+  <div class="par">run side by side</div>
+  <div class="row">
+    <details class="card p0"><summary><div class="top"><span class="num">02</span><span class="pill cap">80k</span></div><span class="name">Security fixes</span><span class="meta">after 01</span></summary>
+      <p class="more">Closes the upload file-write hole, encrypts uploads, removes the hardcoded password, keeps ports on this computer only.</p></details>
+    <details class="card p0"><summary><div class="top"><span class="num">03</span><span class="pill cap">150k</span></div><span class="name">Real ledger</span><span class="meta">after 01</span></summary>
+      <p class="more">Double-entry books that always balance. Posted entries are locked and fixed only by reversing them.</p></details>
+  </div>
+  <div class="arrow">&#8595;</div>
+  <div class="par">run side by side</div>
+  <div class="row">
+    <details class="card p0"><summary><div class="top"><span class="num">04</span><span class="pill cap">100k</span></div><span class="name">Offline gate + plug-in points</span><span class="meta">after 03</span></summary>
+      <p class="more">Nothing reaches the internet unless you switch it on, and every attempt is logged. Adds clean slots for importers, the vault and exports.</p></details>
+    <details class="card p1"><summary><div class="top"><span class="num">07</span><span class="pill cap">120k</span></div><span class="name">Tax categories</span><span class="meta">after 03</span></summary>
+      <p class="more">Schedule C and 1120-S lines kept as data, one version per tax year. Fixes the two mislabeled lines.</p></details>
+  </div>
+  <div class="arrow">&#8595;</div>
+
+  <div class="fork">
+    <h2>You decide: when does PII masking start?</h2>
+    <div class="opts">
+      <div class="opt rec"><b>A. Mask first (my pick)</b>A small masking step runs before import, so raw account numbers and tax IDs are never stored. About 30k more in total.</div>
+      <div class="opt"><b>B. Keep the order</b>Import first and add full masking in 06. Cheaper now, but raw numbers sit unmasked for a while.</div>
+    </div>
+  </div>
+  <div class="arrow">&#8595;</div>
+
+  <div class="par">run side by side</div>
+  <div class="row">
+    <details class="card p0"><summary><div class="top"><span class="num">05</span><span class="pill cap">120k</span></div><span class="name">Statement import</span><span class="meta">after 03 + 04</span></summary>
+      <p class="more">Bank and card statements become ledger entries instead of a file dump. Duplicates are caught.</p></details>
+    <details class="card p1"><summary><div class="top"><span class="num">10</span><span class="pill cap">150k</span></div><span class="name">Setup wizard</span><span class="meta">after 01, 02, 07 <span class="pill you">You decide</span></span></summary>
+      <p class="more">The guided setup screens. You approve the mockup before any code. Later screens wait for 05, 08 and 09.</p></details>
+  </div>
+  <div class="arrow">&#8595;</div>
+  <div class="row">
+    <details class="card p1"><summary><div class="top"><span class="num">06</span><span class="pill cap">150k</span></div><span class="name">Full PII protection</span><span class="meta">after 04 + 05 <span class="pill you">You decide</span></span></summary>
+      <p class="more">Finds and masks SSNs, EINs, account and card numbers everywhere, including logs. You approve the libraries it uses.</p></details>
+  </div>
+  <div class="arrow">&#8595;</div>
+  <div class="par">run side by side</div>
+  <div class="row">
+    <details class="card p1"><summary><div class="top"><span class="num">08</span><span class="pill cap">150k</span></div><span class="name">CPA report packet</span><span class="meta">after 06 + 07</span></summary>
+      <p class="more">Profit and loss, balance sheet and totals by tax line, with amounts, ready to hand your CPA.</p></details>
+    <details class="card p2"><summary><div class="top"><span class="num">11</span><span class="pill cap">150k</span></div><span class="name">One-command install</span><span class="meta">after 04 + 06 <span class="pill you">You decide</span></span></summary>
+      <p class="more">One bootstrap command sets everything up offline. You approve the tooling.</p></details>
+    <details class="card p2"><summary><div class="top"><span class="num">14</span><span class="pill cap">150k</span></div><span class="name">Receipt reading, offline</span><span class="meta">after 05 + 06 <span class="pill you">You decide</span></span></summary>
+      <p class="more">Reads receipts on your own computer, no cloud. You approve the OCR library.</p></details>
+    <details class="card p2"><summary><div class="top"><span class="num">15</span><span class="pill cap">120k</span></div><span class="name">Integration + AI slots</span><span class="meta">after 04 + 06</span></summary>
+      <p class="more">Empty, safe slots for future integrations. Any AI only ever sees masked data.</p></details>
+  </div>
+  <div class="arrow">&#8595;</div>
+  <div class="par">run side by side</div>
+  <div class="row">
+    <details class="card p1"><summary><div class="top"><span class="num">09</span><span class="pill cap">100k</span></div><span class="name">Reconciliation</span><span class="meta">after 05 + 08</span></summary>
+      <p class="more">Match the books to each statement and lock the month.</p></details>
+    <details class="card p1"><summary><div class="top"><span class="num">12</span><span class="pill cap">60k</span></div><span class="name">README + trust page</span><span class="meta">after 06 + 11</span></summary>
+      <p class="more">Plain docs on what the app does, what it never sends anywhere, and how to install it.</p></details>
+    <details class="card p2"><summary><div class="top"><span class="num">13</span><span class="pill cap">100k</span></div><span class="name">Backups</span><span class="meta">after 11</span></summary>
+      <p class="more">Encrypted backups and restore, kept on your own drive.</p></details>
+  </div>
+
+  <details class="done"><summary>When is each phase done?</summary>
+    <ul>
+      <li><span>P0:</span> a fresh install works, the books balance, nothing leaves the computer, and statements import.</li>
+      <li><span>P1:</span> your CPA gets a packet with amounts by tax line, and PII is masked everywhere.</li>
+      <li><span>P2:</span> one command installs it, backups run, receipts are read, and integrations can plug in.</li>
+    </ul>
+  </details>
+</div>
