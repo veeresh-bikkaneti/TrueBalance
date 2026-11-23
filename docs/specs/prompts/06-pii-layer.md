@@ -1,7 +1,7 @@
 # TrueBalance prompt 06: PII sanitization layer, encrypted vault and no-leak tests
 
-Phase: P1 | Branch: `feat/pii-layer` | Token cap: 150k | Estimate: 100k | Max helper seats: 3
-Depends on: Prompts 04 and 05 merged.
+Phase: P1 | Branch: `feat/pii-layer` | Token cap: 120k | Estimate: 70k | Max helper seats: 3
+Depends on: Prompts 04b and 05 merged.
 
 You are working in the TrueBalance repo. This prompt is self-contained. Do this one PR only.
 
@@ -10,10 +10,10 @@ You are working in the TrueBalance repo. This prompt is self-contained. Do this 
 Users will import bank statements, W-2s and W-9s. Make PII protection a first-class layer.
 
 Scope:
-1. Domain `PiiPolicy`: detect and classify SSN, EIN/ITIN, bank account and routing numbers, card numbers, date of birth, street address. Use local patterns with checksums where they exist (card: Luhn; routing: ABA check digit). No AI or remote service.
-2. Run detection at import (prompt 05 staging) and on free-text fields. Keep only what bookkeeping needs; store a needed value (for example a vendor TIN for 1099s) encrypted at field level and show it masked (`***-**-1234`).
+1. Extend the 04b `PiiPolicy` detectors and shared fixtures (do not fork them). Add card numbers, date of birth and street address; 04b already covers SSN, EIN/ITIN, account and routing numbers. Use local patterns with checksums where they exist (card: Luhn; routing: ABA check digit). No AI or remote service.
+2. Detection already runs at import (04b + 05); add it to free-text fields and document text. Keep only what bookkeeping needs; store a needed value (for example a vendor TIN for 1099s) encrypted at field level and show it masked (`***-**-1234`).
 3. `EncryptedFileVault` implementing `IDocumentVault`: originals stored encrypted (AES-GCM via .NET built-ins), key derived from the user passphrase (PBKDF2 or Argon2 via a vetted library; arena the choice and cite sources). Replace plaintext upload storage.
-4. Logging: a redaction enricher/filter so no raw PII reaches logs; error responses never echo input values.
+4. Logging: extend the 04b redaction filter to the new types.
 5. Exports default to masked values; full TIN only when the user opts in per export.
 6. Temp files: parse in memory where possible; delete staging files after import; "purge originals" action that warns about IRS retention periods (cite the IRS "How long should I keep records" page with a confidence tag).
 7. AI boundary doc (`docs/privacy.md`): no AI model ever receives raw PII; any future `IAiAssist` gets tokenized text only, ships disabled, and its use appears in the Network log.

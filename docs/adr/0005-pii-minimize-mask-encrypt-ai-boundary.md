@@ -17,5 +17,5 @@ Users will upload bank statements, W-2s and W-9s. The owner's rule: everything i
 
 ## Consequences
 - Every new feature that touches documents must pass the no-leak suite.
-- When masking starts relative to statement import is still open; see ADR 0010.
+- Masking starts before statement import (decided in ADR 0010).
 - Spec: `docs/specs/prompts/06-pii-layer.md`.

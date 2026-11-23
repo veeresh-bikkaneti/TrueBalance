@@ -1,7 +1,7 @@
 # TrueBalance prompt 05: Staged statement import: parse, preview, review, post
 
 Phase: P0 | Branch: `feat/statement-import` | Token cap: 120k | Estimate: 80k | Max helper seats: 2
-Depends on: Prompts 03 and 04 merged.
+Depends on: Prompts 03, 04 and 04b merged.
 
 You are working in the TrueBalance repo. This prompt is self-contained. Do this one PR only.
 
@@ -16,13 +16,15 @@ Scope:
 4. Use case `PostStagedRow`: user picks a category account; creates a balanced entry (bank account vs category). Rule-based suggestions (payee -> last used category) are local only.
 5. PDF statements: keep text extraction behind `IStatementImporter` but mark PDF as "experimental"; never post PDF-derived rows without review.
 6. Remove the auto-post behavior from the folder-watch service; the watcher only queues files for import.
+7. Call `IPiiMasker` (from 04b) on every parsed field before any staging row, log line or error is written. Match duplicates on last-4 plus fingerprint, never on a raw number.
 
 Acceptance criteria:
 - Test: a sample CSV (fake data) produces staged rows with correct signs and decimals; nothing reaches the ledger until posted.
 - Test: importing the same file twice flags duplicates.
 - Test: posting a staged row creates exactly one balanced entry.
+- The 04b no-leak test still passes with the real importers wired in.
 
-Out of scope: PII masking (06); UI polish (10).
+Out of scope: new detectors, encryption and the vault (06); UI polish (10).
 
 ## Context (read first)
 
