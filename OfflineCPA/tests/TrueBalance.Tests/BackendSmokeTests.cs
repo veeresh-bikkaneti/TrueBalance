@@ -10,6 +10,6 @@ public class BackendSmokeTests
         var serviceType = typeof(LocalFileProcessorService);
 
         Assert.Equal("Backend.Services", serviceType.Namespace);
-        Assert.Equal("OfflineCPA", serviceType.Assembly.GetName().Name);
+        Assert.Equal("Backend", serviceType.Assembly.GetName().Name);
     }
 }
