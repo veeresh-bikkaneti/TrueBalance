@@ -7,7 +7,7 @@
 | `roadmap/build-map.html` | Visual dashboard: all 17 PRs in build order, parallel lanes, caps, decision points. Open in a browser |
 | `roadmap/roadmap.md` | Text roadmap: phases, lanes, "done when", decision points |
 | `specs/prompts/` | One self-contained agent spec per PR (`INDEX.md` lists order, branches, caps, dependencies) |
-| `adr/` | Architecture decision records (0001 to 0010) |
+| `adr/` | Architecture decision records (0001 to 0011) |
 | `backlog/product-backlog.md` | Refined, ordered product backlog with acceptance criteria and Definitions of Ready and Done |
 | `mockups/setup-wizard.html` | Approved clickable setup-wizard mockup. Open in a browser |
 
