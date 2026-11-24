@@ -39,9 +39,8 @@ public class JsonChartOfAccountsSeeder : IChartOfAccountsSeeder
     public async Task<int> SeedAsync(string kind, CancellationToken cancellationToken = default)
     {
         var seed = await LoadAsync(kind, cancellationToken);
-        var existingCodes = await _db.Accounts
-            .Select(a => a.Code)
-            .ToHashSetAsync(cancellationToken);
+        var existingCodes = new HashSet<string>(
+            await _db.Accounts.Select(a => a.Code).ToListAsync(cancellationToken));
 
         var added = 0;
         foreach (var seedAccount in seed.Accounts)

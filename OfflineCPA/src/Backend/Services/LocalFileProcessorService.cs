@@ -54,7 +54,7 @@ public class LocalFileProcessorService : BackgroundService
             if (stoppingToken.IsCancellationRequested)
                 break;
 
-            _logger.LogInformation("Processing file: {File}", file);
+            _logger.LogInformation("Processing file: {FileName}", Path.GetFileName(file));
             
             using var scope = _serviceProvider.CreateScope();
             var parser = scope.ServiceProvider.GetRequiredService<ILocalFileParser>();
@@ -79,20 +79,20 @@ public class LocalFileProcessorService : BackgroundService
                 dbContext.Transactions.Add(transaction);
                 await dbContext.SaveChangesAsync(stoppingToken);
 
-                _logger.LogInformation("Successfully processed and mapped {File}", file);
-                
+                _logger.LogInformation("Successfully processed and mapped file {FileName}", Path.GetFileName(file));
+
                 // Move or delete file after processing
                 var processedDir = Path.Combine(_inputDirectory, "processed");
                 if (!Directory.Exists(processedDir)) Directory.CreateDirectory(processedDir);
-                
+
                 var destPath = Path.Combine(processedDir, Path.GetFileName(file));
                 if (File.Exists(destPath)) File.Delete(destPath);
-                
+
                 File.Move(file, destPath);
             }
             else
             {
-                _logger.LogWarning("Unsupported file type: {File}", file);
+                _logger.LogWarning("Unsupported file type: {FileName}", Path.GetFileName(file));
             }
         }
     }
