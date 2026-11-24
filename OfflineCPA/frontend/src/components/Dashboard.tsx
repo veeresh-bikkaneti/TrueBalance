@@ -158,7 +158,7 @@ const Dashboard: React.FC = () => {
                     <td>
                       {txn.referenceDocumentPath ? (
                         <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.2)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>
-                          {txn.referenceDocumentPath.split(/[\/\\]/).pop()}
+                          {txn.referenceDocumentPath.split(/[\\/]/).pop()}
                         </span>
                       ) : '-'}
                     </td>
