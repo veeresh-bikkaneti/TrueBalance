@@ -10,7 +10,7 @@ interface Transaction {
   referenceDocumentPath: string | null;
 }
 
-const API_BASE = 'http://localhost:5030/api';
+const API_BASE: string = import.meta.env.VITE_API_URL ?? '/api';
 
 const Dashboard: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);

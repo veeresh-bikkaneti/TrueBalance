@@ -1,0 +1,26 @@
+{
+  "kind": "s-corporation",
+  "displayName": "S Corporation (Form 1120-S)",
+  "accounts": [
+    { "code": "1000", "name": "Cash", "type": "Asset", "taxFormLine": "Cash" },
+    { "code": "1100", "name": "Accounts Receivable", "type": "Asset", "taxFormLine": "AccountsReceivable" },
+    { "code": "2000", "name": "Accounts Payable", "type": "Liability", "taxFormLine": "AccountsPayable" },
+    { "code": "2100", "name": "Notes Payable", "type": "Liability", "taxFormLine": "MortgagesNotesPayableLongTerm" },
+    { "code": "3000", "name": "Capital Stock", "type": "Equity", "taxFormLine": "CapitalStock" },
+    { "code": "3100", "name": "Retained Earnings", "type": "Equity", "taxFormLine": "RetainedEarnings" },
+    { "code": "4000", "name": "Gross Receipts or Sales", "type": "Revenue", "taxFormLine": "GrossReceiptsOrSales" },
+    { "code": "5000", "name": "Cost of Goods Sold", "type": "Expense", "taxFormLine": "CostOfGoodsSold" },
+    { "code": "5100", "name": "Compensation of Officers", "type": "Expense", "taxFormLine": "CompensationOfOfficers" },
+    { "code": "5200", "name": "Salaries and Wages", "type": "Expense", "taxFormLine": "SalariesAndWages" },
+    { "code": "5300", "name": "Repairs and Maintenance", "type": "Expense", "taxFormLine": "RepairsAndMaintenance" },
+    { "code": "5400", "name": "Bad Debts", "type": "Expense", "taxFormLine": "BadDebts" },
+    { "code": "5500", "name": "Rents", "type": "Expense", "taxFormLine": "Rents" },
+    { "code": "5600", "name": "Taxes and Licenses", "type": "Expense", "taxFormLine": "TaxesAndLicenses" },
+    { "code": "5700", "name": "Interest", "type": "Expense", "taxFormLine": "Interest" },
+    { "code": "5800", "name": "Depreciation", "type": "Expense", "taxFormLine": "Depreciation" },
+    { "code": "5900", "name": "Advertising", "type": "Expense", "taxFormLine": "Advertising" },
+    { "code": "6000", "name": "Pension and Profit Sharing", "type": "Expense", "taxFormLine": "PensionProfitSharing" },
+    { "code": "6100", "name": "Employee Benefit Programs", "type": "Expense", "taxFormLine": "EmployeeBenefitPrograms" },
+    { "code": "6200", "name": "Other Deductions", "type": "Expense", "taxFormLine": "OtherDeductions" }
+  ]
+}

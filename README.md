@@ -17,7 +17,7 @@ TrueBalance is a free, open-source bookkeeping app for small businesses and hous
 
 ## Running the prototype
 
-The prototype is a .NET 8 API plus a Vite/React frontend. It builds, but it is **not** a working ledger yet, and the UI cannot reach the API without editing the hardcoded API base URL. See [OfflineCPA/walkthrough.md](OfflineCPA/walkthrough.md) for exact commands and known gaps.
+The prototype is a .NET 8 API plus a Vite/React frontend. It builds and a fresh database is migrated automatically at startup, but it is **not** a working ledger yet. See [OfflineCPA/walkthrough.md](OfflineCPA/walkthrough.md) for exact commands and known gaps.
 
 ## Contributing
 
