@@ -21,6 +21,7 @@ builder.Services.AddDbContext<OfflineCPADbContext>(options =>
 // Configure Services
 builder.Services.AddSingleton<ILocalFileParser, PdfFileParser>();
 builder.Services.AddHostedService<LocalFileProcessorService>();
+builder.Services.AddScoped<IChartOfAccountsSeeder, JsonChartOfAccountsSeeder>();
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -91,6 +92,26 @@ app.MapPost("/api/upload", async (IFormFile file, ILocalFileParser parser, Offli
 .WithName("UploadFile")
 .DisableAntiforgery();
 
+app.MapPost("/api/books/setup", async (SetupBooksRequest request, IChartOfAccountsSeeder seeder) =>
+{
+    if (!seeder.SupportedKinds.Contains(request.Kind, StringComparer.OrdinalIgnoreCase))
+    {
+        return Results.BadRequest(new { error = $"Unknown books kind '{request.Kind}'. Supported kinds: {string.Join(", ", seeder.SupportedKinds)}." });
+    }
+
+    try
+    {
+        var added = await seeder.SeedAsync(request.Kind);
+        return Results.Ok(new { kind = request.Kind.Trim().ToLowerInvariant(), accountsAdded = added });
+    }
+    catch (ArgumentException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+})
+.WithName("SetupBooks")
+.WithOpenApi();
+
 app.MapGet("/api/transactions", async (OfflineCPADbContext db) =>
 {
     return await db.Transactions.Include(t => t.Entries).OrderByDescending(t => t.Date).ToListAsync();
@@ -138,3 +159,5 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+public record SetupBooksRequest(string Kind);

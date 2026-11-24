@@ -1,0 +1,23 @@
+{
+  "kind": "sole-proprietor",
+  "displayName": "Sole Proprietor (Schedule C)",
+  "accounts": [
+    { "code": "1000", "name": "Operating Checking", "type": "Asset", "taxFormLine": "None", "description": "Business operating account" },
+    { "code": "2000", "name": "Accounts Payable", "type": "Liability", "taxFormLine": "None" },
+    { "code": "3000", "name": "Owner Equity", "type": "Equity", "taxFormLine": "None" },
+    { "code": "4000", "name": "Business Income", "type": "Revenue", "taxFormLine": "None", "description": "Gross receipts from sales or services" },
+    { "code": "5000", "name": "Cost of Goods Sold", "type": "Expense", "taxFormLine": "None" },
+    { "code": "5100", "name": "Advertising", "type": "Expense", "taxFormLine": "None" },
+    { "code": "5200", "name": "Car and Truck Expenses", "type": "Expense", "taxFormLine": "None" },
+    { "code": "5300", "name": "Contract Labor", "type": "Expense", "taxFormLine": "None" },
+    { "code": "5400", "name": "Depreciation", "type": "Expense", "taxFormLine": "None" },
+    { "code": "5500", "name": "Insurance", "type": "Expense", "taxFormLine": "None" },
+    { "code": "5600", "name": "Office Expense", "type": "Expense", "taxFormLine": "None" },
+    { "code": "5700", "name": "Rent", "type": "Expense", "taxFormLine": "None" },
+    { "code": "5800", "name": "Supplies", "type": "Expense", "taxFormLine": "None" },
+    { "code": "5900", "name": "Travel", "type": "Expense", "taxFormLine": "None" },
+    { "code": "6000", "name": "Meals (50% Deductible)", "type": "Expense", "taxFormLine": "None" },
+    { "code": "6100", "name": "Utilities", "type": "Expense", "taxFormLine": "None" },
+    { "code": "6200", "name": "Other Expenses", "type": "Expense", "taxFormLine": "None" }
+  ]
+}

@@ -18,7 +18,7 @@ Checked items are in the code and covered by a passing check (test, lint or buil
 ## 3. Web client (frontend)
 - [x] 1120-S dashboard screen renders.
 - [x] Upload button and export button call the API.
-- [ ] Configurable API base URL (hardcoded to `http://localhost:5030/api`; backend is not on that port).
+- [x] Configurable API base URL (`VITE_API_URL`, default same-origin `/api` with a Vite dev proxy to `http://localhost:8080`; API port is 8080 locally and in Docker).
 - [ ] Local directory configuration screen.
 - [ ] Categorized transaction view (nothing to show).
 
