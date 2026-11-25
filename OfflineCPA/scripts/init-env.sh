@@ -17,6 +17,7 @@ fi
 
 cat > .env <<EOF
 POSTGRES_PASSWORD=$PASSWORD
+# CONNECTION_STRING is for dotnet run on the host with the dev override. Compose builds its own string.
 CONNECTION_STRING=Host=localhost;Port=5432;Database=OfflineCPADb;Username=bookkeeping;Password=$PASSWORD
 EOF
 chmod 600 .env

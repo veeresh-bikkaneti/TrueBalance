@@ -6,6 +6,11 @@ services:
       POSTGRES_USER: bookkeeping
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
       POSTGRES_DB: OfflineCPADb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookkeeping -d OfflineCPADb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     volumes:
       - pb-pgdata:/var/lib/postgresql/data
     networks:
@@ -19,7 +24,7 @@ services:
     container_name: pb-backend
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=${CONNECTION_STRING:?required}
+      - ConnectionStrings__DefaultConnection=Host=database;Port=5432;Database=OfflineCPADb;Username=bookkeeping;Password=${POSTGRES_PASSWORD:?required}
       - Uploads__Directory=/app/user-assets
     ports:
       - "127.0.0.1:8080:8080"
@@ -27,7 +32,8 @@ services:
       - ./data/input:/app/data/input
       - pb-userassets:/app/user-assets
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     networks:
       - pb-network
 

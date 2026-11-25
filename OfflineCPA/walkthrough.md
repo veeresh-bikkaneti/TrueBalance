@@ -32,15 +32,9 @@ npm run dev
 
 The frontend reads the API base URL from `VITE_API_URL` and defaults to same-origin `/api`. In `npm run dev`, a Vite proxy forwards `/api` to `http://localhost:8080`, so no CORS change is needed. In Docker, compose sets `VITE_API_URL=http://localhost:8080` at build time.
 
-Full stack (first run generates `OfflineCPA/.env` with a random database password):
+Full stack: `scripts/init-env.sh` then `docker compose up`. Compose builds the backend connection string with `Host=database` and does not read `CONNECTION_STRING`.
 
-```bash
-cd OfflineCPA
-scripts/init-env.sh
-docker compose up
-```
-
-Compose reads `POSTGRES_PASSWORD` and `CONNECTION_STRING` from `.env`, publishes the API and UI on `127.0.0.1` only, keeps Postgres on the internal network with no published port, and runs the backend in Production mode.
+Host run: `docker compose -f docker-compose.yml -f docker-compose.dev.yml up database`, then `dotnet run --project src/Backend`. `CONNECTION_STRING` in `.env` uses `Host=localhost` for that path. The dev override publishes Postgres on `127.0.0.1:5432` only. The default compose file still publishes no database port.
 
 ## Known gaps (verified, not claimed as features)
 
