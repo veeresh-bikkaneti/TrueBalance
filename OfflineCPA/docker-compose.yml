@@ -1,15 +1,11 @@
-version: '3.8'
-
 services:
   database:
     image: postgres:15-alpine
     container_name: pb-database
     environment:
       POSTGRES_USER: bookkeeping
-      POSTGRES_PASSWORD: secure_local_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (see .env.example, or run scripts/init-env.sh)}
       POSTGRES_DB: OfflineCPADb
-    ports:
-      - "5432:5432"
     volumes:
       - pb-pgdata:/var/lib/postgresql/data
     networks:
@@ -22,10 +18,11 @@ services:
       dockerfile: Backend/Dockerfile
     container_name: pb-backend
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=database;Port=5432;Database=OfflineCPADb;Username=bookkeeping;Password=secure_local_password
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=${CONNECTION_STRING:?Set CONNECTION_STRING in .env (see .env.example, or run scripts/init-env.sh)}
+      - Uploads__Directory=/app/user-assets
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     volumes:
       - ./data/input:/app/data/input
       - pb-userassets:/app/user-assets
@@ -42,7 +39,7 @@ services:
     environment:
       - VITE_API_URL=http://localhost:8080
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     depends_on:
       - backend
     networks:
