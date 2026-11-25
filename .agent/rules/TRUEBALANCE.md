@@ -15,9 +15,9 @@ trigger: always_on
 ## 3. Token Economy & Seating
 - Pick S / M / L tier from `/AGENTS.md` before starting; warn at 80%, stop at 100%.
 - Main session plans, integrates, and verifies only (<20% of budget).
-- Send building, writing, and review seats to **cheaper models** via the Council Panel seating loop (1 evidence pack, parallel clean-context seats, scoped re-votes).
+- Seating is the "Council of experts and roles" section in `/AGENTS.md`: cheaper models for the orchestrator and seats, a mid-tier model for the architect reviewer, a frontier model for the advisor.
 
 ## 4. TrueBalance Invariants
 - Zero outbound network calls outside `INetworkGate`.
 - Zero raw PII in logs, errors, fixtures, exports, or AI prompts (ADR 0010).
-- Stack scope: `OfflineCPA/` (Python, C#, TypeScript/React).
+- Stack [Tested]: C# .NET 8 backend (`net8.0` in `OfflineCPA/src/Backend/Backend.csproj`), React + TypeScript frontend (`react` and `typescript` in `OfflineCPA/frontend/package.json`). Python is not in `OfflineCPA/`. `find` shows it under `.agent/scripts/`, `.agent/skills/` and `.agent/.shared/` (3, 11 and 3 files). Command: `grep -n TargetFramework OfflineCPA/src/Backend/Backend.csproj`; `find . -name '*.py'`.

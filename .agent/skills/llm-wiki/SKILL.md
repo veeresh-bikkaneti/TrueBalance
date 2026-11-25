@@ -9,6 +9,7 @@ Maintain a compounding, local Markdown knowledge base (`raw/` + `wiki/`) without
 
 ## 1. Directory Contract
 - `raw/` — Immutable source files (docs, papers, transcripts, specs). **NEVER modify, rename, or delete files inside `raw/`.**
+- `raw/` holds public project sources only (docs, specs, papers, public web pages). Never put user statements, tax forms (W-2, W-9, 1099), receipts or any PII in `raw/` or `wiki/`. Private sources go in `raw/private/`, which git ignores.
 - `wiki/index.md` — Content catalog organized by category with `[[wikilinks]]` and 1-line summaries.
 - `wiki/log.md` — Append-only chronological timeline (`## [YYYY-MM-DD] <ingest|query|lint> | <Title>`).
 - `wiki/overview.md` — High-level synthesis of the workspace knowledge.
