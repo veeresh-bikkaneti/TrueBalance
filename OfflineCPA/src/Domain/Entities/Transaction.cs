@@ -11,7 +11,4 @@ public class Transaction
     public string? ReferenceDocumentPath { get; set; }
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
-    // Navigation Properties
-    public ICollection<JournalEntry> Entries { get; set; } = new List<JournalEntry>();
 }

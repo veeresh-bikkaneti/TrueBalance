@@ -14,6 +14,6 @@ public class DomainSmokeTests
         Assert.Equal(string.Empty, account.Code);
         Assert.Equal(TaxLineItem.None, account.TaxFormLine);
         Assert.True(account.IsActive);
-        Assert.Empty(account.JournalEntries);
+        Assert.Empty(account.Postings);
     }
 }

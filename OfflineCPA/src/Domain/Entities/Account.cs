@@ -18,5 +18,5 @@ public class Account
     public bool IsActive { get; set; } = true;
     
     // Navigation Property
-    public ICollection<JournalEntry> JournalEntries { get; set; } = new List<JournalEntry>();
+    public ICollection<Posting> Postings { get; set; } = new List<Posting>();
 }
