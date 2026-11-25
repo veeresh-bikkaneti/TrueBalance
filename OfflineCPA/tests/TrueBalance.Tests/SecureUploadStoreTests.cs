@@ -34,6 +34,8 @@ public class SecureUploadStoreTests : IDisposable
     }
 
     [Theory]
+    [InlineData("../../x.csv")]
+    [InlineData("..\\x.csv")]
     [InlineData("../../evil.csv")]
     [InlineData("..\\evil.csv")]
     [InlineData("/etc/evil.csv")]
