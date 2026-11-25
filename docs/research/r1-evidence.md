@@ -5,7 +5,7 @@
 ## Legend
 - **Source type**: primary = tool's own docs/code/maintainers; secondary = blogs/forums/third-party
 - **Date**: when the page was read (2026-11-25 unless noted)
-- **Confidence/Vote**: Added in main report as [Level n/m] tags; analysis lines labeled [Inferred] or [Tested]
+- **Confidence tags**: [High 3/3] = 3+ agreeing primary sources; [Moderate 2/2] = 2 agreeing primary sources; [Moderate 1/1] = 1 primary source; [Low 1/2] = 1 secondary source or conflicting; analysis lines labeled [Inferred]; link checks labeled [Tested]
 
 ---
 
@@ -359,7 +359,12 @@
 ### IRS Recordkeeping Requirements
 | Tool | Topic | Finding | Source | Type | Date |
 |---|---|---|---|---|---|
-| IRS | Record retention - Small Business | Records must be kept for 3-7 years depending on situation (3-4 years generally, 6 years if underreported income >25%, 7 years for loss claims) | [IRS: How long should I keep records](https://www.irs.gov/businesses/small-businesses-self-employed/how-long-should-i-keep-records) | primary | 2026-11-25 |
+| IRS | Record retention - 3 years | Returns filed on time with no underreported income; keep all records supporting income, deductions, credits | [IRS: How long should I keep records](https://www.irs.gov/businesses/small-businesses-self-employed/how-long-should-i-keep-records) | primary | 2026-11-25 |
+| IRS | Record retention - 4 years | Employment taxes; keep all employment tax records | [IRS: How long should I keep records](https://www.irs.gov/businesses/small-businesses-self-employed/how-long-should-i-keep-records) | primary | 2026-11-25 |
+| IRS | Record retention - 6 years | Income not reported that is more than 25% of gross income shown on return; keep all records for that year | [IRS: How long should I keep records](https://www.irs.gov/businesses/small-businesses-self-employed/how-long-should-i-keep-records) | primary | 2026-11-25 |
+| IRS | Record retention - 7 years | Claim for loss from worthless securities or bad debt deduction; keep records supporting the claim | [IRS: How long should I keep records](https://www.irs.gov/businesses/small-businesses-self-employed/how-long-should-i-keep-records) | primary | 2026-11-25 |
+| IRS | Record retention - Until period expires | Property disposed; keep records for old and new property | [IRS: How long should I keep records](https://www.irs.gov/businesses/small-businesses-self-employed/how-long-should-i-keep-records) | primary | 2026-11-25 |
+| IRS | Record retention - No limit | Fraudulent return or no return filed; keep all records | [IRS: How long should I keep records](https://www.irs.gov/businesses/small-businesses-self-employed/how-long-should-i-keep-records) | primary | 2026-11-25 |
 | IRS | Recordkeeping - Schedule C | Small businesses must keep gross receipts, purchases, expenses, assets, employment taxes | [IRS Publication 334](https://www.irs.gov/publications/p334) | primary | 2026-11-25 |
 | IRS | Recordkeeping - S-Corp | S-Corps must keep gross receipts, purchases, expenses, assets, payroll, shareholder records, K-1 distributions | [IRS Publication 542](https://www.irs.gov/publications/p542) | primary | 2026-11-25 |
 | IRS | Recordkeeping - Household | Households must keep income records (W-2, 1099), expense receipts for deductions/credits, mileage logs | [IRS Publication 17](https://www.irs.gov/publications/p17) | primary | 2026-11-25 |
@@ -367,11 +372,13 @@
 ### IRS Free Filing Options
 | Tool | Topic | Finding | Source | Type | Date |
 |---|---|---|---|---|---|
-| IRS Free File | Eligibility | Available to all taxpayers with AGI <= $79,000 for 2026 filing season | [IRS Free File](https://www.irs.gov/filing/free-file-do-your-federal-taxes-for-free) | primary | 2026-11-25 |
+| IRS Free File | Eligibility | Available to taxpayers with AGI of $89,000 or less (2025 income for 2026 filing season) | [IRS Free File](https://www.irs.gov/filing/free-file-do-your-federal-taxes-for-free) | primary | 2026-11-25 |
 | IRS Free File | Business support | Supports Schedule C but NOT Form 1120-S | [IRS Free File](https://www.irs.gov/filing/free-file-do-your-federal-taxes-for-free) | primary | 2026-11-25 |
-| IRS Direct File | Eligibility | Simple returns only (W-2, Social Security, unemployment); no business income | [IRS Direct File Pilot](https://www.irs.gov/newsroom/irs-direct-file-pilot-expansion) | primary | 2026-11-25 |
-| VITA | Eligibility | Low-moderate income, elderly, disabled, limited English; typically <$64,000 AGI | [IRS VITA](https://www.irs.gov/individuals/free-tax-return-preparation-for-qualifying-taxpayers) | primary | 2026-11-25 |
-| VITA | Business support | Supports all forms including Schedule C and 1120-S | [IRS VITA](https://www.irs.gov/individuals/free-tax-return-preparation-for-qualifying-taxpayers) | primary | 2026-11-25 |
+| IRS Direct File | Eligibility | Simple returns only (W-2, Social Security, unemployment); no business income; permanent option per p6036.pdf | [IRS Direct File p6036](https://www.irs.gov/pub/irs-pdf/p6036.pdf) | primary | 2026-11-25 |
+| VITA | Eligibility | Individuals meeting EITC income guidelines; no IRS-wide limit; sites set own limits | [IRS VITA](https://www.irs.gov/individuals/free-tax-return-preparation-for-qualifying-taxpayers) | primary | 2026-11-25 |
+| VITA | Business support | Supports basic returns; varies by site | [IRS VITA](https://www.irs.gov/individuals/free-tax-return-preparation-for-qualifying-taxpayers) | primary | 2026-11-25 |
+| Military OneSource (MilTax) | Eligibility | Service members, spouses, survivors, recent veterans; no income limit | [Military OneSource MilTax](https://www.militaryonesource.mil/financial-legal/taxes/miltax-military-tax-services/) | primary | 2026-11-25 |
+| Military OneSource (MilTax) | Business support | Yes (federal + up to 5 state returns) | [Military OneSource MilTax](https://www.militaryonesource.mil/financial-legal/taxes/miltax-military-tax-services/) | primary | 2026-11-25 |
 
 ### 1099 and Information Returns
 | Tool | Topic | Finding | Source | Type | Date |
@@ -384,20 +391,37 @@
 ### Schedule C Inputs (2026)
 | Tool | Topic | Finding | Source | Type | Date |
 |---|---|---|---|---|---|
-| IRS | Schedule C Line 8 | Gross receipts or sales | [IRS Schedule C Instructions](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf) | primary | 2026-11-25 |
-| IRS | Schedule C Line 9 | Returns and allowances | [IRS Schedule C Instructions](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf) | primary | 2026-11-25 |
-| IRS | Schedule C Line 10 | Cost of goods sold (beginning inventory + purchases - ending inventory) | [IRS Schedule C Instructions](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf) | primary | 2026-11-25 |
+| IRS | Schedule C Line 1 | Gross receipts or sales | [IRS Schedule C 2026](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf) | primary | 2026-11-25 |
+| IRS | Schedule C Line 2 | Returns and allowances | [IRS Schedule C 2026](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf) | primary | 2026-11-25 |
+| IRS | Schedule C Line 4 | Cost of goods sold (from line 42, Part III) | [IRS Schedule C 2026](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf) | primary | 2026-11-25 |
+| IRS | Schedule C Line 7 | Gross income (Lines 3 + 6: net receipts + other income) | [IRS Schedule C 2026](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf) | primary | 2026-11-25 |
+| IRS | Schedule C Line 28 | Total expenses before home office (Sum of lines 8-27b) | [IRS Schedule C 2026](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf) | primary | 2026-11-25 |
+| IRS | Schedule C Line 29 | Tentative profit or (loss) (Line 7 - Line 28) | [IRS Schedule C 2026](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf) | primary | 2026-11-25 |
+| IRS | Schedule C Line 31 | Net profit or (loss) (Line 29 - Line 30: home office expenses) | [IRS Schedule C 2026](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf) | primary | 2026-11-25 |
 | IRS | Schedule C Lines 13-21 | Business expenses by category (advertising, car, commissions, depreciation, etc.) | [IRS Schedule C Instructions](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf) | primary | 2026-11-25 |
 | IRS | Schedule C Line 27a | Net profit or loss (Line 12 - Line 22) | [IRS Schedule C Instructions](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf) | primary | 2026-11-25 |
 
 ### Form 1120-S Inputs (2026)
 | Tool | Topic | Finding | Source | Type | Date |
 |---|---|---|---|---|---|
-| IRS | Form 1120-S Line 1 | Gross receipts or sales | [IRS Form 1120-S Instructions](https://www.irs.gov/pub/irs-pdf/f1120s.pdf) | primary | 2026-11-25 |
-| IRS | Form 1120-S Lines 2-19 | Deductions (compensation, repairs, bad debts, rent, taxes, etc.) | [IRS Form 1120-S Instructions](https://www.irs.gov/pub/irs-pdf/f1120s.pdf) | primary | 2026-11-25 |
-| IRS | Form 1120-S Line 20 | Total deductions | [IRS Form 1120-S Instructions](https://www.irs.gov/pub/irs-pdf/f1120s.pdf) | primary | 2026-11-25 |
-| IRS | Form 1120-S Line 21 | Ordinary business income (loss) | [IRS Form 1120-S Instructions](https://www.irs.gov/pub/irs-pdf/f1120s.pdf) | primary | 2026-11-25 |
-| IRS | Form 1120-S Schedule K-1 | Shareholder's share of income, deductions, credits | [IRS Form 1120-S Instructions](https://www.irs.gov/pub/irs-pdf/f1120s.pdf) | primary | 2026-11-25 |
+| IRS | Form 1120-S Line 1a | Gross receipts or sales | [IRS Form 1120-S 2025](https://www.irs.gov/pub/irs-pdf/f1120s.pdf) | primary | 2026-11-25 |
+| IRS | Form 1120-S Line 1c | Gross receipts net of returns/allowances (Line 1a - Line 1b) | [IRS Form 1120-S 2025](https://www.irs.gov/pub/irs-pdf/f1120s.pdf) | primary | 2026-11-25 |
+| IRS | Form 1120-S Line 2 | Cost of goods sold | [IRS Form 1120-S 2025](https://www.irs.gov/pub/irs-pdf/f1120s.pdf) | primary | 2026-11-25 |
+| IRS | Form 1120-S Line 3 | Gross profit (Line 1c - Line 2) | [IRS Form 1120-S 2025](https://www.irs.gov/pub/irs-pdf/f1120s.pdf) | primary | 2026-11-25 |
+| IRS | Form 1120-S Line 6 | Total income (Sum of lines 3-5: gross profit + other income) | [IRS Form 1120-S 2025](https://www.irs.gov/pub/irs-pdf/f1120s.pdf) | primary | 2026-11-25 |
+| IRS | Form 1120-S Lines 7-20 | Deductions (compensation of officers, salaries, repairs, bad debts, rents, taxes, interest, depreciation, depletion, advertising, pensions, employee benefits, energy-efficient buildings) | [IRS Form 1120-S 2025](https://www.irs.gov/pub/irs-pdf/f1120s.pdf) | primary | 2026-11-25 |
+| IRS | Form 1120-S Line 21 | Total deductions (Sum of lines 7 through 20) | [IRS Form 1120-S 2025](https://www.irs.gov/pub/irs-pdf/f1120s.pdf) | primary | 2026-11-25 |
+| IRS | Form 1120-S Line 22 | Ordinary business income (loss) (Line 6 - Line 21) | [IRS Form 1120-S 2025](https://www.irs.gov/pub/irs-pdf/f1120s.pdf) | primary | 2026-11-25 |
+| IRS | Form 1120-S Schedule K-1 | Shareholder's pro rata share of allocable income, deductions, credits, etc. | [IRS Form 1120-S 2025](https://www.irs.gov/pub/irs-pdf/f1120s.pdf) | primary | 2026-11-25 |
+
+### Form 1040 Schedules (2025)
+| Tool | Topic | Finding | Source | Type | Date |
+|---|---|---|---|---|---|
+| IRS | Schedule A | Itemized deductions (medical, taxes, interest, charity, casualty) | [IRS Form 1040 2025](https://www.irs.gov/pub/irs-pdf/f1040.pdf) | primary | 2026-11-25 |
+| IRS | Schedule B | Interest and ordinary dividends | [IRS Form 1040 2025](https://www.irs.gov/pub/irs-pdf/f1040.pdf) | primary | 2026-11-25 |
+| IRS | Schedule C | **Profit or Loss from Business (Sole Proprietorship)** | [IRS Form 1040 2025](https://www.irs.gov/pub/irs-pdf/f1040.pdf) | primary | 2026-11-25 |
+| IRS | Schedule D | Capital gains/losses | [IRS Form 1040 2025](https://www.irs.gov/pub/irs-pdf/f1040.pdf) | primary | 2026-11-25 |
+| IRS | Schedule E | Supplemental income and loss (rental, royalties, partnerships, S-corps, estates, trusts) | [IRS Form 1040 2025](https://www.irs.gov/pub/irs-pdf/f1040.pdf) | primary | 2026-11-25 |
 
 ---
 

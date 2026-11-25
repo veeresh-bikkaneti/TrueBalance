@@ -229,95 +229,101 @@ Every adopted/adapted idea maps directly onto ADR 0003 ports and ADR 0011 local 
 
 ---
 
-## 10. IRS Recordkeeping and Filing Readiness (Part 2)
+## 9. IRS Recordkeeping and Filing Readiness (Part 2)
 
 *Not tax or legal advice. All references below are for recordkeeping alignment only. Primary source: irs.gov. Compiled 2026-11-25.*
 
 ### 9.1 IRS Recordkeeping Requirements
 
-| Entity Type | What to Keep | How Long | Form/Source |
+*Periods of limitations from [IRS: How long should I keep records](https://www.irs.gov/businesses/small-businesses-self-employed/how-long-should-i-keep-records) [Moderate 1/1]*
+
+| Period | Trigger | What to Keep | Applies To |
 | --- | --- | --- | --- |
-| **Small Business (Schedule C)** | Gross receipts, purchases, expenses, assets, employment taxes | 3-7 years (generally 3-4 years for most small businesses, 6 years if underreported income >25%, 7 years if loss claim) [High 3/3](https://www.irs.gov/businesses/small-businesses-self-employed/how-long-should-i-keep-records) | IRS Pub 334, Pub 583 |
-| **Sole Proprietor** | Same as Schedule C + personal tax records | 3-7 years [High 3/3](https://www.irs.gov/businesses/small-businesses-self-employed/recordkeeping) | IRS Pub 334 |
-| **S-Corp (Form 1120-S)** | Gross receipts, purchases, expenses, assets, payroll, shareholder records, K-1 distributions | 3-7 years [High 3/3](https://www.irs.gov/businesses/small-businesses-self-employed/how-long-should-i-keep-records) | IRS Pub 542 |
-| **Household (Form 1040)** | Income (W-2, 1099), expenses for deductions/credits, receipts, mileage logs | 3-7 years [High 3/3](https://www.irs.gov/businesses/small-businesses-self-employed/how-long-should-i-keep-records) | IRS Pub 17 |
+| **3 years** | Returns filed on time with no underreported income | All records supporting income, deductions, credits | All taxpayers |
+| **4 years** | Employment taxes | All employment tax records | Employers |
+| **6 years** | Income not reported that is more than 25% of gross income shown on return | All records for that year | All taxpayers |
+| **7 years** | Claim for loss from worthless securities or bad debt deduction | Records supporting the claim | All taxpayers |
+| **Until period of limitations expires** | Property disposed | Records for old and new property | Property owners |
+| **No limit** | Fraudulent return or no return filed | All records | All taxpayers |
 
 **Key IRS Publication References:**
-- IRS Publication 334: Tax Guide for Small Business [High 3/3](https://www.irs.gov/publications/p334)
-- IRS Publication 583: Starting a Business and Keeping Records [High 3/3](https://www.irs.gov/publications/p583)
-- IRS Publication 542: Corporations [High 3/3](https://www.irs.gov/publications/p542)
-- IRS Publication 17: Your Federal Income Tax [High 3/3](https://www.irs.gov/publications/p17)
+- IRS Publication 334: Tax Guide for Small Business [Moderate 1/1](https://www.irs.gov/publications/p334)
+- IRS Publication 583: Starting a Business and Keeping Records [Moderate 1/1](https://www.irs.gov/publications/p583)
+- IRS Publication 542: Corporations [Moderate 1/1](https://www.irs.gov/publications/p542)
+- IRS Publication 17: Your Federal Income Tax [Moderate 1/1](https://www.irs.gov/publications/p17)
 
 ### 9.2 Inputs Required Per Return
 
-#### Schedule C (2026 Draft)
-*Lines 8-27b from current-year instructions [High 3/3](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf)*
+#### Schedule C (Form 1040, 2026)
+*Part I Income and Part II Expenses from 2026 form [Moderate 1/1](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf)*
 
 | Line | Description | Data Needed |
 | --- | --- | --- |
-| 8 | Gross receipts or sales | Total income from business |
-| 9 | Returns and allowances | Refunds/allowances issued |
-| 10 | Cost of goods sold | Beginning inventory + purchases - ending inventory |
-| 12 | Gross profit (8-9-10) | Calculated |
-| 13-21 | Expenses (advertising, car, commissions, depreciation, etc.) | Detailed expense breakdown by category |
-| 22 | Total expenses | Sum of all expense lines |
-| 27a | Net profit or (loss) | Line 12 - Line 22 |
+| 1 | Gross receipts or sales | Total income from business |
+| 2 | Returns and allowances | Refunds/allowances issued |
+| 4 | Cost of goods sold (from line 42, Part III) | Beginning inventory + purchases - ending inventory |
+| 7 | Gross income | Lines 3 + 6 (net receipts + other income) |
+| 28 | Total expenses before home office | Sum of lines 8-27b (all expense categories) |
+| 29 | Tentative profit or (loss) | Line 7 - Line 28 |
+| 31 | Net profit or (loss) | Line 29 - Line 30 (home office expenses) |
 
-#### Form 1120-S (2026 Draft)
-*Key lines from instructions [High 3/3](https://www.irs.gov/pub/irs-pdf/f1120s.pdf)*
+#### Form 1120-S (2025)
+*Key lines from 2025 form [Moderate 1/1](https://www.irs.gov/pub/irs-pdf/f1120s.pdf)*
 
 | Line | Description | Data Needed |
 | --- | --- | --- |
-| 1 | Gross receipts or sales | Total income |
-| 2-19 | Deductions (compensation, repairs, bad debts, rent, taxes, etc.) | Detailed expense breakdown |
-| 20 | Total deductions | Sum of all deduction lines |
-| 21 | Ordinary business income (loss) | Line 1 - Line 20 |
-| 22 | Net income (loss) | Adjusted for non-deductible items |
-| Schedule K-1 | Shareholder's share | Allocable income, deductions, credits per shareholder |
+| 1a | Gross receipts or sales | Total income from operations |
+| 1c | Gross receipts net of returns/allowances | Line 1a - Line 1b |
+| 2 | Cost of goods sold | Beginning inventory + purchases - ending inventory |
+| 3 | Gross profit | Line 1c - Line 2 |
+| 6 | Total income | Sum of lines 3-5 (gross profit + other income) |
+| 7-20 | Deductions (compensation of officers, salaries, repairs, bad debts, rents, taxes, interest, depreciation, depletion, advertising, pensions, employee benefits, energy-efficient buildings) | Detailed expense breakdown by category |
+| 21 | Total deductions | Sum of lines 7 through 20 |
+| 22 | Ordinary business income (loss) | Line 6 - Line 21 |
+| Schedule K-1 | Shareholder's pro rata share | Allocable income, deductions, credits, etc. per shareholder |
 
-#### Household (Form 1040 with Schedules)
-*Common schedules [High 3/3](https://www.irs.gov/pub/irs-pdf/f1040.pdf)*
+#### Household (Form 1040 with Schedules, 2025)
+*Common schedules [Moderate 1/1](https://www.irs.gov/pub/irs-pdf/f1040.pdf)*
 
 | Schedule | Data Needed |
 | --- | --- |
 | A | Itemized deductions (medical, taxes, interest, charity, casualty) |
 | B | Interest and ordinary dividends |
-| C | Capital gains/losses |
-| D | Capital gains distributions |
-| E | Supplemental income (rental, royalties, K-1s) |
+| C | **Profit or Loss from Business (Sole Proprietorship)** |
+| D | Capital gains/losses |
+| E | Supplemental income and loss (rental, royalties, partnerships, S-corps, estates, trusts) |
 
 ### 9.3 IRS Free Filing Options (2026 Filing Season)
 
-*Verified on irs.gov 2026-11-25 [High 3/3](https://www.irs.gov/filing/free-file-do-your-federal-taxes-for-free)*
+*Verified on irs.gov 2026-11-25 [Moderate 1/1](https://www.irs.gov/filing/free-file-do-your-federal-taxes-for-free)*
 
 | Program | Who Qualifies | Income Limit (2026) | Business Returns? | States | Status |
 | --- | --- | --- | --- | --- | --- |
-| **IRS Free File** | All taxpayers | $79,000 AGI | Schedule C only (no 1120-S) | Varies by partner | Active [High 3/3](https://www.irs.gov/filing/free-file-do-your-federal-taxes-for-free) |
-| **IRS Direct File** | Simple returns (W-2, SS, unemployment, Social Security) | No limit | No business income | All 50 + DC | Pilot expanded [High 3/3](https://www.irs.gov/newsroom/irs-direct-file-pilot-expansion) |
-| **Military OneSource** | Active duty military | No limit | Yes (all forms) | All | Active [High 3/3](https://www.militaryonesource.mil/taxes/) |
-| **VITA** | Low-moderate income, elderly, disabled, limited English | Typically <$64,000 | Yes (all forms) | All | Active [High 3/3](https://www.irs.gov/individuals/free-tax-return-preparation-for-qualifying-taxpayers) |
+| **IRS Free File** | Taxpayers with AGI of $89,000 or less in 2025 | $89,000 AGI (2025 income for 2026 filing season) | Schedule C only (no 1120-S) | Varies by partner | Active [Moderate 1/1](https://www.irs.gov/filing/free-file-do-your-federal-taxes-for-free) |
+| **IRS Direct File** | Simple returns (W-2, SS, unemployment, Social Security) | No AGI limit but limited eligibility | No business income | 25+ states in 2025, expanding | Permanent option [Moderate 1/1](https://www.irs.gov/pub/irs-pdf/p6036.pdf) |
+| **Military OneSource (MilTax)** | Service members, spouses, survivors, recent veterans | No income limit | Yes (federal + up to 5 state returns) | All | Active [Moderate 1/1](https://www.militaryonesource.mil/financial-legal/taxes/miltax-military-tax-services/) |
+| **VITA** | Individuals meeting EITC income guidelines | No IRS-wide limit; sites set own limits | Yes (basic returns; varies by site) | All | Active [Moderate 1/1](https://www.irs.gov/individuals/free-tax-return-preparation-for-qualifying-taxpayers) |
 
-**Note:** IRS Free File partners do NOT support Form 1120-S. S-Corps must use commercial software or paper filing. [High 3/3](https://www.irs.gov/filing/free-file-do-your-federal-taxes-for-free)
+**Note:** IRS Free File partners do NOT support Form 1120-S. S-Corps must use commercial software or paper filing. [Moderate 1/1](https://www.irs.gov/filing/free-file-do-your-federal-taxes-for-free)
 
 ### 9.4 Data Hand-Off Formats
 
 | Tool/Option | Accepts | Produces | Offline Capable? | Notes |
 | --- | --- | --- | --- | --- |
-| **IRS Free File Partners** | TXF, CSV, PDF | PDF | No (web-based) | Varies by partner [High 2/2](https://www.irs.gov/filing/free-file-do-your-federal-taxes-for-free) |
-| **IRS Direct File** | Web form entry | PDF | No | Pilot program [High 2/2](https://www.irs.gov/newsroom/irs-direct-file-pilot-expansion) |
-| **QuickBooks Online** | CSV, OFX, manual | PDF, Excel, Accountant's Copy (QBX) | No (cloud) | Accountant invite for live access [High 2/2](https://quickbooks.intuit.com/learn-support/en-us/help-article/account-management/managing-accountant-users-quickbooks-online/L2AcdYvHw_US_en_US) |
-| **QuickBooks Desktop** | QBO, QFX, OFX, CSV, IIF | PDF, Excel, Accountant's Copy (QBX/QBA/QBY) | Yes | Dividing date splits [High 2/2](https://quickbooks.intuit.com/learn-support/en-us/help-article/company-file/create-accountant-copy-company-file-quickbooks/L7vx8V8F3_US_en_US) |
-| **GnuCash** | OFX, QIF, CSV | TXF, CSV, PDF, HTML | Yes | TXF for tax software [High 2/2](https://www.gnucash.org/docs/v5/C/gnucash-manual/set-tax-options.html) |
+| **IRS Free File Partners** | TXF, CSV, PDF | PDF | No (web-based) | Varies by partner [Moderate 2/2](https://www.irs.gov/filing/free-file-do-your-federal-taxes-for-free) |
+| **QuickBooks Online** | CSV, OFX, manual | PDF, Excel, Accountant's Copy (QBX) | No (cloud) | Accountant invite for live access [Moderate 2/2](https://quickbooks.intuit.com/learn-support/en-us/help-article/account-management/managing-accountant-users-quickbooks-online/L2AcdYvHw_US_en_US) |
+| **QuickBooks Desktop** | QBO, QFX, OFX, CSV, IIF | PDF, Excel, Accountant's Copy (QBX/QBA/QBY) | Yes | Dividing date splits [Moderate 2/2](https://quickbooks.intuit.com/learn-support/en-us/help-article/company-file/create-accountant-copy-company-file-quickbooks/L7vx8V8F3_US_en_US) |
+| **GnuCash** | OFX, QIF, CSV | TXF, CSV, PDF, HTML | Yes | TXF for tax software [Moderate 2/2](https://www.gnucash.org/docs/v5/C/gnucash-manual/set-tax-options.html) |
 | **TrueBalance Target** | CSV, OFX, QFX, CAMT | TXF, CSV, PDF (encrypted ZIP) | Yes | Masked-by-default exports [Inferred] |
 
 ### 9.5 1099 and Information Returns
 
 | Requirement | What TrueBalance Should Do | IRS System | Notes |
 | --- | --- | --- | --- |
-| **1099-NEC** | Prepare data (vendor name, TIN, amount) for CPA/filing tool | IRIS (Information Returns Intake System) | TrueBalance prepares; does NOT file [High 2/2](https://www.irs.gov/businesses/small-businesses-self-employed/information-returns-intake-system-iris) |
-| **1099-MISC** | Prepare data for CPA/filing tool | IRIS | TrueBalance prepares; does NOT file [High 2/2](https://www.irs.gov/businesses/small-businesses-self-employed/information-returns-intake-system-iris) |
-| **W-9 Collection** | Store W-9 data (name, TIN, entity type) encrypted; mask by default | N/A | TrueBalance stores; does NOT validate TINs [High 2/2](https://www.irs.gov/pub/irs-pdf/fw9.pdf) |
-| **Form 1096** | Prepare summary for CPA/filing tool | IRIS | TrueBalance prepares; does NOT file [High 2/2](https://www.irs.gov/pub/irs-pdf/f1096.pdf) |
+| **1099-NEC** | Prepare data (vendor name, TIN, amount) for CPA/filing tool | IRIS (Information Returns Intake System) | TrueBalance prepares; does NOT file [Moderate 2/2](https://www.irs.gov/businesses/small-businesses-self-employed/information-returns-intake-system-iris) |
+| **1099-MISC** | Prepare data for CPA/filing tool | IRIS | TrueBalance prepares; does NOT file [Moderate 2/2](https://www.irs.gov/businesses/small-businesses-self-employed/information-returns-intake-system-iris) |
+| **W-9 Collection** | Store W-9 data (name, TIN, entity type) encrypted; mask by default | N/A | TrueBalance stores; does NOT validate TINs [Moderate 2/2](https://www.irs.gov/pub/irs-pdf/fw9.pdf) |
+| **Form 1096** | Prepare summary for CPA/filing tool | IRIS | TrueBalance prepares; does NOT file [Moderate 2/2](https://www.irs.gov/pub/irs-pdf/f1096.pdf) |
 
 **TrueBalance Position:** TrueBalance **prepares** 1099 data and W-9 collection. TrueBalance **never files** information returns. Filing is done by CPA or dedicated filing service. [Inferred]
 
@@ -327,17 +333,19 @@ Every adopted/adapted idea maps directly onto ADR 0003 ports and ADR 0011 local 
 
 | Item | Category | Why | Source | Acceptance Test (Prompt) |
 | --- | --- | --- | --- | --- |
-| **Trial Balance** | **Must** | Foundation for all financial statements; required by all CPAs | [High 3/3](https://www.irs.gov/businesses/small-businesses-self-employed/recordkeeping) | `test_trial_balance_zero_sum` (03) |
-| **General Ledger Detail** | **Must** | Audit trail; CPA needs to trace every transaction | [High 3/3](https://www.irs.gov/businesses/small-businesses-self-employed/recordkeeping) | `test_gl_detail_matches_tb` (08) |
-| **Profit & Loss** | **Must** | Income/expense summary for Schedule C/1120-S | [High 3/3](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf) | `test_p_and_l_accuracy` (08) |
-| **Balance Sheet** | **Must** | Asset/liability/equity for year-end; required for all business returns | [High 3/3](https://www.irs.gov/pub/irs-pdf/f1120s.pdf) | `test_balance_sheet_balances` (08) |
-| **Tax-line Summary** | **Must** | Maps accounts to Schedule C/1120-S lines | [High 3/3](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf) | `test_tax_line_mapping` (07) |
-| **1099 Vendor Summary** | **Should** | CPAs need this for Form 1099-NEC/MISC preparation | [High 2/2](https://www.irs.gov/businesses/small-businesses-self-employed/information-returns-intake-system-iris) | `test_1099_summary_accuracy` (08) |
-| **Receipts Index** | **Should** | CPA audit support; IRS may request | [High 2/2](https://www.irs.gov/businesses/small-businesses-self-employed/recordkeeping) | `test_receipts_index_complete` (06) |
-| **Adjusting Journal Entries (AJE) Support** | **Should** | CPAs use AJEs to correct books without mutating history | [High 2/2](https://quickbooks.intuit.com/learn-support/en-us/help-article/account-management/managing-accountant-users-quickbooks-online/L2AcdYvHw_US_en_US) | `test_aje_import_and_masking` (08) |
-| **Encrypted ZIP Packet** | **Nice** | Convenience for CPA; protects sensitive data | [High 3/3](https://security.intuit.com/security-practices) | `test_encrypted_zip_creation` (08) |
-| **TXF Export** | **Nice** | Direct import into some tax software | [High 3/3](https://www.gnucash.org/docs/v5/C/gnucash-manual/set-tax-options.html) | `test_txf_export_format` (08) |
-| **Non-zero Suspense Warning** | **Must** | Alerts CPA to uncategorized transactions that could be errors | [High 2/2](https://www.irs.gov/businesses/small-businesses-self-employed/recordkeeping) | `test_suspense_warning_at_year_end` (08) |
+| **Trial Balance** | **Must** | Foundation for all financial statements; required by all CPAs | [Inferred] | `test_trial_balance_zero_sum` (03) |
+| **General Ledger Detail** | **Must** | Audit trail; CPA needs to trace every transaction | [Inferred] | `test_gl_detail_matches_tb` (08) |
+| **Profit & Loss** | **Must** | Income/expense summary for Schedule C/1120-S | [Inferred] | `test_p_and_l_accuracy` (08) |
+| **Balance Sheet** | **Must** | Asset/liability/equity for year-end; required for all business returns | [Inferred] | `test_balance_sheet_balances` (08) |
+| **Tax-line Summary** | **Must** | Maps accounts to Schedule C/1120-S lines | [Inferred] | `test_tax_line_mapping` (07) |
+| **1099 Vendor Summary** | **Should** | CPAs need this for Form 1099-NEC/MISC preparation | [Moderate 2/2](https://www.irs.gov/businesses/small-businesses-self-employed/information-returns-intake-system-iris) | `test_1099_summary_accuracy` (08) |
+| **Receipts Index** | **Should** | CPA audit support; IRS may request | [Moderate 2/2](https://www.irs.gov/businesses/small-businesses-self-employed/recordkeeping) | `test_receipts_index_complete` (06) |
+| **Adjusting Journal Entries (AJE) Support** | **Should** | CPAs use AJEs to correct books without mutating history | [Moderate 2/2](https://quickbooks.intuit.com/learn-support/en-us/help-article/account-management/managing-accountant-users-quickbooks-online/L2AcdYvHw_US_en_US) | `test_aje_import_and_masking` (08) |
+| **Encrypted ZIP Packet** | **Nice** | Convenience for CPA; protects sensitive data | [Inferred] | `test_encrypted_zip_creation` (08) |
+| **TXF Export** | **Nice** | Direct import into some tax software | [Inferred] | `test_txf_export_format` (08) |
+| **Non-zero Suspense Warning** | **Must** | Alerts CPA to uncategorized transactions that could be errors | [Moderate 2/2](https://www.irs.gov/businesses/small-businesses-self-employed/recordkeeping) | `test_suspense_warning_at_year_end` (08) |
+
+**Sweet spot summary:** Households with AGI ≤ $89,000 (2025 income) can use IRS Free File for federal returns with Schedule C. IRS Direct File is a permanent option for simple returns (W-2, Social Security) but excludes business income and has limited state support. S-corps filing Form 1120-S have no free IRS filing option and must use commercial software or paper filing. [Inferred]
 
 ---
 
@@ -374,23 +382,23 @@ From Must items in the sweet spot table:
 
 | Tool / Library | License | Copyleft / Restriction Flag | Source URL | Confidence & Vote |
 | --- | --- | --- | --- | --- |
-| **QuickBooks Online** | Proprietary SaaS | **Proprietary** — public docs only; zero screenshots/text/code | [Intuit QBO Terms](https://www.intuit.com/legal/terms/en-us/quickbooks/online/) | [High 3/3] |
-| **QuickBooks Desktop** | Proprietary EULA | **Proprietary** — public docs only; zero reverse-engineering/text | [Intuit QBD EULA](https://www.intuit.com/legal/terms/en-us/quickbooks/desktop-payroll-2024/) | [High 3/3] |
-| **GnuCash** | GNU GPL-2.0-or-later (some GPL-2.0-only / GPL-3.0) | **GPL copyleft** — do not reuse code or TXF/CoA files | [GnuCash License](https://wiki.gnucash.org/wiki/License) | [High 3/3] |
-| **KMyMoney** | GNU GPL-2.0-or-later | **GPL copyleft** — do not reuse code | [KDE KMyMoney](https://apps.kde.org/kmymoney/) | [High 3/3] |
-| **Manager.io** | Functional Source License (FSL, converts to Apache-2.0 after 2 yrs) | **Source-available (not OSI open source)** — do not reuse code | [Manager GitHub](https://github.com/Manager-io/Manager) | [High 3/3] |
+| **QuickBooks Online** | Proprietary SaaS | **Proprietary** — public docs only; zero screenshots/text/code | [Intuit QBO Terms](https://www.intuit.com/legal/terms/en-us/quickbooks/online/) | [Moderate 1/1] |
+| **QuickBooks Desktop** | Proprietary EULA | **Proprietary** — public docs only; zero reverse-engineering/text | [Intuit QBD EULA](https://www.intuit.com/legal/terms/en-us/quickbooks/desktop-payroll-2024/) | [Moderate 1/1] |
+| **GnuCash** | GNU GPL-2.0-or-later (some GPL-2.0-only / GPL-3.0) | **GPL copyleft** — do not reuse code or TXF/CoA files | [GnuCash License](https://wiki.gnucash.org/wiki/License) | [Moderate 1/1] |
+| **KMyMoney** | GNU GPL-2.0-or-later | **GPL copyleft** — do not reuse code | [KDE KMyMoney](https://apps.kde.org/kmymoney/) | [Moderate 1/1] |
+| **Manager.io** | Functional Source License (FSL, converts to Apache-2.0 after 2 yrs) | **Source-available (not OSI open source)** — do not reuse code | [Manager GitHub](https://github.com/Manager-io/Manager) | [Moderate 1/1] |
 | **Ledger** | BSD-3-Clause *(preliminary — verify `LICENSE.md` directly before any reuse)* | Permissive (still design-only here) | [ledger-windows-build](https://github.com/maxwell-k/ledger-windows-build) | [Low 1/1] |
-| **hledger** | GNU GPL-3.0 | **GPL strong copyleft** — do not reuse code | [hledger LICENSE](https://github.com/simonmichael/hledger/blob/main/LICENSE) | [High 3/3] |
-| **Beancount** | GNU GPL-2.0-only | **GPL copyleft** — do not reuse code | [Beancount README](https://github.com/beancount/beancount/blob/master/README.rst) | [High 3/3] |
-| **Fava** | MIT License | Permissive (still design-only here) | [Fava LICENSE](https://github.com/beancount/fava/blob/main/LICENSE) | [High 3/3] |
-| **Akaunting** | Business Source License 1.1 (BSL 1.1, 4-yr change date) | **Source-available (not OSI open source)** — do not reuse code | [Akaunting License](https://akaunting.com/license) | [High 3/3] |
-| **Firefly III** | GNU AGPL-3.0 | **AGPL network copyleft** — do not reuse code | [Firefly III LICENSE](https://github.com/firefly-iii/firefly-iii/blob/main/LICENSE) | [High 3/3] |
-| **ERPNext** | GNU GPL-3.0 (docs CC-BY-SA-3.0) | **GPL strong copyleft** — do not reuse code or JSON CoA templates | [ERPNext license.txt](https://github.com/frappe/erpnext/blob/develop/license.txt) | [High 3/3] |
-| **Odoo Community** | GNU LGPL-3.0 (Enterprise: proprietary OEEL-1) | **LGPL weak copyleft** — do not reuse code | [Odoo Licenses](https://www.odoo.com/documentation/20.0/legal/licenses.html) | [High 3/3] |
-| *Library:* **AqBanking** | GNU GPL-2.0-or-later | **GPL copyleft** — flagged; do not link without Veeresh's approval | [Arch Pkg](https://archlinux.org/packages/extra/x86_64/aqbanking/), [Debian](https://manpages.debian.org/testing/aqbanking-tools/aqhbci-tool4.1.en.html) | [High 3/3] |
-| *Library:* **LibOFX** | GNU GPL-2.0 | **GPL copyleft** — flagged; do not link; write clean-room .NET parser | [LibOFX GitHub](https://github.com/libofx/libofx) | [High 3/3] |
+| **hledger** | GNU GPL-3.0 | **GPL strong copyleft** — do not reuse code | [hledger LICENSE](https://github.com/simonmichael/hledger/blob/main/LICENSE) | [Moderate 1/1] |
+| **Beancount** | GNU GPL-2.0-only | **GPL copyleft** — do not reuse code | [Beancount README](https://github.com/beancount/beancount/blob/master/README.rst) | [Moderate 1/1] |
+| **Fava** | MIT License | Permissive (still design-only here) | [Fava LICENSE](https://github.com/beancount/fava/blob/main/LICENSE) | [Moderate 1/1] |
+| **Akaunting** | Business Source License 1.1 (BSL 1.1, 4-yr change date) | **Source-available (not OSI open source)** — do not reuse code | [Akaunting License](https://akaunting.com/license) | [Moderate 1/1] |
+| **Firefly III** | GNU AGPL-3.0 | **AGPL network copyleft** — do not reuse code | [Firefly III LICENSE](https://github.com/firefly-iii/firefly-iii/blob/main/LICENSE) | [Moderate 1/1] |
+| **ERPNext** | GNU GPL-3.0 (docs CC-BY-SA-3.0) | **GPL strong copyleft** — do not reuse code or JSON CoA templates | [ERPNext license.txt](https://github.com/frappe/erpnext/blob/develop/license.txt) | [Moderate 1/1] |
+| **Odoo Community** | GNU LGPL-3.0 (Enterprise: proprietary OEEL-1) | **LGPL weak copyleft** — do not reuse code | [Odoo Licenses](https://www.odoo.com/documentation/20.0/legal/licenses.html) | [Moderate 1/1] |
+| *Library:* **AqBanking** | GNU GPL-2.0-or-later | **GPL copyleft** — flagged; do not link without Veeresh's approval | [Arch Pkg](https://archlinux.org/packages/extra/x86_64/aqbanking/), [Debian](https://manpages.debian.org/testing/aqbanking-tools/aqhbci-tool4.1.en.html) | [Moderate 1/1] |
+| *Library:* **LibOFX** | GNU GPL-2.0 | **GPL copyleft** — flagged; do not link; write clean-room .NET parser | [LibOFX GitHub](https://github.com/libofx/libofx) | [Moderate 1/1] |
 
 ### Baseline Facts Cited from `docs/research/verified-facts.md`
 - QuickBooks Desktop Pro Plus/Premier Plus/Mac Plus/Enhanced Payroll ended new US subscriptions after Sept 30, 2024; Enterprise unaffected ([Intuit](https://quickbooks.intuit.com/learn-support/en-us/help-article/new-subscriptions/us-quickbooks-desktop-sold-july-2024/L5lkQNq7L_US_en_US)) [High 3/3].
-- IRS recordkeeping alignment (not tax advice): Schedule C 2026 Part II runs lines 8–27b ([IRS Schedule C](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf)); Form 1120-S line 19 is Energy Efficient Commercial Buildings Deduction and line 20 is Other Deductions ([IRS i1120s](https://irs.gov/instructions/i1120s)); general record retention is 3–7 years ([IRS Retention](https://irs.gov/businesses/small-businesses-self-employed/how-long-should-i-keep-records)) [High 3/3].
-- NIST SP 800-122 classifies SSNs and financial account numbers as PII and recommends minimization and de-identification [High 2/2].
+- IRS recordkeeping alignment (not tax advice): Schedule C 2026 Part I lines 1, 2, 4, 7 and Part II lines 8-27b ([IRS Schedule C](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf)); Form 1120-S 2025 lines 1a-1c, 2-3, 6-22 ([IRS Form 1120-S](https://www.irs.gov/pub/irs-pdf/f1120s.pdf)); retention periods per IRS page ([IRS Retention](https://www.irs.gov/businesses/small-businesses-self-employed/how-long-should-i-keep-records)) [Moderate 1/1].
+- NIST SP 800-122 classifies SSNs and financial account numbers as PII and recommends minimization and de-identification [Moderate 2/2].
