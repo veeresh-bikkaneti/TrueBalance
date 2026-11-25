@@ -12,6 +12,9 @@ public class JsonChartOfAccountsSeeder : IChartOfAccountsSeeder
 {
     private static readonly string[] Kinds = { "household", "sole-proprietor", "s-corporation" };
 
+    // Seed files are camelCase; JsonSerializerDefaults.Web matches them to the PascalCase model.
+    private static readonly JsonSerializerOptions SeedSerializerOptions = new(JsonSerializerDefaults.Web);
+
     private readonly OfflineCPADbContext _db;
 
     public JsonChartOfAccountsSeeder(OfflineCPADbContext db)
@@ -31,7 +34,7 @@ public class JsonChartOfAccountsSeeder : IChartOfAccountsSeeder
     public static async Task<ChartSeedFile> LoadFileAsync(string path, CancellationToken cancellationToken = default)
     {
         await using var stream = File.OpenRead(path);
-        var seed = await JsonSerializer.DeserializeAsync<ChartSeedFile>(stream, cancellationToken: cancellationToken)
+        var seed = await JsonSerializer.DeserializeAsync<ChartSeedFile>(stream, SeedSerializerOptions, cancellationToken)
             ?? throw new InvalidOperationException($"Seed file '{path}' is empty.");
         return seed;
     }
