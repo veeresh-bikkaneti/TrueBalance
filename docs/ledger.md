@@ -76,10 +76,20 @@ Locking writes a `PeriodLocked` audit record.
 
 ## Audit records
 
-`LedgerAuditRecords` holds one row per create, post, reverse and lock: time, local
-user id, action, entry id, period id and a short detail string (max 500). It holds
-no names or e-mail addresses. Until a later prompt adds authentication, the API
-records every action under the constant user `local`.
+`LedgerAuditRecords` is the append-only event log. The table name stays so the
+insert-only trigger does not have to be rewritten. Contracts are in
+[modules.md](architecture/modules.md). One row per domain event, written in the
+same unit of work as the change it records. Columns: time, local user id,
+action, event type, one entity id, and a fixed summary (`draft created`,
+`entry posted`, `entry reversed`, `period locked`). The summary has no memo,
+name, account number, posting count, or entry id. Until a later prompt adds
+authentication, the API records every action under the constant user `local`.
+
+The migration drops the old line-level `JournalEntries` table (one signed
+amount, a transaction id, an account id, notes). On main `23c9245` the seed
+inserts accounts only and upload inserts transactions only. No application
+path inserted a journal row, so there was nothing to copy into the new header
+and postings.
 
 ## Database guard
 
@@ -105,3 +115,8 @@ Limits of the guard:
   and a `Status` 1 to 2 update was accepted. Re-run that check if you change the
   migration, which was hand-written because no database was available when it was
   authored.
+- `EventType` was added to the `LedgerAuditRecords` create table in this same
+  unshipped migration. The trigger function text did not change.
+  `Ledger_model_matches_the_snapshot` now checks `HasPendingModelChanges()`
+  without opening a database. The new column was not applied to a live
+  PostgreSQL, so the 2026-11-25 trigger check was not repeated.
