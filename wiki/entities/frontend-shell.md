@@ -5,7 +5,7 @@ checked:
   OfflineCPA/frontend/src/components/Dashboard.tsx: e97260fda939957facc5a7c2db1486a35d7cfa4f
   OfflineCPA/frontend/vite.config.ts: 05af52d3878d1d225177e0ccbb3e5b9499f3680e
   docs/adr/0003-clean-architecture-ports-adapters.md: c9c7256eea1b992b1d2443ea30a1356ec0de5388
-  AGENTS.md: 6cfae08919f4c6d45b47b9db8c54b4091d6f7e1d
+  AGENTS.md: f2e9c1732b93c6156c3176a6e36f7f320a03edb6
 ---
 # Frontend shell
 
@@ -21,4 +21,4 @@ ADR 0003 (accepted) names the target UI: a React app shell and feature component
 
 ## Change it safely
 
-A new screen needs a mockup in `docs/mockups/` before UI code (repo: AGENTS.md#L71). Keep API calls on the `VITE_API_URL` base. Do not add a CDN, a web font, or telemetry. See [[backend-host]] and [[uploads]].
+A new screen needs a mockup in `docs/mockups/` before UI code (repo: AGENTS.md#L72). Keep API calls on the `VITE_API_URL` base. Do not add a CDN, a web font, or telemetry. See [[backend-host]] and [[uploads]].

@@ -47,3 +47,12 @@ Check and report:
 4. Orphan pages (no inbound links from `wiki/index.md` or other pages).
 5. Contradictions or superseded claims across pages.
 Append `## [YYYY-MM-DD] lint | <Summary>` to `wiki/log.md`.
+
+## 4. Code pages
+Facts about this repo use a second pointer. `(source: raw/...)` stays for immutable outside sources.
+
+- `(repo: <path>#L<a>-L<b>)` points at a file outside `raw/` and `wiki/`. `#L<a>` alone is allowed. A path with no line anchor is allowed only when the whole file is under 60 lines.
+- Do not point at `raw/private/`, `.env`, or any gitignored path.
+- A page with any `(repo:)` pointer starts with `checked:` front matter. Each value is `git hash-object <path>` at the time the page was checked against that file.
+- `python3 .agent/scripts/wiki_lint.py --refresh <page>` rewrites those hashes. The PR body names each refreshed page and says it was re-read. Do not refresh a page whose cited lines changed meaning unless the page text changes too.
+
