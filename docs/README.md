@@ -8,6 +8,8 @@
 | `research/r1-evidence.md` | Evidence pack for R1: raw findings with sources for all 11 topics across all studied tools |
 | `roadmap/build-map.html` | Visual dashboard: all 17 PRs in build order, parallel lanes, caps, decision points. Open in a browser |
 | `roadmap/roadmap.md` | Text roadmap: phases, lanes, "done when", decision points |
+| `roadmap/feature-board.md` | One row per backlog feature: module, API, status, PR. Static view: `roadmap/feature-board.html` |
+| `architecture/consistency-review.md` | Layer review against the ADRs, arena results, scale notes |
 | `specs/prompts/` | One self-contained agent spec per PR (`INDEX.md` lists order, branches, caps, dependencies) |
 | `adr/` | Architecture decision records (0001 to 0011) |
 | `backlog/product-backlog.md` | Refined, ordered product backlog with acceptance criteria and Definitions of Ready and Done |

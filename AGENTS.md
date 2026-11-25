@@ -9,7 +9,7 @@ Read this file, `docs/README.md`, and `docs/specs/prompts/INDEX.md` first. Every
 
 ## 2. Repo State & Active Queue (as of 2026-11-24)
 - **Code**: `OfflineCPA/` (Python 90.3%, C# 4.7%, TypeScript 2.8% / React shell, CSS 1.7%). Commit `406eec1` builds, but fresh install lacks migrations and ledger core (`docs/research/review.md`).
-- **Plan & Backlog**: 17 PRs across 3 phases in `docs/specs/prompts/` (`INDEX.md`), `docs/roadmap/roadmap.md`, `docs/roadmap/build-map.html`, and `docs/backlog/product-backlog.md`.
+- **Plan & Backlog**: 17 PRs across 3 phases in `docs/specs/prompts/` (`INDEX.md`), `docs/roadmap/roadmap.md`, `docs/roadmap/build-map.html`, `docs/roadmap/feature-board.md` (static view: `docs/roadmap/feature-board.html`), and `docs/backlog/product-backlog.md`. Architecture consistency review: `docs/architecture/consistency-review.md`.
 - **Active Gate**: ADR 0010 accepted — prompt `04b` (PII masking core) runs before `05`; never run real statements before `06` merges. Next PR: `docs/specs/prompts/00-baseline.md`.
 
 ## 3. Token Economy & Orchestration (First Priority)
