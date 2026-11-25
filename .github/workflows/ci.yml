@@ -31,3 +31,10 @@ jobs:
           CYPRESS_INSTALL_BINARY: "0"
       - run: npm run lint
       - run: npm run build
+
+  wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: python3 .agent/scripts/wiki_lint.py
+
