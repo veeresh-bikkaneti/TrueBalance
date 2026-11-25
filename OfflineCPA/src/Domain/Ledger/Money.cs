@@ -11,8 +11,7 @@ public static class Money
     /// <exception cref="LedgerRuleException">The value has more than 2 decimal places.</exception>
     public static decimal Validated(decimal value, string paramName)
     {
-        if (value != decimal.Round(value, Scale, MidpointRounding.ToEven)
-            || value != decimal.Round(value, Scale))
+        if (value != decimal.Round(value, Scale))
         {
             throw new LedgerRuleException(
                 $"{paramName} has more than {Scale} decimal places ({value}); amounts are not rounded automatically.");

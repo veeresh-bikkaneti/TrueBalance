@@ -97,8 +97,11 @@ Limits of the guard:
 - The triggers do not stop INSERT into `Postings`, and they do not check that
   postings balance. Those rules live in the domain.
 - A superuser can drop the triggers.
-- The triggers are verified by inspection only. CI runs no PostgreSQL service, so
-  no automated test executes them. The migration was written by hand because no
-  database was available to run `dotnet ef migrations add`; the model snapshot
-  was edited to match. Run the migration against a scratch PostgreSQL before
-  relying on it.
+- CI runs no PostgreSQL service, so no automated test executes the triggers.
+  They were checked by hand against PostgreSQL 16 on 2026-11-25: the migration
+  applied cleanly to an empty database, `Database.HasPendingModelChanges()`
+  returned false (so the hand-written model snapshot matches the model), each of
+  the seven writes in the table above was rejected with the message quoted there,
+  and a `Status` 1 to 2 update was accepted. Re-run that check if you change the
+  migration, which was hand-written because no database was available when it was
+  authored.
