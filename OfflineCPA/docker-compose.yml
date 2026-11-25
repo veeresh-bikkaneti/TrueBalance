@@ -4,7 +4,7 @@ services:
     container_name: pb-database
     environment:
       POSTGRES_USER: bookkeeping
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (see .env.example, or run scripts/init-env.sh)}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
       POSTGRES_DB: OfflineCPADb
     volumes:
       - pb-pgdata:/var/lib/postgresql/data
@@ -19,7 +19,7 @@ services:
     container_name: pb-backend
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=${CONNECTION_STRING:?Set CONNECTION_STRING in .env (see .env.example, or run scripts/init-env.sh)}
+      - ConnectionStrings__DefaultConnection=${CONNECTION_STRING:?required}
       - Uploads__Directory=/app/user-assets
     ports:
       - "127.0.0.1:8080:8080"
