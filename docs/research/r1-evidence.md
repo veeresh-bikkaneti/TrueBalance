@@ -1,11 +1,11 @@
-# R1 Evidence Pack: Competitor Research
+# R1 Evidence Pack: Competitor Research + IRS (Part 2)
 
-> Date: 2026-11-25 | Researcher: Vibe Code (main session) | Format: tool, topic, finding, source URL, source type, date read
+> Date: 2026-11-25 (merged A+B) | Researchers: 4 seats + merged | Format: tool, topic, finding, source URL, source type, date read
 
 ## Legend
 - **Source type**: primary = tool's own docs/code/maintainers; secondary = blogs/forums/third-party
 - **Date**: when the page was read (2026-11-25 unless noted)
-- **Confidence/Vote**: Will be added in the main report based on corroboration
+- **Confidence/Vote**: Added in main report as [Level n/m] tags; analysis lines labeled [Inferred] or [Tested]
 
 ---
 
@@ -351,6 +351,53 @@
 | Odoo | License | LGPL (Community edition) | [Odoo](https://www.odoo.com/) | primary | 2026-11-25 |
 | Odoo | Import | Bank statement import: OFX, CAMT.053, CSV | [Invoice Data Extraction](https://invoicedataextraction.com/blog/import-bank-statements-into-quickbooks) | secondary | 2026-11-25 |
 | Odoo | Offline | Self-hosted; can be offline | [Odoo](https://www.odoo.com/) | primary | 2026-11-25 |
+
+---
+
+## IRS Recordkeeping (Part 2)
+
+### IRS Recordkeeping Requirements
+| Tool | Topic | Finding | Source | Type | Date |
+|---|---|---|---|---|---|
+| IRS | Record retention - Small Business | Records must be kept for 3-7 years depending on situation (3-4 years generally, 6 years if underreported income >25%, 7 years for loss claims) | [IRS: How long should I keep records](https://www.irs.gov/businesses/small-businesses-self-employed/how-long-should-i-keep-records) | primary | 2026-11-25 |
+| IRS | Recordkeeping - Schedule C | Small businesses must keep gross receipts, purchases, expenses, assets, employment taxes | [IRS Publication 334](https://www.irs.gov/publications/p334) | primary | 2026-11-25 |
+| IRS | Recordkeeping - S-Corp | S-Corps must keep gross receipts, purchases, expenses, assets, payroll, shareholder records, K-1 distributions | [IRS Publication 542](https://www.irs.gov/publications/p542) | primary | 2026-11-25 |
+| IRS | Recordkeeping - Household | Households must keep income records (W-2, 1099), expense receipts for deductions/credits, mileage logs | [IRS Publication 17](https://www.irs.gov/publications/p17) | primary | 2026-11-25 |
+
+### IRS Free Filing Options
+| Tool | Topic | Finding | Source | Type | Date |
+|---|---|---|---|---|---|
+| IRS Free File | Eligibility | Available to all taxpayers with AGI <= $79,000 for 2026 filing season | [IRS Free File](https://www.irs.gov/filing/free-file-do-your-federal-taxes-for-free) | primary | 2026-11-25 |
+| IRS Free File | Business support | Supports Schedule C but NOT Form 1120-S | [IRS Free File](https://www.irs.gov/filing/free-file-do-your-federal-taxes-for-free) | primary | 2026-11-25 |
+| IRS Direct File | Eligibility | Simple returns only (W-2, Social Security, unemployment); no business income | [IRS Direct File Pilot](https://www.irs.gov/newsroom/irs-direct-file-pilot-expansion) | primary | 2026-11-25 |
+| VITA | Eligibility | Low-moderate income, elderly, disabled, limited English; typically <$64,000 AGI | [IRS VITA](https://www.irs.gov/individuals/free-tax-return-preparation-for-qualifying-taxpayers) | primary | 2026-11-25 |
+| VITA | Business support | Supports all forms including Schedule C and 1120-S | [IRS VITA](https://www.irs.gov/individuals/free-tax-return-preparation-for-qualifying-taxpayers) | primary | 2026-11-25 |
+
+### 1099 and Information Returns
+| Tool | Topic | Finding | Source | Type | Date |
+|---|---|---|---|---|---|
+| IRS | 1099-NEC filing | Businesses must file Form 1099-NEC for non-employee compensation >= $600 | [IRS IRIS](https://www.irs.gov/businesses/small-businesses-self-employed/information-returns-intake-system-iris) | primary | 2026-11-25 |
+| IRS | 1099-MISC filing | Businesses must file Form 1099-MISC for miscellaneous income >= $600 | [IRS IRIS](https://www.irs.gov/businesses/small-businesses-self-employed/information-returns-intake-system-iris) | primary | 2026-11-25 |
+| IRS | W-9 collection | Businesses must collect Form W-9 from vendors to obtain TIN for 1099 reporting | [IRS Form W-9](https://www.irs.gov/pub/irs-pdf/fw9.pdf) | primary | 2026-11-25 |
+| IRS | Form 1096 | Annual summary of information returns must be filed with IRS | [IRS Form 1096](https://www.irs.gov/pub/irs-pdf/f1096.pdf) | primary | 2026-11-25 |
+
+### Schedule C Inputs (2026)
+| Tool | Topic | Finding | Source | Type | Date |
+|---|---|---|---|---|---|
+| IRS | Schedule C Line 8 | Gross receipts or sales | [IRS Schedule C Instructions](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf) | primary | 2026-11-25 |
+| IRS | Schedule C Line 9 | Returns and allowances | [IRS Schedule C Instructions](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf) | primary | 2026-11-25 |
+| IRS | Schedule C Line 10 | Cost of goods sold (beginning inventory + purchases - ending inventory) | [IRS Schedule C Instructions](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf) | primary | 2026-11-25 |
+| IRS | Schedule C Lines 13-21 | Business expenses by category (advertising, car, commissions, depreciation, etc.) | [IRS Schedule C Instructions](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf) | primary | 2026-11-25 |
+| IRS | Schedule C Line 27a | Net profit or loss (Line 12 - Line 22) | [IRS Schedule C Instructions](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf) | primary | 2026-11-25 |
+
+### Form 1120-S Inputs (2026)
+| Tool | Topic | Finding | Source | Type | Date |
+|---|---|---|---|---|---|
+| IRS | Form 1120-S Line 1 | Gross receipts or sales | [IRS Form 1120-S Instructions](https://www.irs.gov/pub/irs-pdf/f1120s.pdf) | primary | 2026-11-25 |
+| IRS | Form 1120-S Lines 2-19 | Deductions (compensation, repairs, bad debts, rent, taxes, etc.) | [IRS Form 1120-S Instructions](https://www.irs.gov/pub/irs-pdf/f1120s.pdf) | primary | 2026-11-25 |
+| IRS | Form 1120-S Line 20 | Total deductions | [IRS Form 1120-S Instructions](https://www.irs.gov/pub/irs-pdf/f1120s.pdf) | primary | 2026-11-25 |
+| IRS | Form 1120-S Line 21 | Ordinary business income (loss) | [IRS Form 1120-S Instructions](https://www.irs.gov/pub/irs-pdf/f1120s.pdf) | primary | 2026-11-25 |
+| IRS | Form 1120-S Schedule K-1 | Shareholder's share of income, deductions, credits | [IRS Form 1120-S Instructions](https://www.irs.gov/pub/irs-pdf/f1120s.pdf) | primary | 2026-11-25 |
 
 ---
 
