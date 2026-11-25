@@ -299,31 +299,31 @@ Every adopted/adapted idea maps directly onto ADR 0003 ports and ADR 0011 local 
 
 | Program | Who Qualifies | Income Limit (2026) | Business Returns? | States | Status |
 | --- | --- | --- | --- | --- | --- |
-| **IRS Free File** | Taxpayers with AGI of $89,000 or less in 2025 | $89,000 AGI (2025 income for 2026 filing season) | Schedule C only (no 1120-S) | Varies by partner | Active [Moderate 1/1](https://www.irs.gov/filing/free-file-do-your-federal-taxes-for-free) |
-| **IRS Direct File** | Simple returns (W-2, SS, unemployment, Social Security) | No AGI limit but limited eligibility | No business income | 25+ states in 2025, expanding | Permanent option [Moderate 1/1](https://www.irs.gov/pub/irs-pdf/p6036.pdf) |
+| **IRS Free File** | Taxpayers with AGI of $95,000 or less | $95,000 AGI (current season opening January 2027); $89,000 AGI for 2026 season (2025 returns) | Schedule C only (no 1120-S) | Varies by partner | Closed until January 2027 [Moderate 1/1](https://www.irs.gov/e-file-do-your-taxes-for-free) |
+| **IRS Direct File** | Simple returns (W-2, SS, unemployment, Social Security) | No AGI limit but limited eligibility | No business income | N/A | Discontinued (not offered for the 2026 filing season) [Moderate 1/1](https://www.taxpayeradvocate.irs.gov/news/directory-entry/objective-25-2025/) |
 | **Military OneSource (MilTax)** | Service members, spouses, survivors, recent veterans | No income limit | Yes (federal + up to 5 state returns) | All | Active [Moderate 1/1](https://www.militaryonesource.mil/financial-legal/taxes/miltax-military-tax-services/) |
 | **VITA** | Individuals meeting EITC income guidelines | No IRS-wide limit; sites set own limits | Yes (basic returns; varies by site) | All | Active [Moderate 1/1](https://www.irs.gov/individuals/free-tax-return-preparation-for-qualifying-taxpayers) |
 
-**Note:** IRS Free File partners do NOT support Form 1120-S. S-Corps must use commercial software or paper filing. [Moderate 1/1](https://www.irs.gov/filing/free-file-do-your-federal-taxes-for-free)
+**Note:** IRS Free File partners do NOT support Form 1120-S. S-Corps must use commercial software or paper filing. [Moderate 1/1](https://www.irs.gov/e-file-do-your-taxes-for-free)
 
 ### 9.4 Data Hand-Off Formats
 
 | Tool/Option | Accepts | Produces | Offline Capable? | Notes |
 | --- | --- | --- | --- | --- |
-| **IRS Free File Partners** | TXF, CSV, PDF | PDF | No (web-based) | Varies by partner [Moderate 2/2](https://www.irs.gov/filing/free-file-do-your-federal-taxes-for-free) |
-| **QuickBooks Online** | CSV, OFX, manual | PDF, Excel, Accountant's Copy (QBX) | No (cloud) | Accountant invite for live access [Moderate 2/2](https://quickbooks.intuit.com/learn-support/en-us/help-article/account-management/managing-accountant-users-quickbooks-online/L2AcdYvHw_US_en_US) |
-| **QuickBooks Desktop** | QBO, QFX, OFX, CSV, IIF | PDF, Excel, Accountant's Copy (QBX/QBA/QBY) | Yes | Dividing date splits [Moderate 2/2](https://quickbooks.intuit.com/learn-support/en-us/help-article/company-file/create-accountant-copy-company-file-quickbooks/L7vx8V8F3_US_en_US) |
-| **GnuCash** | OFX, QIF, CSV | TXF, CSV, PDF, HTML | Yes | TXF for tax software [Moderate 2/2](https://www.gnucash.org/docs/v5/C/gnucash-manual/set-tax-options.html) |
+| **IRS Free File Partners** | TXF, CSV, PDF | PDF | No (web-based) | Varies by partner [Moderate 1/1](https://www.irs.gov/e-file-do-your-taxes-for-free) |
+| **QuickBooks Online** | CSV, OFX, manual | PDF, Excel, Accountant's Copy (QBX) | No (cloud) | Accountant invite for live access [Moderate 1/1](https://quickbooks.intuit.com/learn-support/en-us/help-article/account-management/managing-accountant-users-quickbooks-online/L2AcdYvHw_US_en_US) |
+| **QuickBooks Desktop** | QBO, QFX, OFX, CSV, IIF | PDF, Excel, Accountant's Copy (QBX/QBA/QBY) | Yes | Dividing date splits [Moderate 1/1](https://quickbooks.intuit.com/learn-support/en-us/help-article/company-file/create-accountant-copy-company-file-quickbooks/L7vx8V8F3_US_en_US) |
+| **GnuCash** | OFX, QIF, CSV | TXF, CSV, PDF, HTML | Yes | TXF for tax software [Moderate 1/1](https://www.gnucash.org/docs/v5/C/gnucash-manual/set-tax-options.html) |
 | **TrueBalance Target** | CSV, OFX, QFX, CAMT | TXF, CSV, PDF (encrypted ZIP) | Yes | Masked-by-default exports [Inferred] |
 
 ### 9.5 1099 and Information Returns
 
 | Requirement | What TrueBalance Should Do | IRS System | Notes |
 | --- | --- | --- | --- |
-| **1099-NEC** | Prepare data (vendor name, TIN, amount) for CPA/filing tool | IRIS (Information Returns Intake System) | TrueBalance prepares; does NOT file [Moderate 2/2](https://www.irs.gov/businesses/small-businesses-self-employed/information-returns-intake-system-iris) |
-| **1099-MISC** | Prepare data for CPA/filing tool | IRIS | TrueBalance prepares; does NOT file [Moderate 2/2](https://www.irs.gov/businesses/small-businesses-self-employed/information-returns-intake-system-iris) |
-| **W-9 Collection** | Store W-9 data (name, TIN, entity type) encrypted; mask by default | N/A | TrueBalance stores; does NOT validate TINs [Moderate 2/2](https://www.irs.gov/pub/irs-pdf/fw9.pdf) |
-| **Form 1096** | Prepare summary for CPA/filing tool | IRIS | TrueBalance prepares; does NOT file [Moderate 2/2](https://www.irs.gov/pub/irs-pdf/f1096.pdf) |
+| **1099-NEC** | Prepare data (vendor name, TIN, amount) for CPA/filing tool | IRIS (Information Returns Intake System) | TrueBalance prepares; does NOT file [Moderate 1/1](https://www.irs.gov/businesses/small-businesses-self-employed/information-returns-intake-system-iris) |
+| **1099-MISC** | Prepare data for CPA/filing tool | IRIS | TrueBalance prepares; does NOT file [Moderate 1/1](https://www.irs.gov/businesses/small-businesses-self-employed/information-returns-intake-system-iris) |
+| **W-9 Collection** | Store W-9 data (name, TIN, entity type) encrypted; mask by default | N/A | TrueBalance stores; does NOT validate TINs [Moderate 1/1](https://www.irs.gov/pub/irs-pdf/fw9.pdf) |
+| **Form 1096** | Prepare summary for CPA/filing tool | IRIS | TrueBalance prepares; does NOT file [Moderate 1/1](https://www.irs.gov/pub/irs-pdf/f1096.pdf) |
 
 **TrueBalance Position:** TrueBalance **prepares** 1099 data and W-9 collection. TrueBalance **never files** information returns. Filing is done by CPA or dedicated filing service. [Inferred]
 
@@ -338,14 +338,14 @@ Every adopted/adapted idea maps directly onto ADR 0003 ports and ADR 0011 local 
 | **Profit & Loss** | **Must** | Income/expense summary for Schedule C/1120-S | [Inferred] | `test_p_and_l_accuracy` (08) |
 | **Balance Sheet** | **Must** | Asset/liability/equity for year-end; required for all business returns | [Inferred] | `test_balance_sheet_balances` (08) |
 | **Tax-line Summary** | **Must** | Maps accounts to Schedule C/1120-S lines | [Inferred] | `test_tax_line_mapping` (07) |
-| **1099 Vendor Summary** | **Should** | CPAs need this for Form 1099-NEC/MISC preparation | [Moderate 2/2](https://www.irs.gov/businesses/small-businesses-self-employed/information-returns-intake-system-iris) | `test_1099_summary_accuracy` (08) |
-| **Receipts Index** | **Should** | CPA audit support; IRS may request | [Moderate 2/2](https://www.irs.gov/businesses/small-businesses-self-employed/recordkeeping) | `test_receipts_index_complete` (06) |
-| **Adjusting Journal Entries (AJE) Support** | **Should** | CPAs use AJEs to correct books without mutating history | [Moderate 2/2](https://quickbooks.intuit.com/learn-support/en-us/help-article/account-management/managing-accountant-users-quickbooks-online/L2AcdYvHw_US_en_US) | `test_aje_import_and_masking` (08) |
+| **1099 Vendor Summary** | **Should** | CPAs need this for Form 1099-NEC/MISC preparation | [Moderate 1/1](https://www.irs.gov/businesses/small-businesses-self-employed/information-returns-intake-system-iris) | `test_1099_summary_accuracy` (08) |
+| **Receipts Index** | **Should** | CPA audit support; IRS may request | [Moderate 1/1](https://www.irs.gov/businesses/small-businesses-self-employed/recordkeeping) | `test_receipts_index_complete` (06) |
+| **Adjusting Journal Entries (AJE) Support** | **Should** | CPAs use AJEs to correct books without mutating history | [Moderate 1/1](https://quickbooks.intuit.com/learn-support/en-us/help-article/account-management/managing-accountant-users-quickbooks-online/L2AcdYvHw_US_en_US) | `test_aje_import_and_masking` (08) |
 | **Encrypted ZIP Packet** | **Nice** | Convenience for CPA; protects sensitive data | [Inferred] | `test_encrypted_zip_creation` (08) |
 | **TXF Export** | **Nice** | Direct import into some tax software | [Inferred] | `test_txf_export_format` (08) |
-| **Non-zero Suspense Warning** | **Must** | Alerts CPA to uncategorized transactions that could be errors | [Moderate 2/2](https://www.irs.gov/businesses/small-businesses-self-employed/recordkeeping) | `test_suspense_warning_at_year_end` (08) |
+| **Non-zero Suspense Warning** | **Must** | Alerts CPA to uncategorized transactions that could be errors | [Moderate 1/1](https://www.irs.gov/businesses/small-businesses-self-employed/recordkeeping) | `test_suspense_warning_at_year_end` (08) |
 
-**Sweet spot summary:** Households with AGI ≤ $89,000 (2025 income) can use IRS Free File for federal returns with Schedule C. IRS Direct File is a permanent option for simple returns (W-2, Social Security) but excludes business income and has limited state support. S-corps filing Form 1120-S have no free IRS filing option and must use commercial software or paper filing. [Inferred]
+**Sweet spot summary:** Households with AGI ≤ $95,000 can use IRS Free File (closed until January 2027; $89,000 limit for 2026 season/2025 returns). IRS Direct File was discontinued for the 2026 filing season. S-corps filing Form 1120-S have no free IRS filing option and must use commercial software or paper filing. [Inferred]
 
 ---
 
@@ -401,4 +401,4 @@ From Must items in the sweet spot table:
 ### Baseline Facts Cited from `docs/research/verified-facts.md`
 - QuickBooks Desktop Pro Plus/Premier Plus/Mac Plus/Enhanced Payroll ended new US subscriptions after Sept 30, 2024; Enterprise unaffected ([Intuit](https://quickbooks.intuit.com/learn-support/en-us/help-article/new-subscriptions/us-quickbooks-desktop-sold-july-2024/L5lkQNq7L_US_en_US)) [High 3/3].
 - IRS recordkeeping alignment (not tax advice): Schedule C 2026 Part I lines 1, 2, 4, 7 and Part II lines 8-27b ([IRS Schedule C](https://www.irs.gov/pub/irs-pdf/f1040sc.pdf)); Form 1120-S 2025 lines 1a-1c, 2-3, 6-22 ([IRS Form 1120-S](https://www.irs.gov/pub/irs-pdf/f1120s.pdf)); retention periods per IRS page ([IRS Retention](https://www.irs.gov/businesses/small-businesses-self-employed/how-long-should-i-keep-records)) [Moderate 1/1].
-- NIST SP 800-122 classifies SSNs and financial account numbers as PII and recommends minimization and de-identification [Moderate 2/2].
+- NIST SP 800-122 classifies SSNs and financial account numbers as PII and recommends minimization and de-identification [Moderate 1/1].

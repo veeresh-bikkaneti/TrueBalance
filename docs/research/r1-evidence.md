@@ -372,9 +372,10 @@
 ### IRS Free Filing Options
 | Tool | Topic | Finding | Source | Type | Date |
 |---|---|---|---|---|---|
-| IRS Free File | Eligibility | Available to taxpayers with AGI of $89,000 or less (2025 income for 2026 filing season) | [IRS Free File](https://www.irs.gov/filing/free-file-do-your-federal-taxes-for-free) | primary | 2026-11-25 |
+| IRS Free File | Eligibility | $95,000 AGI limit (current season opening January 2027); $89,000 AGI for 2026 season (2025 returns); closed until January 2027 | [IRS: E-file Do Your Taxes for Free](https://www.irs.gov/e-file-do-your-taxes-for-free) | primary | 2026-11-25 |
 | IRS Free File | Business support | Supports Schedule C but NOT Form 1120-S | [IRS Free File](https://www.irs.gov/filing/free-file-do-your-federal-taxes-for-free) | primary | 2026-11-25 |
-| IRS Direct File | Eligibility | Simple returns only (W-2, Social Security, unemployment); no business income; permanent option per p6036.pdf | [IRS Direct File p6036](https://www.irs.gov/pub/irs-pdf/p6036.pdf) | primary | 2026-11-25 |
+| IRS Direct File | Status | Discontinued (not offered for the 2026 filing season); OB3 ended the operation; funds reallocated | [TAS: Objective 25 2025](https://www.taxpayeradvocate.irs.gov/news/directory-entry/objective-25-2025/) | primary | 2026-11-25 |
+| IRS Direct File | History | Made permanent in 2025 per p6036.pdf, later discontinued | [IRS p6036](https://www.irs.gov/pub/irs-pdf/p6036.pdf) | primary | 2026-11-25 |
 | VITA | Eligibility | Individuals meeting EITC income guidelines; no IRS-wide limit; sites set own limits | [IRS VITA](https://www.irs.gov/individuals/free-tax-return-preparation-for-qualifying-taxpayers) | primary | 2026-11-25 |
 | VITA | Business support | Supports basic returns; varies by site | [IRS VITA](https://www.irs.gov/individuals/free-tax-return-preparation-for-qualifying-taxpayers) | primary | 2026-11-25 |
 | Military OneSource (MilTax) | Eligibility | Service members, spouses, survivors, recent veterans; no income limit | [Military OneSource MilTax](https://www.militaryonesource.mil/financial-legal/taxes/miltax-military-tax-services/) | primary | 2026-11-25 |
