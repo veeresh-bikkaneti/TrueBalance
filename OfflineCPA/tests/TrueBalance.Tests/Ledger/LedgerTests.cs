@@ -250,12 +250,78 @@ public class LedgerTests
         Assert.Equal(
             new[] { LedgerAction.DraftCreated, LedgerAction.Posted, LedgerAction.Reversed },
             audit.Select(a => a.Action).ToArray());
+        Assert.Equal(
+            new[] { LedgerEventType.Drafted, LedgerEventType.Posted, LedgerEventType.Reversed },
+            audit.Select(a => a.EventType).ToArray());
+        Assert.Equal(
+            new[] { "draft created", "entry posted", "entry reversed" },
+            audit.Select(a => a.Details).ToArray());
         Assert.All(audit, a => Assert.Equal(user, a.LocalUserId));
+        Assert.DoesNotContain(audit, a => a.Details.Contains(id.ToString(), StringComparison.OrdinalIgnoreCase));
         Assert.Equal(id, audit[0].JournalEntryId);
         Assert.Equal(id, audit[1].JournalEntryId);
-        Assert.True(audit[2].JournalEntryId == id || audit[2].JournalEntryId == reverseId);
+        Assert.Equal(reverseId, audit[2].JournalEntryId);
         Assert.True(audit[0].OccurredAtUtc <= audit[1].OccurredAtUtc);
         Assert.True(audit[1].OccurredAtUtc <= audit[2].OccurredAtUtc);
+    }
+
+    // A failed post must not leave an EntryPosted row. The draft row from create stays.
+    [Fact]
+    public async Task Failed_post_writes_no_event_row()
+    {
+        var period = YearPeriod();
+        var store = StoreWith(period);
+        var clock = new FakeClock();
+        var lines = new List<DraftPostingLine>
+        {
+            new(Expense().Id, 10m, null),
+            new(Checking().Id, -4m, null),
+        };
+
+        var id = await new CreateDraftEntry(store, clock)
+            .HandleAsync(new CreateDraftEntryCommand(Day, "Fake Vendor 1 purchase", period.Id, lines, "fake-user"));
+
+        await Assert.ThrowsAsync<LedgerRuleException>(() =>
+            new PostEntry(store, clock).HandleAsync(new PostEntryCommand(id, "fake-user")));
+
+        var audit = store.AuditRecords;
+        Assert.Single(audit);
+        Assert.Equal(LedgerEventType.Drafted, audit[0].EventType);
+        Assert.Equal("draft created", audit[0].Details);
+    }
+
+    // Lock writes one PeriodLocked row and nothing else.
+    [Fact]
+    public async Task Locking_a_period_writes_one_period_locked_event()
+    {
+        var period = YearPeriod();
+        var store = StoreWith(period);
+        var clock = new FakeClock();
+
+        await new LockPeriod(store, clock).HandleAsync(new LockPeriodCommand(period.Id, "fake-user"));
+
+        var row = Assert.Single(store.AuditRecords);
+        Assert.Equal(LedgerAction.PeriodLocked, row.Action);
+        Assert.Equal(LedgerEventType.PeriodLocked, row.EventType);
+        Assert.Equal(period.Id, row.PeriodId);
+        Assert.Null(row.JournalEntryId);
+        Assert.Equal("period locked", row.Details);
+    }
+
+    // The in-memory store hides a row until SaveChanges, same as one database transaction.
+    [Fact]
+    public async Task Audit_row_is_not_visible_until_save()
+    {
+        var store = new InMemoryLedgerStore();
+        await store.AppendAuditAsync(LedgerAuditRecord.For(
+            LedgerAction.Posted, LedgerEventType.Posted, "fake-user", Now, details: "entry posted"));
+
+        Assert.Empty(store.AuditRecords);
+
+        await store.SaveChangesAsync();
+
+        var row = Assert.Single(store.AuditRecords);
+        Assert.Equal(LedgerEventType.Posted, row.EventType);
     }
 
     // Contract item 13b. Invariant: audit log is append-only; the store offers no remove or mutate path.

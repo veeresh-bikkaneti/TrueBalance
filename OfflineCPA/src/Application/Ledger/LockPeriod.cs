@@ -1,6 +1,4 @@
 using Application.Interfaces;
-using Domain.Entities;
-using Domain.Enums;
 using Domain.Ledger;
 
 namespace Application.Ledger;
@@ -26,8 +24,7 @@ public sealed class LockPeriod
 
         period.Lock();
 
-        await _store.AppendAuditAsync(LedgerAuditRecord.For(LedgerAction.PeriodLocked, command.LocalUserId, now,
-            periodId: period.Id, details: "Period locked."), ct);
+        await new DomainEventDispatcher(_store).DispatchAsync(period.PullEvents(), command.LocalUserId, now, ct);
         await _store.SaveChangesAsync(ct);
     }
 }

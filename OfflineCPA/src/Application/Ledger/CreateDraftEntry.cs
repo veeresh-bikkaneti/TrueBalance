@@ -1,6 +1,5 @@
 using Application.Interfaces;
 using Domain.Entities;
-using Domain.Enums;
 using Domain.Ledger;
 
 namespace Application.Ledger;
@@ -31,8 +30,7 @@ public sealed class CreateDraftEntry
         var entry = JournalEntry.CreateDraft(command.Date, command.Memo, period, postings, now);
 
         await _store.AddEntryAsync(entry, ct);
-        await _store.AppendAuditAsync(LedgerAuditRecord.For(LedgerAction.DraftCreated, command.LocalUserId, now,
-            journalEntryId: entry.Id, periodId: period.Id, details: $"Draft with {entry.Postings.Count} postings."), ct);
+        await new DomainEventDispatcher(_store).DispatchAsync(entry.PullEvents(), command.LocalUserId, now, ct);
         await _store.SaveChangesAsync(ct);
         return entry.Id;
     }

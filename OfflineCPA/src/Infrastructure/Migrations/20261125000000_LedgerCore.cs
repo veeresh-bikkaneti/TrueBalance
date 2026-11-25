@@ -19,6 +19,11 @@ public partial class LedgerCore : Migration
     /// <inheritdoc />
     protected override void Up(MigrationBuilder migrationBuilder)
     {
+        // The table dropped here is the line-level JournalEntries from main
+        // (TransactionId, AccountId, signed Amount, Notes). Checked at 23c9245:
+        // seed inserts Accounts only (JsonChartOfAccountsSeeder), and upload
+        // inserts Transactions only (Program.cs and LocalFileProcessorService).
+        // No application path inserts a JournalEntry, so there is nothing to copy.
         migrationBuilder.DropTable(
             name: "JournalEntries");
 
@@ -30,6 +35,7 @@ public partial class LedgerCore : Migration
                 OccurredAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                 LocalUserId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                 Action = table.Column<int>(type: "integer", nullable: false),
+                EventType = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
                 JournalEntryId = table.Column<Guid>(type: "uuid", nullable: true),
                 PeriodId = table.Column<Guid>(type: "uuid", nullable: true),
                 Details = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false)

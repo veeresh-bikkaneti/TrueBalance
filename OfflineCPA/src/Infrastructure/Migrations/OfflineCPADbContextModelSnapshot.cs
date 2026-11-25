@@ -113,6 +113,11 @@ partial class OfflineCPADbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(500)
                     .HasColumnType("character varying(500)");
 
+                b.Property<string>("EventType")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("character varying(40)");
+
                 b.Property<Guid?>("JournalEntryId")
                     .HasColumnType("uuid");
 

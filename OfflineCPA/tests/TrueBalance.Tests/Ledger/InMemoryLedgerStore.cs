@@ -4,8 +4,8 @@ using Domain.Entities;
 namespace TrueBalance.Tests.Ledger;
 
 /// <summary>
-/// Plain-collection ILedgerStore for tests. Audit records are append-only:
-/// the only way in is AppendAuditAsync, and no member removes or mutates one.
+/// Plain-collection ILedgerStore for tests. Audit rows stay pending until
+/// SaveChangesAsync, matching one unit of work. No member removes or mutates a row.
 /// </summary>
 public sealed class InMemoryLedgerStore : ILedgerStore
 {
@@ -13,10 +13,11 @@ public sealed class InMemoryLedgerStore : ILedgerStore
     private readonly List<Period> _periods = new();
     private readonly Dictionary<Guid, Account> _accounts = new();
     private readonly List<LedgerAuditRecord> _audit = new();
+    private readonly List<LedgerAuditRecord> _pendingAudit = new();
 
     public int SaveCount { get; private set; }
 
-    // Snapshot copy so callers cannot touch the internal list.
+    // Committed rows only. Callers cannot touch the internal list.
     public IReadOnlyList<LedgerAuditRecord> AuditRecords => _audit.ToArray();
 
     // Test seeding helpers (not part of ILedgerStore).
@@ -57,12 +58,14 @@ public sealed class InMemoryLedgerStore : ILedgerStore
 
     public Task AppendAuditAsync(LedgerAuditRecord record, CancellationToken ct = default)
     {
-        _audit.Add(record);
+        _pendingAudit.Add(record);
         return Task.CompletedTask;
     }
 
     public Task SaveChangesAsync(CancellationToken ct = default)
     {
+        _audit.AddRange(_pendingAudit);
+        _pendingAudit.Clear();
         SaveCount++;
         return Task.CompletedTask;
     }

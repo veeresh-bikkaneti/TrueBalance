@@ -38,6 +38,7 @@ public class OfflineCPADbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Ignore(e => e.DomainEvents);
         });
 
         modelBuilder.Entity<JournalEntry>(entity =>
@@ -59,6 +60,7 @@ public class OfflineCPADbContext : DbContext
 
             entity.HasIndex(e => e.PeriodId);
             entity.HasIndex(e => e.Status);
+            entity.Ignore(e => e.DomainEvents);
         });
 
         modelBuilder.Entity<Posting>(entity =>
@@ -79,6 +81,7 @@ public class OfflineCPADbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.LocalUserId).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.EventType).IsRequired().HasMaxLength(40);
             entity.Property(e => e.Details).IsRequired().HasMaxLength(500);
         });
     }

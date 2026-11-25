@@ -1,6 +1,4 @@
 using Application.Interfaces;
-using Domain.Entities;
-using Domain.Enums;
 using Domain.Ledger;
 
 namespace Application.Ledger;
@@ -28,8 +26,7 @@ public sealed class PostEntry
 
         entry.Post(period, now);
 
-        await _store.AppendAuditAsync(LedgerAuditRecord.For(LedgerAction.Posted, command.LocalUserId, now,
-            journalEntryId: entry.Id, periodId: period.Id, details: $"Posted {entry.Postings.Count} postings."), ct);
+        await new DomainEventDispatcher(_store).DispatchAsync(entry.PullEvents(), command.LocalUserId, now, ct);
         await _store.SaveChangesAsync(ct);
     }
 }

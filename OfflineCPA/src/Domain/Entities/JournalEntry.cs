@@ -7,6 +7,7 @@ namespace Domain.Entities;
 public class JournalEntry
 {
     private readonly List<Posting> _postings = new();
+    private readonly List<IDomainEvent> _events = new();
 
     public Guid Id { get; private set; } = Guid.NewGuid();
     public DateOnly Date { get; private set; }
@@ -18,6 +19,15 @@ public class JournalEntry
     public Guid? ReversesEntryId { get; private set; }
     public Guid? ReversedByEntryId { get; private set; }
     public IReadOnlyList<Posting> Postings => _postings;
+    public IReadOnlyList<IDomainEvent> DomainEvents => _events;
+
+    /// <summary>Copies raised events and clears them so a dispatcher writes each one once.</summary>
+    public IReadOnlyList<IDomainEvent> PullEvents()
+    {
+        var copy = _events.ToArray();
+        _events.Clear();
+        return copy;
+    }
 
     /// <summary>Posted and Reversed entries both count in balances; the reversal is a separate Posted entry that negates the original.</summary>
     public bool IsInLedger => Status is JournalEntryStatus.Posted or JournalEntryStatus.Reversed;
@@ -54,6 +64,7 @@ public class JournalEntry
             CreatedAtUtc = nowUtc
         };
         entry._postings.AddRange(list);
+        entry._events.Add(new EntryDrafted(entry.Id, period.Id, nowUtc));
         return entry;
     }
 
@@ -79,6 +90,7 @@ public class JournalEntry
 
         Status = JournalEntryStatus.Posted;
         PostedAtUtc = nowUtc;
+        _events.Add(new EntryPosted(Id, PeriodId, nowUtc));
     }
 
     /// <summary>
@@ -115,6 +127,7 @@ public class JournalEntry
 
         Status = JournalEntryStatus.Reversed;
         ReversedByEntryId = reversal.Id;
+        _events.Add(new EntryReversed(reversal.Id, Id, reversalPeriod.Id, nowUtc));
         return reversal;
     }
 

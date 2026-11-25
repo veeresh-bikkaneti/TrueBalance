@@ -5,11 +5,22 @@ namespace Domain.Entities;
 /// <summary>An accounting period. Once locked, nothing may be posted into it.</summary>
 public class Period
 {
+    private readonly List<IDomainEvent> _events = new();
+
     public Guid Id { get; private set; } = Guid.NewGuid();
     public string Name { get; private set; } = string.Empty;
     public DateOnly StartDate { get; private set; }
     public DateOnly EndDate { get; private set; }
     public bool IsLocked { get; private set; }
+    public IReadOnlyList<IDomainEvent> DomainEvents => _events;
+
+    /// <summary>Copies raised events and clears them so a dispatcher writes each one once.</summary>
+    public IReadOnlyList<IDomainEvent> PullEvents()
+    {
+        var copy = _events.ToArray();
+        _events.Clear();
+        return copy;
+    }
 
     private Period() { }
 
@@ -34,5 +45,6 @@ public class Period
         if (IsLocked)
             throw new LedgerRuleException($"Period '{Name}' is already locked.");
         IsLocked = true;
+        _events.Add(new PeriodLocked(Id));
     }
 }

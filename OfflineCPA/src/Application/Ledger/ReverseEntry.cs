@@ -1,6 +1,4 @@
 using Application.Interfaces;
-using Domain.Entities;
-using Domain.Enums;
 using Domain.Ledger;
 
 namespace Application.Ledger;
@@ -30,8 +28,7 @@ public sealed class ReverseEntry
         var reversal = entry.Reverse(period, command.ReversalDate, command.Memo, now);
 
         await _store.AddEntryAsync(reversal, ct);
-        await _store.AppendAuditAsync(LedgerAuditRecord.For(LedgerAction.Reversed, command.LocalUserId, now,
-            journalEntryId: reversal.Id, periodId: period.Id, details: $"Reverses entry {entry.Id}."), ct);
+        await new DomainEventDispatcher(_store).DispatchAsync(entry.PullEvents(), command.LocalUserId, now, ct);
         await _store.SaveChangesAsync(ct);
         return reversal.Id;
     }
