@@ -1,21 +1,34 @@
 using Application.Interfaces;
 using Application.Ledger;
+using Application.Uploads;
+using Backend.Configuration;
+using Backend.Extensions;
 using Backend.Services;
 using ClosedXML.Excel;
 using Domain.Entities;
 using Domain.Ledger;
 using Infrastructure.Data;
+using Infrastructure.Options;
 using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
+
+DotEnv.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSecureErrorHandling();
 
-// Configure EF Core with PostgreSQL
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Host=localhost;Port=5432;Database=OfflineCPADb;Username=bookkeeping;Password=secure_local_password";
+// Configure EF Core with PostgreSQL. The connection string must come from
+// configuration (environment variable or .env); there is no built-in secret.
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "ConnectionStrings:DefaultConnection is not configured. Copy OfflineCPA/.env.example to OfflineCPA/.env " +
+        "(or run OfflineCPA/scripts/init-env.sh to generate a random password) and set the variable.");
+}
 
 builder.Services.AddDbContext<OfflineCPADbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -31,6 +44,8 @@ builder.Services.AddScoped<PostEntry>();
 builder.Services.AddScoped<ReverseEntry>();
 builder.Services.AddScoped<LockPeriod>();
 builder.Services.AddScoped<GetAccountBalances>();
+builder.Services.Configure<UploadOptions>(builder.Configuration.GetSection(UploadOptions.SectionName));
+builder.Services.AddScoped<ISecureUploadStore, SecureUploadStore>();
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -52,51 +67,59 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowFrontend");
+app.UseSecureErrorHandling();
 
 // Endpoints
-app.MapPost("/api/upload", async (IFormFile file, ILocalFileParser parser, OfflineCPADbContext db) =>
+app.MapPost("/api/upload", async (
+    IFormFile file,
+    ISecureUploadStore uploadStore,
+    ILocalFileParser parser,
+    OfflineCPADbContext db,
+    CancellationToken cancellationToken) =>
 {
     if (file == null || file.Length == 0)
-        return Results.BadRequest("No file uploaded.");
+        return Results.BadRequest(new { error = "No file uploaded." });
 
-    var uploadDirectory = "/app/user-assets";
-    if (!Directory.Exists(uploadDirectory))
-        Directory.CreateDirectory(uploadDirectory);
-
-    var filePath = Path.Combine(uploadDirectory, file.FileName);
-
-    using (var stream = new FileStream(filePath, FileMode.Create))
+    StoredUpload stored;
+    try
     {
-        await file.CopyToAsync(stream);
+        stored = await uploadStore.SaveAsync(
+            file.OpenReadStream(),
+            file.Length,
+            file.FileName,
+            file.ContentType,
+            cancellationToken);
+    }
+    catch (InvalidUploadException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
     }
 
-    var extension = Path.GetExtension(file.FileName);
-    
     // Process offline via PdfPig
-    if (parser.SupportsExtension(extension))
+    if (parser.SupportsExtension(stored.Extension))
     {
         try
         {
-            var text = await parser.ExtractTextAsync(filePath);
-            
+            var text = await parser.ExtractTextAsync(stored.FullPath);
+
             var transaction = new Transaction
             {
-                Description = $"User Uploaded: {file.FileName}",
+                Description = $"User Uploaded: {stored.OriginalFileName}",
                 Date = DateTime.UtcNow,
-                ReferenceDocumentPath = filePath
+                ReferenceDocumentPath = stored.FullPath
             };
 
             db.Transactions.Add(transaction);
             await db.SaveChangesAsync();
-            return Results.Ok(new { message = "File uploaded and processed smoothly locally." });
+            return Results.Ok(new { message = "File uploaded and processed smoothly locally.", id = stored.Id });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-             return Results.Problem("File saved locally, but text extraction failed: " + ex.Message);
+             return Results.Problem("File saved locally, but text extraction failed.");
         }
     }
 
-    return Results.Ok(new { message = "File uploaded securely to local user-assets." });
+    return Results.Ok(new { message = "File uploaded securely to local user-assets.", id = stored.Id });
 })
 .WithName("UploadFile")
 .DisableAntiforgery();

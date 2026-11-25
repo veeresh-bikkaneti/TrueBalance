@@ -28,9 +28,13 @@ Thumbs.db
 
 # Project specifics
 tmp_refactor.py
+.env
 _scripts/*.txt
 _scripts/*.json
 !_scripts/package.json
+
+# Private sources (statements, tax forms, receipts, any PII). Never commit.
+raw/private/
 
 # Financial / Bank Statements & Data
 *.csv

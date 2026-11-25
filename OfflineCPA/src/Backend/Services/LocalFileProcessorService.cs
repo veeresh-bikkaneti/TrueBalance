@@ -45,55 +45,54 @@ public class LocalFileProcessorService : BackgroundService
         _logger.LogInformation("Local File Processor Service is stopping.");
     }
 
-    private async Task ProcessFilesAsync(CancellationToken stoppingToken)
+    internal async Task ProcessFilesAsync(CancellationToken stoppingToken)
     {
         var files = Directory.GetFiles(_inputDirectory);
-        
+
         foreach (var file in files)
         {
             if (stoppingToken.IsCancellationRequested)
                 break;
 
-            _logger.LogInformation("Processing file: {File}", file);
-            
+            var fileId = Guid.NewGuid().ToString("N");
+            _logger.LogInformation("Processing file {FileId}", fileId);
+
             using var scope = _serviceProvider.CreateScope();
             var parser = scope.ServiceProvider.GetRequiredService<ILocalFileParser>();
-            var dbContext = scope.ServiceProvider.GetRequiredService<OfflineCPADbContext>();
-
             var extension = Path.GetExtension(file);
 
-            if (parser.SupportsExtension(extension))
+            if (!parser.SupportsExtension(extension))
             {
-                var text = await parser.ExtractTextAsync(file, stoppingToken);
-
-                // Create a basic transaction from the file
-                var transaction = new Transaction
-                {
-                    Description = $"Auto-imported from {Path.GetFileName(file)}",
-                    Date = DateTime.UtcNow,
-                    ReferenceDocumentPath = file
-                };
-
-                // TODO: Further basic NLP mapping based on text.
-
-                dbContext.Transactions.Add(transaction);
-                await dbContext.SaveChangesAsync(stoppingToken);
-
-                _logger.LogInformation("Successfully processed and mapped {File}", file);
-                
-                // Move or delete file after processing
-                var processedDir = Path.Combine(_inputDirectory, "processed");
-                if (!Directory.Exists(processedDir)) Directory.CreateDirectory(processedDir);
-                
-                var destPath = Path.Combine(processedDir, Path.GetFileName(file));
-                if (File.Exists(destPath)) File.Delete(destPath);
-                
-                File.Move(file, destPath);
+                _logger.LogWarning("Unsupported file type {FileId}", fileId);
+                continue;
             }
-            else
+
+            var dbContext = scope.ServiceProvider.GetRequiredService<OfflineCPADbContext>();
+            var text = await parser.ExtractTextAsync(file, stoppingToken);
+
+            // Create a basic transaction from the file
+            var transaction = new Transaction
             {
-                _logger.LogWarning("Unsupported file type: {File}", file);
-            }
+                Description = $"Auto-imported from {Path.GetFileName(file)}",
+                Date = DateTime.UtcNow,
+                ReferenceDocumentPath = file
+            };
+
+            // TODO: Further basic NLP mapping based on text.
+
+            dbContext.Transactions.Add(transaction);
+            await dbContext.SaveChangesAsync(stoppingToken);
+
+            _logger.LogInformation("Successfully processed file {FileId}", fileId);
+
+            // Move or delete file after processing
+            var processedDir = Path.Combine(_inputDirectory, "processed");
+            if (!Directory.Exists(processedDir)) Directory.CreateDirectory(processedDir);
+
+            var destPath = Path.Combine(processedDir, Path.GetFileName(file));
+            if (File.Exists(destPath)) File.Delete(destPath);
+
+            File.Move(file, destPath);
         }
     }
 }

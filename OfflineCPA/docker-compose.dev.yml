@@ -1,0 +1,6 @@
+# Host override: publish Postgres on loopback so `dotnet run` on the host can connect.
+# The default compose file publishes no database port.
+services:
+  database:
+    ports:
+      - "127.0.0.1:5432:5432"
