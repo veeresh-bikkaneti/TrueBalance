@@ -64,25 +64,130 @@ partial class OfflineCPADbContextModelSnapshot : ModelSnapshot
                     .ValueGeneratedOnAdd()
                     .HasColumnType("uuid");
 
+                b.Property<DateTime>("CreatedAtUtc")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<DateOnly>("Date")
+                    .HasColumnType("date");
+
+                b.Property<string>("Memo")
+                    .IsRequired()
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
+
+                b.Property<Guid>("PeriodId")
+                    .HasColumnType("uuid");
+
+                b.Property<DateTime?>("PostedAtUtc")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<Guid?>("ReversedByEntryId")
+                    .HasColumnType("uuid");
+
+                b.Property<Guid?>("ReversesEntryId")
+                    .HasColumnType("uuid");
+
+                b.Property<int>("Status")
+                    .HasColumnType("integer");
+
+                b.HasKey("Id");
+
+                b.HasIndex("PeriodId");
+
+                b.HasIndex("Status");
+
+                b.ToTable("JournalEntries");
+            });
+
+        modelBuilder.Entity("Domain.Entities.LedgerAuditRecord", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
+
+                b.Property<int>("Action")
+                    .HasColumnType("integer");
+
+                b.Property<string>("Details")
+                    .IsRequired()
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
+
+                b.Property<string>("EventType")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("character varying(40)");
+
+                b.Property<Guid?>("JournalEntryId")
+                    .HasColumnType("uuid");
+
+                b.Property<string>("LocalUserId")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
+
+                b.Property<DateTime>("OccurredAtUtc")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<Guid?>("PeriodId")
+                    .HasColumnType("uuid");
+
+                b.HasKey("Id");
+
+                b.ToTable("LedgerAuditRecords");
+            });
+
+        modelBuilder.Entity("Domain.Entities.Period", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
+
+                b.Property<DateOnly>("EndDate")
+                    .HasColumnType("date");
+
+                b.Property<bool>("IsLocked")
+                    .HasColumnType("boolean");
+
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
+
+                b.Property<DateOnly>("StartDate")
+                    .HasColumnType("date");
+
+                b.HasKey("Id");
+
+                b.ToTable("Periods");
+            });
+
+        modelBuilder.Entity("Domain.Entities.Posting", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
+
                 b.Property<Guid>("AccountId")
                     .HasColumnType("uuid");
 
                 b.Property<decimal>("Amount")
                     .HasColumnType("numeric(18,2)");
 
-                b.Property<string>("Notes")
-                    .HasColumnType("text");
-
-                b.Property<Guid>("TransactionId")
+                b.Property<Guid>("JournalEntryId")
                     .HasColumnType("uuid");
+
+                b.Property<string>("Memo")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
                 b.HasKey("Id");
 
                 b.HasIndex("AccountId");
 
-                b.HasIndex("TransactionId");
+                b.HasIndex("JournalEntryId");
 
-                b.ToTable("JournalEntries");
+                b.ToTable("Postings");
             });
 
         modelBuilder.Entity("Domain.Entities.Transaction", b =>
@@ -112,31 +217,38 @@ partial class OfflineCPADbContextModelSnapshot : ModelSnapshot
 
         modelBuilder.Entity("Domain.Entities.JournalEntry", b =>
             {
+                b.HasOne("Domain.Entities.Period", null)
+                    .WithMany()
+                    .HasForeignKey("PeriodId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Domain.Entities.Posting", b =>
+            {
                 b.HasOne("Domain.Entities.Account", "Account")
-                    .WithMany("JournalEntries")
+                    .WithMany("Postings")
                     .HasForeignKey("AccountId")
                     .OnDelete(DeleteBehavior.Restrict)
                     .IsRequired();
 
-                b.HasOne("Domain.Entities.Transaction", "Transaction")
-                    .WithMany("Entries")
-                    .HasForeignKey("TransactionId")
+                b.HasOne("Domain.Entities.JournalEntry", null)
+                    .WithMany("Postings")
+                    .HasForeignKey("JournalEntryId")
                     .OnDelete(DeleteBehavior.Cascade)
                     .IsRequired();
 
                 b.Navigation("Account");
-
-                b.Navigation("Transaction");
             });
 
         modelBuilder.Entity("Domain.Entities.Account", b =>
             {
-                b.Navigation("JournalEntries");
+                b.Navigation("Postings");
             });
 
-        modelBuilder.Entity("Domain.Entities.Transaction", b =>
+        modelBuilder.Entity("Domain.Entities.JournalEntry", b =>
             {
-                b.Navigation("Entries");
+                b.Navigation("Postings");
             });
 #pragma warning restore 612, 618
     }
