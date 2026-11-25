@@ -1,44 +1,56 @@
-# TrueBalance prompt 03: Double-entry ledger core with locked posted entries
+# TrueBalance prompt 03 (revised 2026-11-25): Ledger module with locked posted entries and in-process events
 
-Phase: P0 | Branch: `feat/ledger-core` | Token cap: 150k | Estimate: 100k | Max helper seats: 3
-Depends on: Prompt 01 merged (02 can run in parallel).
+Phase: P0 | Branch: `feat/ledger-core` | Token cap: 160k | Estimate: 110k | Max helper seats: 3 (2 builders + 1 reviewer)
+Depends on: Prompt 02 (PR 26) merged and main green, and R1 merged with its ledger and chart-of-accounts sections (owner decision, 2026-11-25). Gate: if `docs/research/r1-competitor-research.md` is not on main or lacks those sections, stop and tell Veeresh; do not start. Apply every R1 idea marked adopt or adapt for the ledger, periods and chart of accounts, and list them in the PR body.
 
 You are working in the TrueBalance repo. This prompt is self-contained. Do this one PR only.
 
+## Step 0: repo check (do this before anything else)
+
+Run and paste the output in your first message:
+```
+git fetch origin && git status -sb && git log --oneline -5 origin/main
+git rev-list --left-right --count origin/main...HEAD
+dotnet build OfflineCPA/OfflineCPA.sln -c Release && dotnet test OfflineCPA/tests/TrueBalance.Tests
+```
+Stop and report if the working tree is dirty, if you are not on the header's branch (create it from `origin/main` if it does not exist), or if `main` does not build. Read `AGENTS.md`, ADR 0010 and ADR 0011 before you plan.
+
 ## Task
 
-Build the real ledger. This is the heart of the app.
+Build the real ledger as the first module of the modular monolith (ADR 0011). This is the heart of the app.
 
 Scope:
-1. Domain (no I/O): `JournalEntry` (date, memo, status Draft/Posted/Reversed, period), `Posting` lines (account, debit or credit as a non-negative decimal plus side, or a signed amount; pick one in arena and document it). Invariant: an entry posts only if total debits equal total credits and it has at least 2 lines. Posted entries are immutable; corrections create a reversing entry linked to the original.
-2. `Period` with open/locked state; no posting into a locked period.
-3. Audit log: every create/post/reverse writes an append-only record (who = local user id, when, what).
-4. Application use cases: `CreateDraftEntry`, `PostEntry`, `ReverseEntry`, `LockPeriod`, plus query `GetAccountBalances`. Move endpoint logic out of `Program.cs` into these use cases; endpoints become thin.
-5. Persistence: EF configuration and a migration; enforce immutability in the use case and with a database guard (trigger or check) so a direct update of a posted line fails.
-6. Statechart for an entry (Draft -> Posted -> Reversed) in `docs/ledger.md`.
+1. Module layout: create the Ledger module (folder and namespace, or its own projects; arena the two, pick one, document it in `docs/architecture/modules.md`). Add architecture tests (for example with a dependency-rule library; arena the pick and cite it) that fail if Domain references Infrastructure or a framework, or if another module writes ledger tables directly.
+2. Naming migration: the current model uses `Transaction` (header) and `JournalEntry` (line) with a signed amount. Rename to `JournalEntry` (header) and `Posting` (line) with an EF migration that keeps existing rows. Keep the signed amount unless arena finds a strong reason to switch to debit/credit columns; document the choice.
+3. Domain (no I/O): `JournalEntry` (date, memo, status Draft/Posted/Reversed, period), `Posting` lines. Invariant: an entry posts only if its postings sum to 0 and it has at least 2 lines. Posted entries are immutable; corrections create a reversing entry linked to the original.
+4. `Period` with open/locked state; no posting into a locked period.
+5. In-process domain events (ADR 0011): `EntryPosted`, `EntryReversed`, `PeriodLocked`, dispatched in memory inside the same database transaction, with no broker or background queue. Each event appends one row to an append-only `EventLog` table (who = local user id, when, event type, entity id, masked summary only). This log is the audit trail; never store raw descriptions or PII in it.
+6. Application use cases: `CreateDraftEntry`, `PostEntry`, `ReverseEntry`, `LockPeriod`, query `GetAccountBalances`. Move endpoint logic out of `Program.cs` into these use cases; endpoints become thin.
+7. Persistence: enforce immutability in the use case and with a database guard (trigger or check) so a direct update or delete of a posted posting fails. Same guard for EventLog (insert only).
+8. Statechart for an entry (Draft -> Posted -> Reversed) in `docs/ledger.md`.
 
 Acceptance criteria (tdd, narrow):
 - Unbalanced entry is rejected with a clear error; balanced entry posts.
-- Editing or deleting a posted entry fails; reversal produces a zero net effect on balances.
+- Editing or deleting a posted entry fails, in code and at the database; reversal gives zero net effect on balances.
 - Posting into a locked period fails.
-- Balances: sum of all account balances across all entries is 0 (property-style test over generated entries).
-- Rounding: amounts with more than 2 decimals are rejected at the boundary.
+- Property-style test: across generated entries, the sum of all account balances is 0.
+- Amounts with more than 2 decimals are rejected at the boundary.
+- Posting an entry writes exactly one EventLog row in the same transaction; a failed post writes none.
+- Architecture tests pass and fail on a deliberate violation (show the failing run once).
+- The rename migration keeps rows from the 01 seed data.
 
-Out of scope: import (05), reports (08).
+Out of scope: import (05), reports (08), the network gate and other ports (04).
 
 ## Context (read first)
 
-Repo: github.com/veeresh-bikkaneti/TrueBalance (public). App code lives in `OfflineCPA/`: .NET 8 solution (`src/Domain`, `src/Application`, `src/Infrastructure`, `src/Backend` minimal API), Vite + React frontend (`frontend/`), docker-compose with Postgres 15. TrueBalance is a free, open-source, offline bookkeeping app for small businesses and households. It must balance books and produce reports a CPA can use to file taxes. It must never connect to the internet unless the user turns on an integration, and no AI model (local or remote) may ever receive raw PII.
+Repo: github.com/veeresh-bikkaneti/TrueBalance (public). App code lives in `OfflineCPA/`: .NET 8 solution (`src/Domain`, `src/Application`, `src/Infrastructure`, `src/Backend` minimal API), tests in `tests/TrueBalance.Tests` (xUnit), Vite + React frontend (`frontend/`), docker-compose with Postgres 15 for development. TrueBalance is a free, open-source, offline bookkeeping app for small businesses and households. It must balance books and produce reports a CPA can use to file taxes. It must never connect to the internet unless the user turns on an integration, and no AI model (local or remote) may ever receive raw PII.
 
-Review findings this work fixes (verified by running the code on 2026-11-19, commit 406eec1):
-- No EF migrations, so `/api/transactions` and `/api/export` return 500 on a fresh database.
-- `/api/upload` saves using the raw client filename, so a crafted filename writes files outside the upload folder (path traversal, confirmed).
-- Uploads are stored unencrypted; no auth; Postgres, API and UI ports are published on all interfaces; DB password is hardcoded in docker-compose.yml and Program.cs; compose runs in Development mode and leaks stack traces.
-- PDF text is extracted and thrown away; CSV is ignored. No journal entries are ever created; the Excel export has only date, description and file path.
-- `TaxLineItem` enum targets Form 1120-S only, and labels Travel/Meals as lines 20/21 (current 1120-S instructions: line 19 is Energy Efficient Commercial Buildings Deduction, line 20 is Other Deductions).
-- Frontend hardcodes `http://localhost:5030/api`; backend listens on 5159 (launchSettings) or 8080 (Docker).
-- Zero backend tests; 3 eslint errors; npm audit flags axios (high), form-data (high), follow-redirects (moderate).
-- Docs (`walkthrough.md`, `architecture_research.md`) claim features that do not exist.
+State of main on 2026-11-25 (commit 81f584f):
+- Merged: 00 baseline tests and CI (PR 13), ADR 0011 local modular monolith (PR 14), agent refresh and wiki (PR 15), 01 initial EF migration and seedable charts of accounts for household, sole proprietor and S-corp (PR 23).
+- The backend CI job on main is red: `JsonChartOfAccountsSeeder.cs` calls `ToHashSetAsync`, which does not compile against the EF Core 8 packages in use. The fix is on `fix/security-hardening` (PR 26).
+- The current model calls the entry header `Transaction` and its lines `JournalEntry`, with a signed `Amount` (positive debit, negative credit). Tables: Accounts, Transactions, JournalEntries.
+- ADR 0011: one local app. The backend is a modular monolith (modules: Ledger, Import, PII/Masking, Vault, TaxMaps, Reporting, Settings) enforced by project or namespace rules and architecture tests. Events are in-process only, with an append-only event log table that holds masked data only. No broker, no microservices, no microfrontends. Docker is for developers only.
+- ADR 0010: PII masking core (04b) lands before statement import (05).
 
 Target architecture (all prompts build toward it):
 - Domain (no I/O): Account, JournalEntry with Posting lines (sum must be 0), Period, Reversal; tax maps as versioned data; PII policy (classify, mask, tokenize).
@@ -49,14 +61,14 @@ Target architecture (all prompts build toward it):
 
 ## Budget (token economy)
 
-- Check the repo for an AGENTS.md (or similar) token budget. At the time of writing none exists. If one exists now, use whichever cap is stricter.
+- AGENTS.md on main now exists. If it sets a token budget, use whichever cap is stricter.
 - Cap and estimate for this prompt are in the header. Say both before you start.
 - Stop and ask Veeresh before you pass the cap. Do not push past it on your own.
 - Report tokens used (main plus every helper) and estimated cost with the result.
 
 ## How to run this (orchestration)
 
-- The main session only plans, integrates and verifies. Building, writing and review go to helpers on cheaper models, or to a Council Panel: one shared evidence pack, parallel clean-context seats, scoped re-votes on disagreements only. A Sonnet-class reviewer accepts or rejects the work. Never name a specific model in code, docs or commits.
+- The main session only plans, integrates and verifies. Building, writing and review go to helpers on cheaper models, or to a Council Panel: one shared evidence pack, parallel clean-context seats, scoped re-votes on disagreements only. A mid-tier reviewer model accepts or rejects the work. Never name a specific model in code, docs or commits.
 - Every helper seat has real overhead, so use the fewest seats that cover the work (the header gives a maximum). Small edits stay in the main session.
 - Use the Edit tool for file changes (not shell rewrites).
 - pstack steps, in order (if pstack isn't installed, do each step inline): sharpen (restate the goal and acceptance criteria in 3 lines), statechart (states and transitions of any flow you touch), swarm (split into parallel sub-tasks with owners), architect (where each piece sits in the layers), arena (two options for the riskiest choice; pick one with one reason), how (step plan), tdd (write the failing test first; run only the narrow regression needed to clear the gates, not the full suite unless the gate needs it), unslop (all prose: PR body, docs, comments).
@@ -71,13 +83,44 @@ Target architecture (all prompts build toward it):
 - PII rule: never put real or realistic personal data in code, fixtures, logs or screenshots. Use obviously fake values generated by a test helper.
 - Keep docs honest: describe only what the code does.
 
-## Facts
+## Facts (owner's source and evidence rules)
 
-Any external fact (IRS rule, standard, library behavior) in code comments, docs or the PR body gets an inline source link and a tag: [Confidence: High | Vote: 3/3]. 3+ agreeing primary sources = High; 2 agreeing or 1 primary = Moderate; 1 secondary or conflicting = Low; 0 sources = leave the claim out. Not legal or tax advice: frame IRS items as recordkeeping for a CPA.
+Any external fact (IRS rule, standard, library behavior, version number) in code comments, docs or the PR body follows these rules. Not legal or tax advice: frame IRS items as recordkeeping for a CPA.
+
+#### 1. Grounding & Verification
+- **Search First:** Actively use web search to ground responses in current information. Prioritize official documentation, primary datasets, source code, or user-provided files before secondary sources.
+- **Deduplicate Sources:** Multiple articles or copies republishing the same underlying origin count as a single source.
+- **Fact-Check Everything:** Independently verify every claim, number, version number, setting name, and reference.
+
+#### 2. Zero Fabrication
+- Base all analysis strictly on verified, provided, or cited real-world data.
+- Never invent, estimate, or extrapolate missing figures.
+- If required data cannot be verified or found, explicitly state: **"Data not available."** Drop unverified claims rather than guessing.
+
+#### 3. Confidence Scoring & Phrasing
+Evaluate each verified claim using the following scale and match your phrasing to the confidence level:
+- **High (3+ agreeing primary sources):** Use definitive phrasing (e.g., *"confirms," "establishes"*).
+- **Moderate (2 agreeing sources, or 1 primary source):** Use measured phrasing (e.g., *"indicates," "suggests"*).
+- **Low (1 secondary source such as a blog/forum, or conflicting sources):** Explicitly flag the uncertainty (e.g., *"sources conflict," "preliminary reports suggest"*).
+- **None (0 verifiable sources):** Omit the claim entirely.
+
+#### 4. Source Attribution & Formatting
+- **Inline Citations:** End every sourced claim or data point with a direct source link and a confidence tag showing agreeing sources over total sources checked—for example: `[High 3/3]` or `[Low 1/2]`.
+- **Label Original Work:** Clearly separate verified facts from your own work by explicitly labeling analytical interpretations as **[Inferred]** and direct executions/checks as **[Tested]**.
+
+#### 5. Statistical Rigor
+When presenting quantitative data or analysis:
+- Show all calculations step-by-step.
+- Name the exact statistical method used (e.g., mean, median, standard deviation, linear regression).
+- State the sample size ($n$) and exact timeframe for every metric.
+- Cite the specific dataset or source for every input number.
+
+Applied to this PR: tag format is `[High 3/3]` (agreeing sources / sources checked). Test results you ran are [Tested]; design choices and arena picks are [Inferred].
 
 ## Git and PR rules
 
 - Start from the latest `main` (after the previous prompt's PR is merged). Branch name is in the header.
+- Release chain: before Veeresh merges, the branch must contain the latest `main`. If GitHub shows the PR as behind or conflicting, stop and tell him; he uses GitHub's "Update branch". You never run `git merge` yourself.
 - Conventional Commits. No `Co-Authored-By` or any AI trailer. No "Generated with" line in the PR body.
 - No rebase, no force push, no `git merge`. Use cherry-pick or `--ff-only` if you need to sync.
 - Open a draft PR only. Veeresh reviews and merges; never merge.
