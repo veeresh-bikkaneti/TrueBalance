@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TrueBalance feature board</title>
+<style>
+:root{--bg:#f5f7f8;--card:#fff;--fg:#17212b;--muted:#5b6876;--line:#d5dde3;
+ --done:#11866d;--donebg:#e2f4ee;--pr:#5b4fc4;--prbg:#ecebfc;--next:#b26a00;--nextbg:#fff3dc;
+ --block:#8a4b2f;--blockbg:#f8efe8;--later:#5b6876;--laterbg:#eef1f4}
+@media (prefers-color-scheme:dark){:root{--bg:#12171c;--card:#1b2229;--fg:#e8edf1;--muted:#9aa7b3;--line:#2e3943;
+ --done:#4fcfab;--donebg:#15332b;--pr:#a49bf2;--prbg:#26234a;--next:#f3b54a;--nextbg:#3a2c10;
+ --block:#e0b09a;--blockbg:#3a2a22;--later:#9aa7b3;--laterbg:#222a32;color-scheme:dark}}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,sans-serif;padding:24px 16px 48px}
+.wrap{max-width:880px;margin:0 auto}
+h1{font-size:1.5rem;font-weight:600;margin:0}
+.sub{color:var(--muted);margin:6px 0 18px}
+h2{font-size:1rem;margin:22px 0 8px}
+.counts{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px}
+.counts span{border:1px solid var(--line);border-radius:99px;padding:2px 10px;font-size:.8rem;color:var(--muted)}
+article{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--c);padding:10px 12px;margin:0 0 8px}
+.done{--c:var(--done)}.pr{--c:var(--pr)}.next{--c:var(--next)}.block{--c:var(--block)}.later{--c:var(--later)}
+.top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.id{font-size:.8rem;color:var(--c);font-weight:600}
+h3{font-size:1rem;margin:0;font-weight:600}
+dl{display:grid;grid-template-columns:8.5rem 1fr;gap:2px 10px;margin:8px 0 0;font-size:.85rem}
+dt{color:var(--muted)}
+dd{margin:0}
+.chart{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 0}
+.box{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:6px 8px;font-size:.8rem}
+.arr{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>TrueBalance feature board</h1>
+<p class="sub">Same facts as the markdown board. Opens with no network. Main 23c9245, read 2026-11-25.</p>
+<div class="counts"><span>Done 2</span><span>In PR 2</span><span>Next 1</span><span>Blocked 9</span><span>Later 4</span></div>
+
+<h2>Feature life</h2>
+<div class="chart">
+<span class="box">Later</span><span class="arr">-></span>
+<span class="box">Blocked</span><span class="arr">-></span>
+<span class="box">Next</span><span class="arr">-></span>
+<span class="box">In PR</span><span class="arr">-></span>
+<span class="box">Done</span>
+</div>
+<p class="sub">A blocked row becomes Next when its dependency merges. In PR becomes Done only when the owner merges.</p>
+
+<h2>Request path</h2>
+<div class="chart">
+<span class="box">feature component</span><span class="arr">-></span>
+<span class="box">feature api</span><span class="arr">-></span>
+<span class="box">endpoint</span><span class="arr">-></span>
+<span class="box">use case</span><span class="arr">-></span>
+<span class="box">aggregate</span><span class="arr">-></span>
+<span class="box">port</span><span class="arr">-></span>
+<span class="box">adapter</span><span class="arr">-></span>
+<span class="box">database</span>
+</div>
+<p class="sub">The aggregate also writes one masked event row in the same transaction. No message broker.</p>
+
+<h2>Done</h2>
+<article class="done"><div class="top"><span class="id">TB-00</span><span class="id">Done</span></div><h3>Baseline, CI, honest docs</h3><dl><dt>Module</dt><dd>Settings</dd><dt>PR</dt><dd>13 merged</dd><dt>Prompt</dt><dd>00-baseline.md</dd><dt>Tests</dt><dd>backend test project</dd></dl></article>
+<article class="done"><div class="top"><span class="id">TB-01</span><span class="id">Done</span></div><h3>Migrations and starter chart</h3><dl><dt>Module</dt><dd>Ledger</dd><dt>API</dt><dd>POST /api/books/setup</dd><dt>PR</dt><dd>23 merged</dd><dt>Prompt</dt><dd>01-migrations-coa.md</dd></dl></article>
+
+<h2>In PR</h2>
+<article class="pr"><div class="top"><span class="id">TB-02</span><span class="id">In PR</span></div><h3>Upload safety and loopback</h3><dl><dt>Module</dt><dd>Settings</dd><dt>API</dt><dd>POST /api/upload</dd><dt>PR</dt><dd>26 draft</dd><dt>Prompt</dt><dd>02-security-hardening.md</dd><dt>Tests</dt><dd>upload and error-handling tests on that branch</dd></dl></article>
+<article class="pr"><div class="top"><span class="id">TB-03</span><span class="id">In PR</span></div><h3>Double-entry ledger</h3><dl><dt>Module</dt><dd>Ledger</dd><dt>API</dt><dd>POST /api/ledger/entries, post, reverse, lock; GET balances</dd><dt>Events</dt><dd>audit row only</dd><dt>PR</dt><dd>28 draft, ca2b111</dd><dt>Prompt</dt><dd>03-ledger-core.md</dd></dl></article>
+
+<h2>Next</h2>
+<article class="next"><div class="top"><span class="id">TB-03b</span><span class="id">Next</span></div><h3>Architecture tests and domain events</h3><dl><dt>Module</dt><dd>Ledger</dd><dt>Events</dt><dd>EntryPosted, EntryReversed, PeriodLocked</dd><dt>PR</dt><dd>same draft 28, not in ca2b111 yet</dd><dt>Prompt</dt><dd>not in the index; stay on PR 28</dd></dl></article>
+
+<h2>Blocked</h2>
+<article class="block"><div class="top"><span class="id">TB-04</span><span class="id">Blocked</span></div><h3>Ports and network gate</h3><dl><dt>Module</dt><dd>Settings</dd><dt>UI</dt><dd>src/features/settings</dd><dt>Prompt</dt><dd>04-ports-network-gate.md</dd><dt>Waits</dt><dd>TB-03</dd></dl></article>
+<article class="block"><div class="top"><span class="id">TB-04b</span><span class="id">Blocked</span></div><h3>Mask before import</h3><dl><dt>Module</dt><dd>PII/Masking</dd><dt>Prompt</dt><dd>04b-pii-masking-core.md</dd><dt>Waits</dt><dd>TB-04</dd></dl></article>
+<article class="block"><div class="top"><span class="id">TB-05</span><span class="id">Blocked</span></div><h3>Staged statement import</h3><dl><dt>Module</dt><dd>Import</dd><dt>UI</dt><dd>src/features/import</dd><dt>Prompt</dt><dd>05-statement-import.md</dd><dt>Waits</dt><dd>TB-03, TB-04, TB-04b</dd></dl></article>
+<article class="block"><div class="top"><span class="id">TB-06</span><span class="id">Blocked</span></div><h3>PII layer and vault</h3><dl><dt>Module</dt><dd>PII/Masking, Vault</dd><dt>Prompt</dt><dd>06-pii-layer.md</dd><dt>Owner</dt><dd>encryption library</dd></dl></article>
+<article class="block"><div class="top"><span class="id">TB-07</span><span class="id">Blocked</span></div><h3>Tax maps as data</h3><dl><dt>Module</dt><dd>TaxMaps</dd><dt>Prompt</dt><dd>07-tax-maps.md</dd><dt>Waits</dt><dd>TB-03</dd></dl></article>
+<article class="block"><div class="top"><span class="id">TB-08</span><span class="id">Blocked</span></div><h3>Reports and CPA packet</h3><dl><dt>Module</dt><dd>Reporting</dd><dt>UI</dt><dd>src/features/reports</dd><dt>Prompt</dt><dd>08-reports-cpa-packet.md</dd></dl></article>
+<article class="block"><div class="top"><span class="id">TB-09</span><span class="id">Blocked</span></div><h3>Reconciliation</h3><dl><dt>Module</dt><dd>Ledger</dd><dt>UI</dt><dd>src/features/reconcile</dd><dt>Prompt</dt><dd>09-reconciliation.md</dd></dl></article>
+<article class="block"><div class="top"><span class="id">TB-10</span><span class="id">Blocked</span></div><h3>Setup wizard and shell</h3><dl><dt>Module</dt><dd>Settings</dd><dt>UI</dt><dd>src/shell and src/features</dd><dt>Prompt</dt><dd>10-setup-wizard-ui.md</dd><dt>Owner</dt><dd>screens that differ from the approved mockup</dd></dl></article>
+<article class="block"><div class="top"><span class="id">TB-12</span><span class="id">Blocked</span></div><h3>Trust statement</h3><dl><dt>Module</dt><dd>Settings</dd><dt>Prompt</dt><dd>12-readme-trust.md</dd><dt>Waits</dt><dd>TB-06 and TB-11</dd></dl></article>
+
+<h2>Later</h2>
+<article class="later"><div class="top"><span class="id">TB-11</span><span class="id">Later</span></div><h3>One command, encrypted file</h3><dl><dt>Module</dt><dd>Ledger store</dd><dt>Prompt</dt><dd>11-one-command-bootstrap.md</dd><dt>Owner</dt><dd>encryption library</dd></dl></article>
+<article class="later"><div class="top"><span class="id">TB-13</span><span class="id">Later</span></div><h3>Encrypted backup</h3><dl><dt>Module</dt><dd>Vault</dd><dt>UI</dt><dd>src/features/settings</dd><dt>Prompt</dt><dd>13-backups.md</dd></dl></article>
+<article class="later"><div class="top"><span class="id">TB-14</span><span class="id">Later</span></div><h3>Local receipt reading</h3><dl><dt>Module</dt><dd>Import</dd><dt>UI</dt><dd>src/features/import</dd><dt>Prompt</dt><dd>14-local-receipt-ocr.md</dd><dt>Owner</dt><dd>OCR library</dd></dl></article>
+<article class="later"><div class="top"><span class="id">TB-15</span><span class="id">Later</span></div><h3>Opt-in integrations and AI</h3><dl><dt>Module</dt><dd>Settings</dd><dt>UI</dt><dd>src/features/settings</dd><dt>Prompt</dt><dd>15-integration-ai-adapters.md</dd></dl></article>
+</div>
+</body>
+</html>
