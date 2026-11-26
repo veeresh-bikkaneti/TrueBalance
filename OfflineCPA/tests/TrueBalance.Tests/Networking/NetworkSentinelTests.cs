@@ -22,14 +22,15 @@ public class NetworkSentinelTests
     {
         if (!File.Exists("/proc/net/tcp"))
             return; // Windows and macOS have no /proc; CI is the source of truth here.
+        if (!Directory.Exists(ProcFdRoot))
+            Assert.Fail("/proc/net/tcp exists but " + ProcFdRoot + " does not; the own-socket filter cannot run.");
 
         // The host (CI agent, IDE, database) may already hold loopback or
         // long-lived sockets; those were not opened by the flows. The sentinel
         // fails only on a non-loopback endpoint that appears during the run.
         var preExisting = new HashSet<string>();
-        var ownInodes = ReadOwnSocketInodes();
         foreach (var path in new[] { "/proc/net/tcp", "/proc/net/tcp6" })
-            foreach (var socket in ReadNonLoopbackSockets(path, ownInodes))
+            foreach (var socket in ReadNonLoopbackSockets(path, ReadOwnSocketInodes()))
                 preExisting.Add(socket.Remote);
 
         var violations = new List<string>();
@@ -38,6 +39,9 @@ public class NetworkSentinelTests
         {
             while (!cts.IsCancellationRequested)
             {
+                // Read the inodes every pass: a socket the flows open gets a
+                // new inode, so a set read once would never see it.
+                var ownInodes = ReadOwnSocketInodes();
                 foreach (var path in new[] { "/proc/net/tcp", "/proc/net/tcp6" })
                     foreach (var socket in ReadNonLoopbackSockets(path, ownInodes))
                         if (!preExisting.Contains(socket.Remote) || socket.State == "02")
@@ -103,34 +107,77 @@ public class NetworkSentinelTests
     /// <summary>A remote endpoint observed in an active TCP state.</summary>
     private sealed record SocketEndpoint(string Remote, string State);
 
-    /// <summary>The socket inodes this process owns, read from /proc/self/fd links like "socket:[12345]".</summary>
-    private static IReadOnlySet<string> ReadOwnSocketInodes()
+    /// <summary>tdd red first: the reader must return the RAW link target. ResolveLinkTarget(...).FullName
+    /// prefixes the link's own directory, so it never matched the "socket:[" pattern.</summary>
+    [Fact]
+    public void Own_inode_reader_reads_the_raw_link_target()
     {
+        var dir = Path.Combine(Path.GetTempPath(), "tb-fd-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
         try
         {
-            var inodes = new HashSet<string>();
-            foreach (var entry in Directory.EnumerateFileSystemEntries("/proc/self/fd"))
-            {
-                var target = TryReadLink(entry);
-                // Format: "socket:[12345]". The inode is the digits inside the brackets.
-                const string prefix = "socket:[";
-                if (target is not null && target.StartsWith(prefix, StringComparison.Ordinal) && target.EndsWith("]", StringComparison.Ordinal))
-                    inodes.Add(target[prefix.Length..^1]);
-            }
+            File.CreateSymbolicLink(Path.Combine(dir, "0"), "socket:[12345]");
+            File.CreateSymbolicLink(Path.Combine(dir, "1"), "anon_inode:[not-a-socket]");
 
-            return inodes;
+            var inodes = ReadOwnSocketInodes(dir);
+
+            Assert.Contains("12345", inodes);
         }
-        catch (IOException)
+        finally
         {
-            return new HashSet<string>();
+            Directory.Delete(dir, recursive: true);
         }
     }
 
+    /// <summary>On Linux, a live loopback listener's socket inode must appear in the own-inode set.</summary>
+    [Fact]
+    public void Own_inode_set_contains_a_live_listener_socket()
+    {
+        if (!File.Exists("/proc/net/tcp") || !Directory.Exists(ProcFdRoot))
+            return; // CI (Linux) is the source of truth.
+
+        var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        listener.Start();
+        try
+        {
+            var port = ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
+            var row = File.ReadLines("/proc/net/tcp")
+                .Select(l => l.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                .Where(c => c.Length > 9)
+                .FirstOrDefault(c => c[1].EndsWith($":{port:X4}", StringComparison.Ordinal) && c[3] == "0A");
+            Assert.NotNull(row); // the listener must have a LISTEN row
+            Assert.Contains(row![9], ReadOwnSocketInodes());
+        }
+        finally
+        {
+            listener.Stop();
+        }
+    }
+
+    private const string ProcFdRoot = "/proc/self/fd";
+
+    /// <summary>The socket inodes this process owns, read from fd links like "socket:[12345]". The root is a parameter so the reader can be unit-tested with a synthetic fd directory.</summary>
+    private static IReadOnlySet<string> ReadOwnSocketInodes(string fdRoot = ProcFdRoot)
+    {
+        var inodes = new HashSet<string>();
+        foreach (var entry in Directory.EnumerateFileSystemEntries(fdRoot))
+        {
+            var target = TryReadLink(entry);
+            // Format: "socket:[12345]". The inode is the digits inside the brackets.
+            const string prefix = "socket:[";
+            if (target is not null && target.StartsWith(prefix, StringComparison.Ordinal) && target.EndsWith("]", StringComparison.Ordinal))
+                inodes.Add(target[prefix.Length..^1]);
+        }
+
+        return inodes;
+    }
+
+    /// <summary>Returns the RAW link target. ResolveLinkTarget(...).FullName prefixed the link's own directory ("/proc/self/fd/socket:[N]"), which never matched the socket pattern; FileInfo.LinkTarget returns "socket:[N]" as the kernel reports it.</summary>
     private static string? TryReadLink(string path)
     {
         try
         {
-            return File.ResolveLinkTarget(path, returnFinalTarget: false)?.FullName;
+            return new FileInfo(path).LinkTarget;
         }
         catch (IOException)
         {
@@ -158,8 +205,9 @@ public class NetworkSentinelTests
                     continue;
 
                 // Column layout: sl local_address rem_address st tx:rx tr retrnsmt uid timeout inode.
+                // An empty own-inode set means this process owns no sockets at all, so nothing counts.
                 var inode = columns.Length > 9 ? columns[9] : string.Empty;
-                if (ownInodes.Count != 0 && !ownInodes.Contains(inode))
+                if (!ownInodes.Contains(inode))
                     continue;
 
                 var remote = columns[2];
