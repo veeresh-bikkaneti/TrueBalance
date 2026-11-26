@@ -1,0 +1,26 @@
+version: 2
+updates:
+  # Frontend (npm): one weekly PR for all minor and patch bumps.
+  - package-ecosystem: npm
+    directory: /OfflineCPA/frontend
+    schedule:
+      interval: weekly
+    groups:
+      frontend-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  # Backend (.NET): one weekly PR for all minor and patch bumps.
+  - package-ecosystem: nuget
+    directory: /OfflineCPA
+    schedule:
+      interval: weekly
+    groups:
+      dotnet-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+# Major version bumps and security updates stay ungrouped: `groups` applies to
+# version updates only by default, so security fixes still open their own PRs.
