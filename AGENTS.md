@@ -60,16 +60,18 @@ Load and obey these local skills in `.agent/skills/` alongside `pstack` (Cursor 
 Based on [Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) with strict source citations:
 - **Immutable `raw/`**: Never modify, rename, or delete files inside `raw/`.
 - `raw/` holds public project sources only (docs, specs, papers, public web pages). Never put user statements, tax forms (W-2, W-9, 1099), receipts or any PII in `raw/` or `wiki/`. Private sources go in `raw/private/`, which git ignores.
-- **Strict Citation Rule (Mandatory)**: Every factual claim, number, quote, or code reference in `wiki/` MUST include an inline pointer to the exact raw file and location (e.g., `(source: raw/filename.md#section-or-line)` or `(source: raw/doc.pdf, p. 4)`). Never summarize away exact figures without linking back.
+- **Strict Citation Rule (Mandatory)**: Every factual claim, number, quote, or code reference in `wiki/` MUST include an inline pointer. Outside sources use `(source: raw/filename.md#section-or-line)` or `(source: raw/doc.pdf, p. 4)`. A fact about this repo uses `(repo: <path>#L<a>-L<b>)`, as the llm-wiki skill describes. Never summarize away exact figures without linking back.
 - **Ingest**: Read new `raw/` file -> write summary in `wiki/sources/` with inline citations -> update `wiki/entities/` and `wiki/concepts/` using `[[wikilinks]]` and citations -> update `wiki/index.md` -> append `## [YYYY-MM-DD] ingest | Title` to `wiki/log.md`.
 - **Query**: Read `wiki/index.md` first -> read relevant `wiki/` pages -> follow `(source: raw/...)` back into `raw/` for exact numbers/code -> cite both wiki page and raw file. File reusable syntheses in `wiki/analyses/`.
-- **Lint**: Run `python3 .agent/scripts/wiki_lint.py` to check broken `(source: raw/...)` paths, broken `[[wikilinks]]`, and orphan pages, plus review for uncited claims and contradictions.
+- **Read order**: Read `wiki/index.md`, then the module page, then only the files that page cites. Open other code only when the page does not answer the question, and then fix the page in the same PR.
+- **Lint**: Run `python3 .agent/scripts/wiki_lint.py` to check broken `(source: raw/...)` paths, broken `[[wikilinks]]`, and orphan pages, plus repo pointers and stale hashes, plus review for uncited claims and contradictions.
 
 ## 6. Git, Architecture & Verification Rules
 1. **One Spec, One Draft PR**: Build in `INDEX.md` order on the branch named in the spec. Open as draft. Never merge, approve, or enable auto-merge (Veeresh merges).
 2. **Git Hygiene**: Conventional Commits. No `Co-Authored-By` or AI trailers in commits; no "Generated with" lines in PRs. No rebase, no force push, no `git merge`.
 3. **Architecture**: Show a working mockup in `docs/mockups/` before UI code. Enforce Clean Architecture, SOLID, loose coupling, React shell to feature components, and ADRs (change only via superseding ADR).
 4. **Facts & Evidence**: Check official docs, source code, or repo files first (`docs/research/verified-facts.md`). Follow the owner's source and evidence rules exactly as written in `docs/specs/prompts/02-security-hardening.md` (section Facts). Tags look like `[High 3/3]`, `[Moderate 1/1]`, `[Low 1/2]`; analysis is `[Inferred]`, direct checks are `[Tested]`.
+5. **Wiki stays current**: A PR that changes code updates the wiki page for each module it touched, and `wiki_lint.py` passes with no STALE entries.
 
 ## 7. Owner-Only Decisions
 - Merging any PR.
