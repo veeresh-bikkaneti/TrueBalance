@@ -42,7 +42,7 @@ public class AdapterModuleTests
             .ToArray();
 
         Assert.Equal(
-            new[] { "Infrastructure.Data", "Infrastructure.Networking", "Infrastructure.Reporting", "Infrastructure.Services" },
+            new[] { "Infrastructure.Data", "Infrastructure.Networking", "Infrastructure.Pii", "Infrastructure.Reporting", "Infrastructure.Services" },
             modules);
     }
 

@@ -46,3 +46,6 @@ raw/private/
 *.qfx
 *.qbo
 *.ofx
+
+# Local PII fingerprint key (generated at first start). Never commit.
+**/pii-fingerprint.key

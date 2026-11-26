@@ -3,22 +3,22 @@ checked:
   OfflineCPA/src/Application/Networking/INetworkGate.cs: 77fab7a5d681fe7d25f236857a96c4ab8fe25914
   OfflineCPA/src/Infrastructure/Networking/LocalNetworkGate.cs: 9b776c957e947fa9159fe6cc21371dfa74ae1058
   OfflineCPA/src/Infrastructure/Networking/DisabledIntegrationSettings.cs: bcfebc42ced358fbc1f2fd78bc986a04e2812e0e
-  OfflineCPA/src/Infrastructure/Networking/NetworkingModule.cs: 6b71a6d1751dd5e52d395f2e9084f4af2ad754bd
-  OfflineCPA/src/Infrastructure/Networking/ScopedNetworkAttemptLog.cs: 89c699f17af6648406dd0896dc1907cf71a05b0d
   OfflineCPA/src/Application/Ledger/LedgerNetworkAttemptLog.cs: 03a17539428b4a0688487187c90809a791b87335
-  OfflineCPA/src/Application/Ai/IAiAssist.cs: b32faecea493216c82c0db7e88de674f29554945
-  OfflineCPA/src/Infrastructure/AdapterModuleRegistration.cs: 98f6f27b02c94a2298b2860b84e40a66d8f1b56c
-  OfflineCPA/src/Infrastructure/IAdapterModule.cs: d8fef4533ad154804d873af75694525f05154305
-  OfflineCPA/src/Backend/Program.cs: e02af47f1e75ea8f35e7446d8b8315be41b80bc8
   OfflineCPA/src/Domain/Ledger/LedgerEvents.cs: dbf804ef2d845a43757fb28b13e0765a4e0cb54e
   OfflineCPA/src/Domain/Enums/LedgerAction.cs: b171c1e27fcdf7c9af5c2770a95219939dfcba3e
+  OfflineCPA/src/Infrastructure/Networking/ScopedNetworkAttemptLog.cs: 89c699f17af6648406dd0896dc1907cf71a05b0d
+  OfflineCPA/src/Infrastructure/Networking/NetworkingModule.cs: 6b71a6d1751dd5e52d395f2e9084f4af2ad754bd
+  OfflineCPA/src/Application/Ai/IAiAssist.cs: b32faecea493216c82c0db7e88de674f29554945
+  OfflineCPA/src/Infrastructure/IAdapterModule.cs: d8fef4533ad154804d873af75694525f05154305
+  OfflineCPA/src/Infrastructure/AdapterModuleRegistration.cs: 98f6f27b02c94a2298b2860b84e40a66d8f1b56c
+  OfflineCPA/src/Backend/Program.cs: 17e6fc6fe3d31caa311ea9bc4bb5f99e074abfdd
+  OfflineCPA/tests/TrueBalance.Tests/Networking/NetworkGateTests.cs: 9462be3d36fd4af7a920053bc0c86173e91c2ad1
+  OfflineCPA/tests/TrueBalance.Tests/Networking/AdapterModuleTests.cs: 90a67c01e4cb95369f1ef4b4f03a90ec903c26f9
+  OfflineCPA/tests/TrueBalance.Tests/Networking/GateLogIsolationTests.cs: 6fc0135e933a05e783edb15705f3b48891f0e462
   OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs: c241452235c4fd1d5dbe64d134c98008fc5cf610
   OfflineCPA/tests/TrueBalance.Tests/Ledger/TypeNameHelper.cs: f04a70cc2a904c6be3bc1426315b5f50a10bf8d4
   OfflineCPA/tests/TrueBalance.Tests/Ledger/TypeNameHelperTests.cs: 6670dbca3b10d74c40588d8ce761a84a9e0642ad
-  OfflineCPA/tests/TrueBalance.Tests/Networking/NetworkGateTests.cs: 9462be3d36fd4af7a920053bc0c86173e91c2ad1
   OfflineCPA/tests/TrueBalance.Tests/Networking/NetworkSentinelTests.cs: 44ae0f1d9141c5e0252c3e7657f9fe3af688cf42
-  OfflineCPA/tests/TrueBalance.Tests/Networking/GateLogIsolationTests.cs: 6fc0135e933a05e783edb15705f3b48891f0e462
-  OfflineCPA/tests/TrueBalance.Tests/Networking/AdapterModuleTests.cs: aeaa86e7e8433b80e021aa87031c886c3d42384a
 ---
 # Network gate
 

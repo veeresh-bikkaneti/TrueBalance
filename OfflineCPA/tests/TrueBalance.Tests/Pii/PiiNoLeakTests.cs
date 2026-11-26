@@ -1,0 +1,200 @@
+using System.Net.Http.Headers;
+using Backend.Endpoints;
+using Domain.Entities;
+using Infrastructure.Data;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using TrueBalance.Tests.Pii.Fixtures;
+
+namespace TrueBalance.Tests.Pii;
+
+/// <summary>
+/// The ADR 0010 no-leak gate: fake SSN, EIN, ITIN, routing and account
+/// numbers pass through the masker and the stub importer path, and none of
+/// the raw values may appear in any database text column, in captured logs,
+/// or in an error body. Statement import (prompt 05) cannot merge until
+/// this passes.
+/// </summary>
+public class PiiNoLeakTests
+{
+    private static (WebApplication App, OfflineCPADbContext Db, CapturingLoggerProvider Logs) BuildApp()
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+
+        var masker = new MaskingPiiMasker();
+        var importer = new StubImporter(FakePii.SampleStatementText());
+
+        builder.Services.AddSingleton<Application.Interfaces.IDocumentVault>(new FakeVault());
+        builder.Services.AddSingleton<Application.Interfaces.IStatementImporter>(importer);
+        builder.Services.AddSingleton<Application.Interfaces.IPiiMasker>(masker);
+        var databaseName = $"pii-no-leak-{Guid.NewGuid():N}";
+        builder.Services.AddDbContext<OfflineCPADbContext>(options => options.UseInMemoryDatabase(databaseName));
+
+        var logs = new CapturingLoggerProvider();
+        builder.Logging.ClearProviders();
+        builder.Logging.Services.AddSingleton<ILoggerProvider>(
+            _ => new Backend.Extensions.PiiRedactionLoggerProvider(logs, masker));
+
+        var app = builder.Build();
+        app.MapUploadEndpoints();
+
+        var db = app.Services.CreateScope().ServiceProvider.GetRequiredService<OfflineCPADbContext>();
+        db.Database.EnsureCreated();
+
+        return (app, db, logs);
+    }
+
+    private static MultipartFormDataContent UploadContent(string fileName, string contentType)
+    {
+        var file = new ByteArrayContent([1, 2, 3, 4]);
+        file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        return new MultipartFormDataContent
+        {
+            { file, "file", fileName },
+        };
+    }
+
+    private static async Task<string> PostUploadAsync(WebApplication app, MultipartFormDataContent content)
+    {
+        using var client = app.GetTestClient();
+        var response = await client.PostAsync("/api/upload", content);
+        return await response.Content.ReadAsStringAsync();
+    }
+
+    [Fact]
+    public async Task Raw_values_never_reach_the_database_text_columns()
+    {
+        var (app, db, _) = BuildApp();
+        await app.StartAsync();
+        try
+        {
+            // The stub importer path: extracted text goes through the masker
+            // before it is persisted, the way prompt 05 will use the port.
+            var masker = app.Services.GetRequiredService<Application.Interfaces.IPiiMasker>();
+            var text = await new StubImporter(FakePii.SampleStatementText()).ExtractTextAsync("ignored.pdf");
+            db.Transactions.Add(new Transaction
+            {
+                Description = masker.Mask(text),
+                Date = DateTime.UtcNow,
+            });
+            db.Transactions.Add(new Transaction
+            {
+                Description = $"Import of file {Guid.NewGuid()}",
+                Date = DateTime.UtcNow,
+            });
+            await db.SaveChangesAsync();
+
+            Assert.All(db.ChangeTracker.Entries(), entry =>
+                Assert.All(
+                    entry.Properties.Where(p => p.Metadata.ClrType == typeof(string) && p.CurrentValue is not null),
+                    p =>
+                    {
+                        var value = (string)p.CurrentValue!;
+                        foreach (var raw in FakePii.LeakTargets())
+                        {
+                            Assert.DoesNotContain(raw, value, StringComparison.Ordinal);
+                        }
+                    }));
+        }
+        finally
+        {
+            await app.StopAsync();
+        }
+    }
+
+    [Fact]
+    public async Task Upload_response_and_transaction_avoid_raw_values()
+    {
+        var (app, db, _) = BuildApp();
+        await app.StartAsync();
+        try
+        {
+            var body = await PostUploadAsync(
+                app,
+                UploadContent($"statement for {FakePii.SsnFormatted} {FakePii.AccountNumberA}.pdf", "application/pdf"));
+
+            foreach (var raw in FakePii.LeakTargets())
+            {
+                Assert.DoesNotContain(raw, body, StringComparison.Ordinal);
+            }
+
+            var transactions = db.Transactions.ToList();
+            Assert.True(transactions.Count == 1, $"transaction count {transactions.Count}; response body: {body}");
+            var transaction = transactions[0];
+            foreach (var raw in FakePii.LeakTargets())
+            {
+                Assert.DoesNotContain(raw, transaction.Description, StringComparison.Ordinal);
+                Assert.DoesNotContain(raw, transaction.ReferenceDocumentPath ?? "", StringComparison.Ordinal);
+            }
+
+            // Non-destructive: the display name keeps its shape with tokens in place.
+            Assert.StartsWith("Uploaded file ", transaction.Description, StringComparison.Ordinal);
+            Assert.Contains("ACCT ****", transaction.Description, StringComparison.Ordinal);
+            Assert.Matches(
+                @"^Uploaded file [0-9a-f-]{36} \(statement for \[SSN \*\*\*\*\d{4} fp:[0-9a-f]{16}\] \[ACCT \*\*\*\*\d{4} fp:[0-9a-f]{16}\]\.pdf\)$",
+                transaction.Description);
+
+            // The stored reference is the vault id, not a file path.
+            Assert.False(Path.IsPathRooted(transaction.ReferenceDocumentPath ?? ""));
+        }
+        finally
+        {
+            await app.StopAsync();
+        }
+    }
+
+    [Fact]
+    public async Task Error_bodies_never_echo_raw_input_values()
+    {
+        var (app, _, _) = BuildApp();
+        await app.StartAsync();
+        try
+        {
+            var body = await PostUploadAsync(
+                app,
+                UploadContent($"{FakePii.SsnFormatted}.pdf", "application/x-invalid"));
+
+            Assert.Contains("Content rejected", body, StringComparison.Ordinal);
+            foreach (var raw in FakePii.LeakTargets())
+            {
+                Assert.DoesNotContain(raw, body, StringComparison.Ordinal);
+            }
+        }
+        finally
+        {
+            await app.StopAsync();
+        }
+    }
+
+    [Fact]
+    public async Task Raw_values_never_reach_captured_logs()
+    {
+        var (app, _, logs) = BuildApp();
+        await app.StartAsync();
+        try
+        {
+            var logger = app.Services.GetRequiredService<ILogger<PiiNoLeakTests>>();
+            logger.LogInformation(
+                "Imported statement text: {Text}",
+                FakePii.SampleStatementText());
+
+            Assert.NotEmpty(logs.Lines);
+            foreach (var line in logs.Lines)
+            {
+                foreach (var raw in FakePii.LeakTargets())
+                {
+                    Assert.DoesNotContain(raw, line, StringComparison.Ordinal);
+                }
+            }
+        }
+        finally
+        {
+            await app.StopAsync();
+        }
+    }
+}

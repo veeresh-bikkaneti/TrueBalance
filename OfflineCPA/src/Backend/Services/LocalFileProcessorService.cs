@@ -70,12 +70,13 @@ public class LocalFileProcessorService : BackgroundService
             var dbContext = scope.ServiceProvider.GetRequiredService<OfflineCPADbContext>();
             var text = await importer.ExtractTextAsync(file, stoppingToken);
 
-            // Create a basic transaction from the file
+            // The transaction references only the generated id; the file name
+            // and the full path stay out of the database (ADR 0010).
             var transaction = new Transaction
             {
-                Description = $"Auto-imported from {Path.GetFileName(file)}",
+                Description = $"Auto-imported file {fileId}",
                 Date = DateTime.UtcNow,
-                ReferenceDocumentPath = file
+                ReferenceDocumentPath = fileId
             };
 
             // TODO: Further basic NLP mapping based on text.

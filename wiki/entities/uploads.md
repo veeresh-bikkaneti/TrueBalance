@@ -1,13 +1,13 @@
 ---
 checked:
   OfflineCPA/src/Application/Interfaces/IDocumentVault.cs: e81b2e70ec0d6f40e6a3685caa28418dcad78053
-  OfflineCPA/src/Application/Interfaces/IStatementImporter.cs: 26c011a1a3334924f6f8f2974c188b6ae09456a1
   OfflineCPA/src/Application/Uploads/StoredUpload.cs: d0f89183d09d583b499dbb4352993efda461b885
+  OfflineCPA/src/Application/Interfaces/IStatementImporter.cs: 26c011a1a3334924f6f8f2974c188b6ae09456a1
   OfflineCPA/src/Infrastructure/Options/UploadOptions.cs: 9ae8e83707e682d5fbaa3750ff62686ca5174e68
   OfflineCPA/src/Infrastructure/Services/SecureUploadStore.cs: 10ac66ed94a52da92f59d8a9355792bf36828413
-  OfflineCPA/src/Backend/Program.cs: e02af47f1e75ea8f35e7446d8b8315be41b80bc8
+  OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs: 404f93eb7df6a91fd45c0087b80953bf0b8c3e9f
   OfflineCPA/src/Infrastructure/Services/PdfFileParser.cs: 761889026e5904f87832e4dd745add680d3f5dcc
-  OfflineCPA/src/Backend/Services/LocalFileProcessorService.cs: 87d4c2d8c4544c6a4102d6f1353215105cebfa8e
+  OfflineCPA/src/Backend/Services/LocalFileProcessorService.cs: 274d180fd385ea73989c33d0f8f0312620adf476
   OfflineCPA/tests/TrueBalance.Tests/SecureUploadStoreTests.cs: 466fcc91ef34691cb13c9adc0975d01aa87fca26
   OfflineCPA/tests/TrueBalance.Tests/FolderWatchLogTests.cs: 65987fb121d282db11bdbf832c1c81d48a68c7f8
 ---
@@ -23,9 +23,9 @@ Empty files and files over `MaxBytes` (default 20 MB) are rejected. The extensio
 
 ## Entry points
 
-`POST /api/upload` calls the vault, then, for a PDF, extracts text through `IStatementImporter` and inserts a `Transaction` whose description includes the original file name (repo: OfflineCPA/src/Backend/Program.cs#L73-L125). `PdfFileParser` supports only `.pdf` and reads text with PdfPig (repo: OfflineCPA/src/Infrastructure/Services/PdfFileParser.cs#L6-L26).
+`POST /api/upload` lives in `UploadEndpoints` and calls the vault, then, for a PDF, extracts text through `IStatementImporter` and inserts a `Transaction` whose description carries the vault id plus the masked display name; `ReferenceDocumentPath` stores that id, never a path (repo: OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs#L40-L70). `PdfFileParser` supports only `.pdf` and reads text with PdfPig (repo: OfflineCPA/src/Infrastructure/Services/PdfFileParser.cs#L6-L26).
 
-`LocalFileProcessorService` scans `Bookkeeping:InputDirectory` (default `/app/data/input`) every 30 seconds. The log line uses a generated id, not the file name. It resolves `IStatementImporter` from a scope (repo: OfflineCPA/src/Backend/Services/LocalFileProcessorService.cs#L55-L76). The transaction description still includes `Path.GetFileName`.
+`LocalFileProcessorService` scans `Bookkeeping:InputDirectory` (default `/app/data/input`) every 30 seconds. The log line uses a generated id, not the file name. It resolves `IStatementImporter` from a scope (repo: OfflineCPA/src/Backend/Services/LocalFileProcessorService.cs#L55-L76). The transaction stores the generated id in both the description and `ReferenceDocumentPath`; the file name and path never reach the database (repo: OfflineCPA/src/Backend/Services/LocalFileProcessorService.cs#L70-L81).
 
 ## Tests
 
@@ -33,4 +33,4 @@ Empty files and files over `MaxBytes` (default 20 MB) are rejected. The extensio
 
 ## Change it safely
 
-A new file type goes in a new adapter folder with its own module class; see [[network-gate]] for the convention. Do not build a path from the client file name. Masking of the name stored on the transaction is planned in [[pii-boundary]], not in this store.
+A new file type goes in a new adapter folder with its own module class; see [[network-gate]] for the convention. Do not build a path from the client file name. Anything that persists or echoes extracted text passes [[pii-masking]] first.

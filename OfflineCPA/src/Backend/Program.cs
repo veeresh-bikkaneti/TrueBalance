@@ -1,7 +1,7 @@
 using Application.Interfaces;
 using Application.Ledger;
-using Application.Uploads;
 using Backend.Configuration;
+using Backend.Endpoints;
 using Backend.Extensions;
 using Backend.Services;
 using Domain.Entities;
@@ -10,6 +10,8 @@ using Infrastructure.Data;
 using Infrastructure.Options;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Console;
+using Microsoft.Extensions.Options;
 
 DotEnv.Load();
 
@@ -18,6 +20,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSecureErrorHandling();
+
+// Every log line passes the PII masker before it reaches the console, so a
+// developer mistake cannot leak a raw account number into the logs.
+builder.Logging.ClearProviders();
+builder.Logging.Services.AddSingleton<ILoggerProvider>(sp => new PiiRedactionLoggerProvider(
+    new ConsoleLoggerProvider(sp.GetRequiredService<IOptionsMonitor<ConsoleLoggerOptions>>()),
+    sp.GetRequiredService<IPiiMasker>()));
 
 // Configure EF Core with PostgreSQL. The connection string must come from
 // configuration (environment variable or .env); there is no built-in secret.
@@ -43,6 +52,16 @@ builder.Services.AddScoped<ReverseEntry>();
 builder.Services.AddScoped<LockPeriod>();
 builder.Services.AddScoped<GetAccountBalances>();
 builder.Services.Configure<UploadOptions>(builder.Configuration.GetSection(UploadOptions.SectionName));
+builder.Services.Configure<PiiOptions>(builder.Configuration.GetSection(PiiOptions.SectionName));
+// Anchor the fingerprint key to the app content root, not the process
+// working directory, so the key lands in one predictable, git-ignored place
+// no matter how the backend is started.
+builder.Services.PostConfigure<PiiOptions>(options =>
+{
+    options.FingerprintKeyPath = Path.IsPathRooted(options.FingerprintKeyPath)
+        ? options.FingerprintKeyPath
+        : Path.Combine(builder.Environment.ContentRootPath, options.FingerprintKeyPath);
+});
 // No IAiAssist implementation is registered: the app ships offline and AI is
 // an opt-in integration; any future implementation receives tokenized text
 // from the PII layer, never raw values.
@@ -70,65 +89,13 @@ app.UseCors("AllowFrontend");
 app.UseSecureErrorHandling();
 
 // Endpoints
-app.MapPost("/api/upload", async (
-    IFormFile file,
-    IDocumentVault vault,
-    IStatementImporter importer,
-    OfflineCPADbContext db,
-    CancellationToken cancellationToken) =>
-{
-    if (file == null || file.Length == 0)
-        return Results.BadRequest(new { error = "No file uploaded." });
+app.MapUploadEndpoints();
 
-    StoredUpload stored;
-    try
-    {
-        stored = await vault.SaveAsync(
-            file.OpenReadStream(),
-            file.Length,
-            file.FileName,
-            file.ContentType,
-            cancellationToken);
-    }
-    catch (InvalidUploadException ex)
-    {
-        return Results.BadRequest(new { error = ex.Message });
-    }
-
-    // Process offline via PdfPig
-    if (importer.SupportsExtension(stored.Extension))
-    {
-        try
-        {
-            var text = await importer.ExtractTextAsync(stored.FullPath);
-
-            var transaction = new Transaction
-            {
-                Description = $"User Uploaded: {stored.OriginalFileName}",
-                Date = DateTime.UtcNow,
-                ReferenceDocumentPath = stored.FullPath
-            };
-
-            db.Transactions.Add(transaction);
-            await db.SaveChangesAsync();
-            return Results.Ok(new { message = "File uploaded and processed smoothly locally.", id = stored.Id });
-        }
-        catch (Exception)
-        {
-             return Results.Problem("File saved locally, but text extraction failed.");
-        }
-    }
-
-    return Results.Ok(new { message = "File uploaded securely to local user-assets.", id = stored.Id });
-})
-.WithName("UploadFile")
-.DisableAntiforgery();
-
-app.MapPost("/api/books/setup", async (SetupBooksRequest request, IChartOfAccountsSeeder seeder) =>
+app.MapPost("/api/books/setup", async (SetupBooksRequest request, IChartOfAccountsSeeder seeder, IPiiMasker masker) =>
 {
     if (!seeder.SupportedKinds.Contains(request.Kind, StringComparer.OrdinalIgnoreCase))
     {
-        return Results.BadRequest(new { error = $"Unknown books kind '{request.Kind}'. Supported kinds: {string.Join(", ", seeder.SupportedKinds)}." });
+        return Results.BadRequest(new { error = masker.Mask($"Unknown books kind '{request.Kind}'. Supported kinds: {string.Join(", ", seeder.SupportedKinds)}.") });
     }
 
     try
@@ -138,7 +105,7 @@ app.MapPost("/api/books/setup", async (SetupBooksRequest request, IChartOfAccoun
     }
     catch (ArgumentException ex)
     {
-        return Results.BadRequest(new { error = ex.Message });
+        return Results.BadRequest(new { error = masker.Mask(ex.Message) });
     }
 })
 .WithName("SetupBooks")
