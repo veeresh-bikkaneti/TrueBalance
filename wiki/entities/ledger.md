@@ -1,7 +1,7 @@
 ---
 checked:
   OfflineCPA/src/Domain/Entities/JournalEntry.cs: 60a5b3d1e5b424ba8d60bd599e5a6072b3de7e87
-  OfflineCPA/src/Backend/Program.cs: 631e0233ec079f91233b2c85b031567189a4e932
+  OfflineCPA/src/Backend/Program.cs: e02af47f1e75ea8f35e7446d8b8315be41b80bc8
   OfflineCPA/src/Domain/Entities/Posting.cs: 53956565729f8b7d009c0bcc9997481f9ea6e4f5
   OfflineCPA/src/Domain/Entities/Period.cs: bcc4fe128753b85180c4567b93e875337cb7df6c
   OfflineCPA/src/Domain/Enums/JournalEntryStatus.cs: 8eb3b37ef9b17fad255980f39c475a6dfcde9fd3
@@ -12,12 +12,12 @@ checked:
   OfflineCPA/src/Application/Ledger/ReverseEntry.cs: 15513cf210f49717466fb92da07acbd5d295bcbd
   OfflineCPA/src/Application/Ledger/LockPeriod.cs: 5847bbfe4d6d13869463ab78e55d4d8751fff324
   OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerTests.cs: 32143217f410c0b14792b66a476804be626dbab6
-  OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs: f932d7f98d523b9c1a91b37bd75be4e75fe3bd08
-  docs/architecture/modules.md: 296ecfb6566a66c56773e762d5b03c3ae360f5dc
+  OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs: 13d5b9f7311ccf67810976ba90a837f0a68c0f20
+  docs/architecture/modules.md: 3d9497c0c96c00fe368eac6fba2caba23dd4e726
 ---
 # Ledger
 
-The ledger is the double-entry book: draft an entry, post it, reverse it, lock a period, and read account balances (repo: OfflineCPA/src/Domain/Entities/JournalEntry.cs#L45-L131) (repo: OfflineCPA/src/Backend/Program.cs#L186-L245).
+The ledger is the double-entry book: draft an entry, post it, reverse it, lock a period, and read account balances (repo: OfflineCPA/src/Domain/Entities/JournalEntry.cs#L45-L131) (repo: OfflineCPA/src/Backend/Program.cs#L164-L221).
 
 ## Types and files
 
@@ -29,7 +29,7 @@ The ledger is the double-entry book: draft an entry, post it, reverse it, lock a
 
 Use cases are `CreateDraftEntry`, `PostEntry`, `ReverseEntry`, `LockPeriod`, and `GetAccountBalances`. Create dispatches domain events and then calls `SaveChanges`. Post, reverse, and lock do the same (repo: OfflineCPA/src/Application/Ledger/CreateDraftEntry.cs#L32-L34) (repo: OfflineCPA/src/Application/Ledger/PostEntry.cs#L29-L30) (repo: OfflineCPA/src/Application/Ledger/ReverseEntry.cs#L31-L32) (repo: OfflineCPA/src/Application/Ledger/LockPeriod.cs#L27-L28).
 
-Routes, all thin, map a rule failure to HTTP 400. Until a later prompt there is no auth, so the user id is the constant `local` (repo: OfflineCPA/src/Backend/Program.cs#L186-L245):
+Routes, all thin, map a rule failure to HTTP 400. Until a later prompt there is no auth, so the user id is the constant `local` (repo: OfflineCPA/src/Backend/Program.cs#L164-L221):
 
 - `POST /api/ledger/entries`
 - `POST /api/ledger/entries/{id}/post`
@@ -41,8 +41,8 @@ Routes, all thin, map a rule failure to HTTP 400. Until a later prompt there is 
 
 Balance and lock rules are on [[double-entry-invariants]]. The audit row for each event is on [[event-log]].
 
-Behavior tests live in `LedgerTests` (reject unbalanced posts, reversals, locked periods, audit rows) (repo: OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerTests.cs#L11-L15). Namespace rules live in `LedgerArchitectureTests` (repo: OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs#L15-L24).
+Behavior tests live in `LedgerTests` (reject unbalanced posts, reversals, locked periods, audit rows) (repo: OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerTests.cs#L11-L15). Namespace rules live in `LedgerArchitectureTests` (repo: OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs#L20-L70).
 
 ## Change it safely
 
-Put a new rule on the entity method, then on the use case that calls it, then on `EfLedgerStore` if the query changes, and add a fact in `LedgerTests`. A new type that touches `JournalEntry`, `Posting`, `Period`, `LedgerAuditRecord`, or `IDomainEvent` must stay in a namespace from the module table (repo: docs/architecture/modules.md#L5-L17). Posted entries are not edited in place. `JournalEntry` has no public property setters (repo: OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerTests.cs#L65-L73).
+Put a new rule on the entity method, then on the use case that calls it, then on `EfLedgerStore` if the query changes, and add a fact in `LedgerTests`. A new type that touches `JournalEntry`, `Posting`, `Period`, `LedgerAuditRecord`, or `IDomainEvent` must stay in a namespace from the module table (repo: docs/architecture/modules.md#L7-L19). Posted entries are not edited in place. `JournalEntry` has no public property setters (repo: OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerTests.cs#L65-L73).

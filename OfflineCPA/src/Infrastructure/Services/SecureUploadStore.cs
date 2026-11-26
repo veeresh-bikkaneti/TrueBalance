@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services;
 
-public class SecureUploadStore : ISecureUploadStore
+public class SecureUploadStore : IDocumentVault
 {
     private const int MaxOriginalNameLength = 200;
 

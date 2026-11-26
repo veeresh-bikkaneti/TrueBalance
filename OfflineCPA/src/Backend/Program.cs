@@ -4,12 +4,11 @@ using Application.Uploads;
 using Backend.Configuration;
 using Backend.Extensions;
 using Backend.Services;
-using ClosedXML.Excel;
 using Domain.Entities;
 using Domain.Ledger;
 using Infrastructure.Data;
 using Infrastructure.Options;
-using Infrastructure.Services;
+using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 DotEnv.Load();
@@ -33,19 +32,20 @@ if (string.IsNullOrWhiteSpace(connectionString))
 builder.Services.AddDbContext<OfflineCPADbContext>(options =>
     options.UseNpgsql(connectionString));
 
-// Configure Services
-builder.Services.AddSingleton<ILocalFileParser, PdfFileParser>();
+// Configure Services. Adapters register themselves: each adapter folder in
+// Infrastructure has one module class, found by convention, so adding an
+// adapter needs no edit here.
+builder.Services.AddInfrastructureAdapterModules();
 builder.Services.AddHostedService<LocalFileProcessorService>();
-builder.Services.AddScoped<IChartOfAccountsSeeder, JsonChartOfAccountsSeeder>();
-builder.Services.AddSingleton<IClock, SystemClock>();
-builder.Services.AddScoped<ILedgerStore, EfLedgerStore>();
 builder.Services.AddScoped<CreateDraftEntry>();
 builder.Services.AddScoped<PostEntry>();
 builder.Services.AddScoped<ReverseEntry>();
 builder.Services.AddScoped<LockPeriod>();
 builder.Services.AddScoped<GetAccountBalances>();
 builder.Services.Configure<UploadOptions>(builder.Configuration.GetSection(UploadOptions.SectionName));
-builder.Services.AddScoped<ISecureUploadStore, SecureUploadStore>();
+// No IAiAssist implementation is registered: the app ships offline and AI is
+// an opt-in integration; any future implementation receives tokenized text
+// from the PII layer, never raw values.
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -72,8 +72,8 @@ app.UseSecureErrorHandling();
 // Endpoints
 app.MapPost("/api/upload", async (
     IFormFile file,
-    ISecureUploadStore uploadStore,
-    ILocalFileParser parser,
+    IDocumentVault vault,
+    IStatementImporter importer,
     OfflineCPADbContext db,
     CancellationToken cancellationToken) =>
 {
@@ -83,7 +83,7 @@ app.MapPost("/api/upload", async (
     StoredUpload stored;
     try
     {
-        stored = await uploadStore.SaveAsync(
+        stored = await vault.SaveAsync(
             file.OpenReadStream(),
             file.Length,
             file.FileName,
@@ -96,11 +96,11 @@ app.MapPost("/api/upload", async (
     }
 
     // Process offline via PdfPig
-    if (parser.SupportsExtension(stored.Extension))
+    if (importer.SupportsExtension(stored.Extension))
     {
         try
         {
-            var text = await parser.ExtractTextAsync(stored.FullPath);
+            var text = await importer.ExtractTextAsync(stored.FullPath);
 
             var transaction = new Transaction
             {
@@ -151,34 +151,10 @@ app.MapGet("/api/transactions", async (OfflineCPADbContext db) =>
 .WithName("GetTransactions")
 .WithOpenApi();
 
-app.MapGet("/api/export", async (OfflineCPADbContext db) =>
+app.MapGet("/api/export", async (IReportExporter exporter, CancellationToken cancellationToken) =>
 {
-    var transactions = await db.Transactions.OrderBy(t => t.Date).ToListAsync();
-
-    using var workbook = new XLWorkbook();
-    var worksheet = workbook.Worksheets.Add("1120-S Bookkeeping");
-
-    // Headers
-    worksheet.Cell(1, 1).Value = "Date";
-    worksheet.Cell(1, 2).Value = "Description";
-    worksheet.Cell(1, 3).Value = "Document Path";
-    
-    var row = 2;
-    foreach (var txn in transactions)
-    {
-        worksheet.Cell(row, 1).Value = txn.Date.ToString("yyyy-MM-dd");
-        worksheet.Cell(row, 2).Value = txn.Description;
-        worksheet.Cell(row, 3).Value = txn.ReferenceDocumentPath ?? "N/A";
-        row++;
-    }
-
-    worksheet.Columns().AdjustToContents();
-
-    using var stream = new MemoryStream();
-    workbook.SaveAs(stream);
-    stream.Position = 0;
-
-    return Results.File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"OfflineCPA_Export_{DateTime.Now:yyyyMMdd}.xlsx");
+    var bytes = await exporter.ExportTransactionLogAsync(cancellationToken);
+    return Results.File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"OfflineCPA_Export_{DateTime.Now:yyyyMMdd}.xlsx");
 })
 .WithName("ExportToExcel")
 .WithOpenApi();

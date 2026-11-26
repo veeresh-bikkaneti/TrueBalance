@@ -26,17 +26,45 @@ public class LedgerArchitectureTests
         AssertNoDependency(DomainAssembly, "Infrastructure");
         AssertNoDependency(DomainAssembly, "Microsoft.EntityFrameworkCore");
         AssertNoDependency(DomainAssembly, "Microsoft.AspNetCore");
+        AssertNoDependency(DomainAssembly, "System.Net.Http");
+        AssertNoDependency(DomainAssembly, "System.Net.Sockets");
     }
 
-    // Application already sits under Infrastructure, so a project reference the other way does not compile.
-    // This checks the compiled reference list and type dependencies.
+    // Application must not reference Infrastructure, EF Core, or ASP.NET Core.
     [Fact]
-    public void Application_does_not_reference_infrastructure()
+    public void Application_does_not_reference_infrastructure_ef_or_aspnet()
     {
         var names = ApplicationAssembly.GetReferencedAssemblies().Select(a => a.Name).ToArray();
         Assert.DoesNotContain("Infrastructure", names);
         AssertNoDependency(ApplicationAssembly, "Infrastructure");
+        AssertNoDependency(ApplicationAssembly, "Microsoft.EntityFrameworkCore");
+        AssertNoDependency(ApplicationAssembly, "Microsoft.AspNetCore");
     }
+
+    // Only the networking port (Application.Networking) and the gate adapter
+    // (Infrastructure.Networking) may call the network. Every other module
+    // has to go through INetworkGate.
+    [Fact]
+    public void Only_networking_modules_reference_http_or_sockets()
+    {
+        var result = Types.InAssemblies(new[] { DomainAssembly, ApplicationAssembly, InfrastructureAssembly, BackendAssembly })
+            .ShouldNot()
+            .HaveDependencyOnAny("System.Net.Http", "System.Net.Sockets")
+            .GetResult();
+
+        // NetArchTest 1.3.2 has no namespace allowance, so filter the two
+        // allowed namespaces out of the failure list by hand.
+        var failures = (result.FailingTypeNames ?? Array.Empty<string>())
+            .Where(name => !name.Contains('+', StringComparison.Ordinal))
+            .Where(name => !IsInNamespace(name, "Application.Networking"))
+            .Where(name => !IsInNamespace(name, "Infrastructure.Networking"))
+            .ToArray();
+        Assert.True(failures.Length == 0, "Network types used outside the gate module: " + string.Join(", ", failures));
+    }
+
+    private static bool IsInNamespace(string typeName, string namespaceName)
+        => typeName.StartsWith(namespaceName + ".", StringComparison.Ordinal)
+           || typeName == namespaceName;
 
     // Only ledger namespaces may touch journal entries, postings, periods, or the event log.
     [Fact]

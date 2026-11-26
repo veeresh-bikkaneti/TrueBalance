@@ -12,21 +12,34 @@ Production types that touch `JournalEntry`, `Posting`, `Period`, `LedgerAuditRec
 | `Domain.Enums` | `LedgerAction`, `JournalEntryStatus` |
 | `Domain.Ledger` | Events, money, rule exception |
 | `Application.Ledger` | Use cases and `DomainEventDispatcher` |
-| `Application.Interfaces` | `ILedgerStore` |
+| `Application.Interfaces` | `ILedgerStore`, `IStatementImporter`, `IDocumentVault`, `IReportExporter`, `IClock`, `IChartOfAccountsSeeder` |
 | `Infrastructure.Data` | EF store and `OfflineCPADbContext` |
 | `Infrastructure.Migrations` | Migrations and the model snapshot |
 
 `TrueBalance.Tests.Ledger` is the test double. It is not a production module.
 
+## Networking namespace
+
+Only `Application.Networking` (the `INetworkGate` port family) and `Infrastructure.Networking` (the gate adapter) may reference `System.Net.Http` or `System.Net.Sockets`. `LedgerArchitectureTests` fails on any other type that does. The gate denies every request until the user's settings enable the integration, hands out a `HttpClient` locked to its one approved host, and writes one `LedgerAuditRecords` row per attempt.
+
+| Namespace | What lives here |
+| --- | --- |
+| `Application.Networking` | `INetworkGate`, `IIntegrationSettings`, `INetworkAttemptLog`, the attempt records |
+| `Application.Ledger` | `LedgerNetworkAttemptLog`, the only writer of gate rows |
+| `Infrastructure.Networking` | `LocalNetworkGate`, `DisabledIntegrationSettings`, `NetworkingModule` |
+
+Adapters register by convention: one `IAdapterModule` class per adapter folder under `Infrastructure`, found by `AddInfrastructureAdapterModules`. The module classes live in `Infrastructure.Data`, `Infrastructure.Services`, `Infrastructure.Networking`, and `Infrastructure.Reporting`.
+
 ## Dependency rules
 
-The same test class checks three rules. Library: NetArchTest.Rules 1.3.2, MIT, [license file](https://github.com/BenMorris/NetArchTest/blob/master/LICENSE). [Confidence: High]
+The same test class checks four rules. Library: NetArchTest.Rules 1.3.2, MIT, [license file](https://github.com/BenMorris/NetArchTest/blob/master/LICENSE). [Confidence: High]
 
-ArchUnitNET was the other candidate. Its license is Apache-2.0 ([license file](https://github.com/TNG/ArchUnitNET/blob/main/LICENSE)). [Confidence: High] NetArchTest was picked because the license is MIT and the fluent dependency check is enough for these three rules.
+ArchUnitNET was the other candidate. Its license is Apache-2.0 ([license file](https://github.com/TNG/ArchUnitNET/blob/main/LICENSE)). [Confidence: High] NetArchTest was picked because the license is MIT and the fluent dependency check is enough for these four rules.
 
-1. Domain does not reference Infrastructure, `Microsoft.EntityFrameworkCore`, or `Microsoft.AspNetCore`.
-2. Application does not reference the Infrastructure assembly. Infrastructure already references Application, so a project reference the other way does not compile. The test checks the compiled assembly list.
+1. Domain does not reference Infrastructure, `Microsoft.EntityFrameworkCore`, `Microsoft.AspNetCore`, `System.Net.Http`, or `System.Net.Sockets`.
+2. Application does not reference the Infrastructure assembly, `Microsoft.EntityFrameworkCore`, or `Microsoft.AspNetCore`. Infrastructure already references Application, so a project reference the other way does not compile. The test checks the compiled assembly list.
 3. A production type that depends on the ledger types above must live in a namespace in the table.
+4. No type outside `Application.Networking` and `Infrastructure.Networking` references `System.Net.Http` or `System.Net.Sockets`.
 
 ## Event contracts
 
@@ -42,3 +55,12 @@ The aggregate raises the event only after the rule passes. `DomainEventDispatche
 | `PeriodLocked` | `PeriodLocked` | `PeriodLocked` | `PeriodId` (`JournalEntryId` is null) | `period locked` | period name |
 
 `EntryDrafted` is the create row. ADR 0011 names posted, reversed, and locked. Create still needs one row so a draft is in the same log. A reversing entry is born `Posted` and does not raise `EntryPosted`; the original raises one `EntryReversed`.
+
+The network gate writes two more event types to the same append-only table. They are not aggregate events; the gate writes them on every outbound attempt, allowed or denied.
+
+| Trigger | EventType | Action | Entity id column | Masked summary | Not stored |
+| --- | --- | --- | --- | --- | --- |
+| Adapter asks a disabled integration for a host | `NetworkGateDenied` | `NetworkGateDenied` | both null | `network denied: <adapter> <host>` | paths, queries, user ids, raw values |
+| Adapter asks an enabled integration for a host | `NetworkGateGranted` | `NetworkGateGranted` | both null | `network granted: <adapter> <host>` | paths, queries, user ids, raw values |
+
+`LedgerNetworkAttemptLog` keeps only lowercase letters, digits, dots, dashes, and colons in the two name fields, and caps their length. `IAiAssist` (in `Application.Ai`) is the AI port; no implementation is registered, and any future one receives tokenized text from the PII layer (prompt 06), never raw values.

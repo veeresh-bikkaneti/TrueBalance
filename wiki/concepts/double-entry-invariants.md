@@ -7,7 +7,7 @@ checked:
   OfflineCPA/src/Infrastructure/Data/EfLedgerStore.cs: 4cd65b156acdb9137bc2e5656d1663c61fb300fa
   OfflineCPA/src/Domain/Entities/Period.cs: bcc4fe128753b85180c4567b93e875337cb7df6c
   OfflineCPA/src/Domain/Ledger/LedgerRuleException.cs: 17a075cde4cb15a500cb0ad2a16db76dda06ab7a
-  OfflineCPA/src/Backend/Program.cs: 631e0233ec079f91233b2c85b031567189a4e932
+  OfflineCPA/src/Backend/Program.cs: e02af47f1e75ea8f35e7446d8b8315be41b80bc8
   OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerTests.cs: 32143217f410c0b14792b66a476804be626dbab6
   docs/ledger.md: 2eba6c35c8c780c81a1572e5362ff66584445921
 ---
@@ -29,7 +29,7 @@ A posting amount is a signed `decimal`. Positive is a debit and negative is a cr
 
 `Period.Lock` can run once. There is no unlock method (repo: OfflineCPA/src/Domain/Entities/Period.cs#L41-L49). A locked period rejects new drafts and posts (repo: OfflineCPA/src/Domain/Entities/JournalEntry.cs#L53-L54) (repo: OfflineCPA/src/Domain/Entities/JournalEntry.cs#L88-L89).
 
-Violations throw `LedgerRuleException`. The ledger routes map that failure to HTTP 400 (repo: OfflineCPA/src/Domain/Ledger/LedgerRuleException.cs#L4) (repo: OfflineCPA/src/Backend/Program.cs#L186-L198).
+Violations throw `LedgerRuleException`. The ledger routes map that failure to HTTP 400 (repo: OfflineCPA/src/Domain/Ledger/LedgerRuleException.cs#L4) (repo: OfflineCPA/src/Backend/Program.cs#L166-L189).
 
 ## Change it safely
 

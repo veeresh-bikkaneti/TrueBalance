@@ -4,7 +4,7 @@ namespace TrueBalance.Tests;
 
 public class ApplicationSmokeTests
 {
-    private sealed class StubLocalFileParser : ILocalFileParser
+    private sealed class StubStatementImporter : IStatementImporter
     {
         public Task<string> ExtractTextAsync(string filePath, CancellationToken cancellationToken = default)
         {
@@ -18,9 +18,9 @@ public class ApplicationSmokeTests
     }
 
     [Fact]
-    public void Local_file_parser_contract_supports_pdf()
+    public void Statement_importer_contract_supports_pdf()
     {
-        ILocalFileParser parser = new StubLocalFileParser();
+        IStatementImporter parser = new StubStatementImporter();
 
         Assert.True(parser.SupportsExtension(".pdf"));
         Assert.True(parser.SupportsExtension(".PDF"));
@@ -28,9 +28,9 @@ public class ApplicationSmokeTests
     }
 
     [Fact]
-    public async Task Local_file_parser_contract_extracts_text()
+    public async Task Statement_importer_contract_extracts_text()
     {
-        ILocalFileParser parser = new StubLocalFileParser();
+        IStatementImporter parser = new StubStatementImporter();
 
         var text = await parser.ExtractTextAsync("local-file.pdf");
 

@@ -14,6 +14,7 @@ Catalog of all wiki pages. Updated on every ingest and analysis.
 - [[charts-of-accounts]] — Seed JSON, seeder, and `/api/books/setup`.
 - [[data-and-migrations]] — DbContext, migrations, triggers, and the snapshot test.
 - [[backend-host]] — Program wiring, `.env` loading, errors, and compose.
+- [[network-gate]] — Ports, the default-deny network gate, and adapter registration.
 - [[frontend-shell]] — The screen that exists, and the ADR 0003 layout that is planned.
 
 ## Concepts

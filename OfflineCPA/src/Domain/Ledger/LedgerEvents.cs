@@ -6,6 +6,8 @@ public static class LedgerEventType
     public const string Posted = "EntryPosted";
     public const string Reversed = "EntryReversed";
     public const string PeriodLocked = "PeriodLocked";
+    public const string NetworkDenied = "NetworkGateDenied";
+    public const string NetworkGranted = "NetworkGateGranted";
 }
 
 public sealed record EntryDrafted(Guid EntryId, Guid PeriodId, DateTime OccurredAtUtc) : IDomainEvent;
