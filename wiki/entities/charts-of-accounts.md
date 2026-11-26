@@ -3,7 +3,7 @@ checked:
   OfflineCPA/src/Infrastructure/Seed/household.json: a3f3ab0e7952d8470fcf20b5c548399a1bcf1192
   OfflineCPA/src/Infrastructure/Services/JsonChartOfAccountsSeeder.cs: 068b242b1c9b1ab4ad4773cf925766b1c6e6c717
   OfflineCPA/src/Infrastructure/Data/OfflineCPADbContext.cs: 79af2ba8029ac2126a5a2367c395c30dc210b3ab
-  OfflineCPA/src/Backend/Program.cs: 631e0233ec079f91233b2c85b031567189a4e932
+  OfflineCPA/src/Backend/Program.cs: e02af47f1e75ea8f35e7446d8b8315be41b80bc8
   OfflineCPA/tests/TrueBalance.Tests/ChartSeedTests.cs: b86f643b3ca3a10024595e2ea30a02584d58ac4e
   OfflineCPA/src/Domain/Entities/Account.cs: a1cf6b39dc2c2488604e542adf232732cbe2a353
 ---

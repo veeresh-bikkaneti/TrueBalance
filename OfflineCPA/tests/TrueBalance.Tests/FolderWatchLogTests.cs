@@ -39,7 +39,7 @@ public class FolderWatchLogTests : IDisposable
 
         var logger = new CaptureLogger<LocalFileProcessorService>();
         var services = new ServiceCollection();
-        services.AddSingleton<ILocalFileParser, RejectingParser>();
+        services.AddSingleton<IStatementImporter, RejectingParser>();
         using var provider = services.BuildServiceProvider();
 
         var service = new LocalFileProcessorService(logger, config, provider);
@@ -51,7 +51,7 @@ public class FolderWatchLogTests : IDisposable
         Assert.Matches("[0-9a-f]{32}", logged);
     }
 
-    private sealed class RejectingParser : ILocalFileParser
+    private sealed class RejectingParser : IStatementImporter
     {
         public bool SupportsExtension(string extension) => false;
 

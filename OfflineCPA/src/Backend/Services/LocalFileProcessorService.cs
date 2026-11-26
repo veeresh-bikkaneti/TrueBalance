@@ -58,17 +58,17 @@ public class LocalFileProcessorService : BackgroundService
             _logger.LogInformation("Processing file {FileId}", fileId);
 
             using var scope = _serviceProvider.CreateScope();
-            var parser = scope.ServiceProvider.GetRequiredService<ILocalFileParser>();
+            var importer = scope.ServiceProvider.GetRequiredService<IStatementImporter>();
             var extension = Path.GetExtension(file);
 
-            if (!parser.SupportsExtension(extension))
+            if (!importer.SupportsExtension(extension))
             {
                 _logger.LogWarning("Unsupported file type {FileId}", fileId);
                 continue;
             }
 
             var dbContext = scope.ServiceProvider.GetRequiredService<OfflineCPADbContext>();
-            var text = await parser.ExtractTextAsync(file, stoppingToken);
+            var text = await importer.ExtractTextAsync(file, stoppingToken);
 
             // Create a basic transaction from the file
             var transaction = new Transaction

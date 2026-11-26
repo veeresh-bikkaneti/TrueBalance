@@ -3,7 +3,7 @@ using UglyToad.PdfPig;
 
 namespace Infrastructure.Services;
 
-public class PdfFileParser : ILocalFileParser
+public class PdfFileParser : IStatementImporter
 {
     public bool SupportsExtension(string extension)
     {

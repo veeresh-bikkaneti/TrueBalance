@@ -2,7 +2,11 @@ using Application.Uploads;
 
 namespace Application.Interfaces;
 
-public interface ISecureUploadStore
+/// <summary>
+/// Port for the document vault: an adapter stores one uploaded file under a
+/// generated name and never echoes the client's filename back out.
+/// </summary>
+public interface IDocumentVault
 {
     Task<StoredUpload> SaveAsync(
         Stream content,
