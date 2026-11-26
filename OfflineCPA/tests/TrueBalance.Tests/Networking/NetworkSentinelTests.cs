@@ -5,10 +5,12 @@ using TrueBalance.Tests.Ledger;
 namespace TrueBalance.Tests.Networking;
 
 /// <summary>
-/// Network sentinel: while the main flows run, no socket to a non-loopback
-/// address may open. On Linux (CI) the harness watches /proc/net/tcp and
-/// /proc/net/tcp6 and fails naming the endpoint it saw. Loopback is allowed
-/// because the database itself may listen there or at another local address.
+/// Network sentinel: while the main flows run, this test process must not
+/// open a socket to a non-loopback address. On Linux (CI) the harness watches
+/// /proc/net/tcp and /proc/net/tcp6 but only counts rows whose inode belongs
+/// to a socket owned by this process (collected from /proc/self/fd), so other
+/// processes' connections cannot fail the test. Loopback is still allowed
+/// because the database itself may listen there.
 /// On other systems the part after the format check cannot run; the
 /// architecture test <see cref="TrueBalance.Tests.Ledger.LedgerArchitectureTests.Only_networking_modules_reference_http_or_sockets"/>
 /// covers the type-level rule instead.
@@ -25,8 +27,9 @@ public class NetworkSentinelTests
         // long-lived sockets; those were not opened by the flows. The sentinel
         // fails only on a non-loopback endpoint that appears during the run.
         var preExisting = new HashSet<string>();
+        var ownInodes = ReadOwnSocketInodes();
         foreach (var path in new[] { "/proc/net/tcp", "/proc/net/tcp6" })
-            foreach (var socket in ReadNonLoopbackSockets(path))
+            foreach (var socket in ReadNonLoopbackSockets(path, ownInodes))
                 preExisting.Add(socket.Remote);
 
         var violations = new List<string>();
@@ -36,7 +39,7 @@ public class NetworkSentinelTests
             while (!cts.IsCancellationRequested)
             {
                 foreach (var path in new[] { "/proc/net/tcp", "/proc/net/tcp6" })
-                    foreach (var socket in ReadNonLoopbackSockets(path))
+                    foreach (var socket in ReadNonLoopbackSockets(path, ownInodes))
                         if (!preExisting.Contains(socket.Remote) || socket.State == "02")
                             violations.Add($"{path}: remote {socket.Remote} state {socket.State}");
                 try { await Task.Delay(25, cts.Token); }
@@ -56,7 +59,7 @@ public class NetworkSentinelTests
 
         // Give the sampler a last chance to catch something that opened and closed.
         foreach (var path in new[] { "/proc/net/tcp", "/proc/net/tcp6" })
-            foreach (var socket in ReadNonLoopbackSockets(path))
+            foreach (var socket in ReadNonLoopbackSockets(path, ReadOwnSocketInodes()))
                 if (!preExisting.Contains(socket.Remote) || socket.State == "02")
                     violations.Add($"{path}: remote {socket.Remote} state {socket.State}");
 
@@ -100,8 +103,47 @@ public class NetworkSentinelTests
     /// <summary>A remote endpoint observed in an active TCP state.</summary>
     private sealed record SocketEndpoint(string Remote, string State);
 
-    /// <summary>Returns ESTABLISHED (01) or SYN_SENT (02) sockets that are not loopback.</summary>
-    private static IEnumerable<SocketEndpoint> ReadNonLoopbackSockets(string path)
+    /// <summary>The socket inodes this process owns, read from /proc/self/fd links like "socket:[12345]".</summary>
+    private static IReadOnlySet<string> ReadOwnSocketInodes()
+    {
+        try
+        {
+            var inodes = new HashSet<string>();
+            foreach (var entry in Directory.EnumerateFileSystemEntries("/proc/self/fd"))
+            {
+                var target = TryReadLink(entry);
+                // Format: "socket:[12345]". The inode is the digits inside the brackets.
+                const string prefix = "socket:[";
+                if (target is not null && target.StartsWith(prefix, StringComparison.Ordinal) && target.EndsWith("]", StringComparison.Ordinal))
+                    inodes.Add(target[prefix.Length..^1]);
+            }
+
+            return inodes;
+        }
+        catch (IOException)
+        {
+            return new HashSet<string>();
+        }
+    }
+
+    private static string? TryReadLink(string path)
+    {
+        try
+        {
+            return File.ResolveLinkTarget(path, returnFinalTarget: false)?.FullName;
+        }
+        catch (IOException)
+        {
+            return null;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Returns ESTABLISHED (01) or SYN_SENT (02) sockets that are not loopback and belong to this process.</summary>
+    private static IEnumerable<SocketEndpoint> ReadNonLoopbackSockets(string path, IReadOnlySet<string> ownInodes)
     {
         try
         {
@@ -113,6 +155,11 @@ public class NetworkSentinelTests
             {
                 var columns = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                 if (columns.Length < 4)
+                    continue;
+
+                // Column layout: sl local_address rem_address st tx:rx tr retrnsmt uid timeout inode.
+                var inode = columns.Length > 9 ? columns[9] : string.Empty;
+                if (ownInodes.Count != 0 && !ownInodes.Contains(inode))
                     continue;
 
                 var remote = columns[2];

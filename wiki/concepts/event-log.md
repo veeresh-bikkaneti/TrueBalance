@@ -33,7 +33,7 @@ The use case calls dispatch and then `SaveChanges`, so a thrown rule writes neit
 
 ## Network gate rows
 
-The gate writes two more event types to the same append-only table: `NetworkGateDenied` and `NetworkGateGranted` (repo: OfflineCPA/src/Domain/Ledger/LedgerEvents.cs#L9-L10) (repo: OfflineCPA/src/Domain/Enums/LedgerAction.cs#L3-L11). They are not aggregate events; `LedgerNetworkAttemptLog` appends the row directly, and the summary carries only the sanitized adapter name and host (repo: OfflineCPA/src/Application/Ledger/LedgerNetworkAttemptLog.cs#L25-L47).
+The gate writes two more event types to the same append-only table: `NetworkGateDenied` and `NetworkGateGranted` (repo: OfflineCPA/src/Domain/Ledger/LedgerEvents.cs#L9-L10) (repo: OfflineCPA/src/Domain/Enums/LedgerAction.cs#L3-L11). The wired decorator `ScopedNetworkAttemptLog` opens a fresh scope per attempt, so the row is the only change that scope saves; see [[network-gate]]. They are not aggregate events; `LedgerNetworkAttemptLog` appends the row, and the summary carries only the sanitized adapter name and host (repo: OfflineCPA/src/Application/Ledger/LedgerNetworkAttemptLog.cs#L25-L47).
 
 ## Change it safely
 

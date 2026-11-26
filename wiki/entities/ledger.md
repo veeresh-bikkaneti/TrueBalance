@@ -12,7 +12,7 @@ checked:
   OfflineCPA/src/Application/Ledger/ReverseEntry.cs: 15513cf210f49717466fb92da07acbd5d295bcbd
   OfflineCPA/src/Application/Ledger/LockPeriod.cs: 5847bbfe4d6d13869463ab78e55d4d8751fff324
   OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerTests.cs: 32143217f410c0b14792b66a476804be626dbab6
-  OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs: 13d5b9f7311ccf67810976ba90a837f0a68c0f20
+  OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs: c241452235c4fd1d5dbe64d134c98008fc5cf610
   docs/architecture/modules.md: 3d9497c0c96c00fe368eac6fba2caba23dd4e726
 ---
 # Ledger
@@ -41,7 +41,7 @@ Routes, all thin, map a rule failure to HTTP 400. Until a later prompt there is 
 
 Balance and lock rules are on [[double-entry-invariants]]. The audit row for each event is on [[event-log]].
 
-Behavior tests live in `LedgerTests` (reject unbalanced posts, reversals, locked periods, audit rows) (repo: OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerTests.cs#L11-L15). Namespace rules live in `LedgerArchitectureTests` (repo: OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs#L20-L70).
+Behavior tests live in `LedgerTests` (reject unbalanced posts, reversals, locked periods, audit rows) (repo: OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerTests.cs#L11-L15). Namespace rules live in `LedgerArchitectureTests` (repo: OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs#L22-L108).
 
 ## Change it safely
 
