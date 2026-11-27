@@ -19,7 +19,7 @@ public sealed class QueueImport(IImportStore store, IClock clock)
 /// <summary>The sign layout a person confirmed. Column names stay with the bank profile.</summary>
 public sealed record ConfirmedLayout(AmountLayout AmountLayout, bool DebitsCarryMinus = false,
     string? IndicatorColumn = null, string? MoneyInMarker = null, string? MoneyOutMarker = null,
-    BalanceMeaning BalanceMeaning = BalanceMeaning.FromAccountType);
+    BalanceMeaning? BalanceMeaning = null);
 
 public sealed record ImportStatementCommand(
     Guid BatchId, Guid BankAccountId, string? BankName, ConfirmedLayout? Layout = null);
@@ -117,7 +117,7 @@ public sealed class ImportStatement(
             MoneyOutMarker = layout.MoneyOutMarker
         };
         await CsvProfiles.ApplyAsync(store, masker, command.BankName, map, confirmed: true, ct, layout.BalanceMeaning);
-        return (map, layout.BalanceMeaning);
+        return (map, layout.BalanceMeaning ?? profile?.BalanceMeaning ?? BalanceMeaning.FromAccountType);
     }
 
     private async Task<int> FailAsync(ImportBatch batch, string reason, CancellationToken ct)
@@ -146,9 +146,9 @@ internal static class CsvProfiles
 
     /// <summary>Validates, masks and sets the profile. The caller saves.</summary>
     public static async Task ApplyAsync(IImportStore store, IPiiMasker masker, string bankName, CsvColumnMap map,
-        bool confirmed, CancellationToken ct, BalanceMeaning meaning = BalanceMeaning.FromAccountType)
+        bool confirmed, CancellationToken ct, BalanceMeaning? meaning = null)
     {
-        if (!Enum.IsDefined(meaning))
+        if (meaning is { } m && !Enum.IsDefined(m))
             throw new LedgerRuleException("That balance meaning is not supported.");
         if (string.IsNullOrWhiteSpace(bankName) || string.IsNullOrWhiteSpace(map.Date) || string.IsNullOrWhiteSpace(map.Description))
             throw new LedgerRuleException("A profile needs a bank name, a date column and a description column.");
@@ -193,7 +193,7 @@ internal static class CsvProfiles
         profile.IndicatorColumn = map.IndicatorColumn;
         profile.MoneyInMarker = map.MoneyInMarker;
         profile.MoneyOutMarker = map.MoneyOutMarker;
-        profile.BalanceMeaning = meaning;
+        profile.BalanceMeaning = meaning ?? profile.BalanceMeaning;
         profile.LayoutConfirmed = confirmed;
     }
 }

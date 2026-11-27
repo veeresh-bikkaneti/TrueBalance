@@ -184,6 +184,20 @@ public sealed class CardBalanceDiscardTests : IDisposable
         Assert.All(FakePii.LeakTargets(), raw => Assert.DoesNotContain(raw, json, StringComparison.Ordinal));
     }
 
+    [Fact]
+    public async Task Confirming_again_without_a_balance_meaning_keeps_the_saved_one()
+    {
+        using var db = NewDb();
+        const string csv = "date,description,amount,balance\n2026-06-15,a,-10,-110\n2026-06-16,b,-25,-135\n";
+        await ImportAsync(db, await QueueAsync(db, csv),
+            new ConfirmedLayout(AmountLayout.Signed, BalanceMeaning: BalanceMeaning.Available));
+        var next = await QueueAsync(db, csv);
+        await ImportAsync(db, next, new ConfirmedLayout(AmountLayout.Signed));
+
+        Assert.Equal(BalanceMeaning.Available, db.CsvMappingProfiles.Single().BalanceMeaning);
+        Assert.Equal(BalanceCheck.Passed, db.ImportBatches.Single(b => b.Id == next).BalanceCheck);
+    }
+
     private sealed class Vault(string path) : IDocumentVault
     {
         public Task<Application.Uploads.StoredUpload> SaveAsync(Stream content, long length, string originalFileName,
