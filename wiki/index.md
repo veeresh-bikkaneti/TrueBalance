@@ -10,6 +10,7 @@ Catalog of all wiki pages. Updated on every ingest and analysis.
 
 ## Entities
 - [[ledger]] — Ledger types, store, routes, tests, and what to change with them.
+- [[statement-import]] — Queued batches, staged rows, duplicate flags, and posting.
 - [[uploads]] — Upload store, PDF parser, folder watcher, and their tests.
 - [[pii-masking]] — The 04b masking core: policy, port, detectors, redaction, and the no-leak gate.
 - [[charts-of-accounts]] — Seed JSON, seeder, and `/api/books/setup`.
