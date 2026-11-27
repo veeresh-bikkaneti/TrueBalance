@@ -5,6 +5,7 @@ Read this file, `docs/README.md`, and `docs/specs/prompts/INDEX.md` first. Every
 ## 1. Mission & Non-Negotiable Constraints
 - **What TrueBalance is**: Free, open-source, offline bookkeeping app for small businesses and households (`OfflineCPA/`). Keeps balanced books, protects PII by design, installs with one command, and exports CPA-ready tax reports (recordkeeping support only, not tax or legal advice).
 - **Offline & PII-by-Design**: Zero new outbound network paths outside `INetworkGate`. Zero raw PII in logs, errors, exports, committed fixtures, or prompts sent to any AI model.
+- **Contributor warning**: Do not run real statements, tax forms, or receipts through any build before prompt `06` merges (see `docs/privacy/masking-coverage.md`); use the synthetic fixtures in `OfflineCPA/tests/TrueBalance.Tests/Pii/Fixtures/` only.
 - **Placeholders**: Never pre-fill real vendor or business names in templates or sample data; use generic placeholders.
 
 ## 2. Repo State & Active Queue (as of 2026-11-25)

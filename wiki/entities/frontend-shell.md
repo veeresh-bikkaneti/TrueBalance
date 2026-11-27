@@ -5,7 +5,7 @@ checked:
   OfflineCPA/frontend/src/components/Dashboard.tsx: e97260fda939957facc5a7c2db1486a35d7cfa4f
   OfflineCPA/frontend/vite.config.ts: 05af52d3878d1d225177e0ccbb3e5b9499f3680e
   docs/adr/0003-clean-architecture-ports-adapters.md: c9c7256eea1b992b1d2443ea30a1356ec0de5388
-  AGENTS.md: f2e9c1732b93c6156c3176a6e36f7f320a03edb6
+  AGENTS.md: d4872b7b8ff1b9704748aee4d5756e10b01624ae
 ---
 # Frontend shell
 

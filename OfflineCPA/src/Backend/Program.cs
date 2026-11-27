@@ -1,7 +1,7 @@
 using Application.Interfaces;
 using Application.Ledger;
-using Application.Uploads;
 using Backend.Configuration;
+using Backend.Endpoints;
 using Backend.Extensions;
 using Backend.Services;
 using Domain.Entities;
@@ -10,6 +10,8 @@ using Infrastructure.Data;
 using Infrastructure.Options;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Console;
+using Microsoft.Extensions.Options;
 
 DotEnv.Load();
 
@@ -18,6 +20,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSecureErrorHandling();
+
+// Every log line passes the PII masker before it reaches the console, so a
+// developer mistake cannot leak a raw account number into the logs.
+builder.Logging.ClearProviders();
+builder.Logging.Services.AddSingleton<ILoggerProvider>(sp => new PiiRedactionLoggerProvider(
+    new ConsoleLoggerProvider(sp.GetRequiredService<IOptionsMonitor<ConsoleLoggerOptions>>()),
+    sp.GetRequiredService<IPiiMasker>()));
 
 // Configure EF Core with PostgreSQL. The connection string must come from
 // configuration (environment variable or .env); there is no built-in secret.
@@ -43,6 +52,16 @@ builder.Services.AddScoped<ReverseEntry>();
 builder.Services.AddScoped<LockPeriod>();
 builder.Services.AddScoped<GetAccountBalances>();
 builder.Services.Configure<UploadOptions>(builder.Configuration.GetSection(UploadOptions.SectionName));
+builder.Services.Configure<PiiOptions>(builder.Configuration.GetSection(PiiOptions.SectionName));
+// Anchor the fingerprint key to the app content root, not the process
+// working directory, so the key lands in one predictable, git-ignored place
+// no matter how the backend is started.
+builder.Services.PostConfigure<PiiOptions>(options =>
+{
+    options.FingerprintKeyPath = Path.IsPathRooted(options.FingerprintKeyPath)
+        ? options.FingerprintKeyPath
+        : Path.Combine(builder.Environment.ContentRootPath, options.FingerprintKeyPath);
+});
 // No IAiAssist implementation is registered: the app ships offline and AI is
 // an opt-in integration; any future implementation receives tokenized text
 // from the PII layer, never raw values.
@@ -60,6 +79,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+Infrastructure.Pii.PiiStartup.WarnIfKeyGenerated(app.Services.GetRequiredService<IPiiMasker>(), app.Logger);
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -70,65 +91,13 @@ app.UseCors("AllowFrontend");
 app.UseSecureErrorHandling();
 
 // Endpoints
-app.MapPost("/api/upload", async (
-    IFormFile file,
-    IDocumentVault vault,
-    IStatementImporter importer,
-    OfflineCPADbContext db,
-    CancellationToken cancellationToken) =>
-{
-    if (file == null || file.Length == 0)
-        return Results.BadRequest(new { error = "No file uploaded." });
+app.MapUploadEndpoints();
 
-    StoredUpload stored;
-    try
-    {
-        stored = await vault.SaveAsync(
-            file.OpenReadStream(),
-            file.Length,
-            file.FileName,
-            file.ContentType,
-            cancellationToken);
-    }
-    catch (InvalidUploadException ex)
-    {
-        return Results.BadRequest(new { error = ex.Message });
-    }
-
-    // Process offline via PdfPig
-    if (importer.SupportsExtension(stored.Extension))
-    {
-        try
-        {
-            var text = await importer.ExtractTextAsync(stored.FullPath);
-
-            var transaction = new Transaction
-            {
-                Description = $"User Uploaded: {stored.OriginalFileName}",
-                Date = DateTime.UtcNow,
-                ReferenceDocumentPath = stored.FullPath
-            };
-
-            db.Transactions.Add(transaction);
-            await db.SaveChangesAsync();
-            return Results.Ok(new { message = "File uploaded and processed smoothly locally.", id = stored.Id });
-        }
-        catch (Exception)
-        {
-             return Results.Problem("File saved locally, but text extraction failed.");
-        }
-    }
-
-    return Results.Ok(new { message = "File uploaded securely to local user-assets.", id = stored.Id });
-})
-.WithName("UploadFile")
-.DisableAntiforgery();
-
-app.MapPost("/api/books/setup", async (SetupBooksRequest request, IChartOfAccountsSeeder seeder) =>
+app.MapPost("/api/books/setup", async (SetupBooksRequest request, IChartOfAccountsSeeder seeder, IPiiMasker masker) =>
 {
     if (!seeder.SupportedKinds.Contains(request.Kind, StringComparer.OrdinalIgnoreCase))
     {
-        return Results.BadRequest(new { error = $"Unknown books kind '{request.Kind}'. Supported kinds: {string.Join(", ", seeder.SupportedKinds)}." });
+        return Results.BadRequest(new { error = masker.Mask($"Unknown books kind '{request.Kind}'. Supported kinds: {string.Join(", ", seeder.SupportedKinds)}.") });
     }
 
     try
@@ -138,7 +107,7 @@ app.MapPost("/api/books/setup", async (SetupBooksRequest request, IChartOfAccoun
     }
     catch (ArgumentException ex)
     {
-        return Results.BadRequest(new { error = ex.Message });
+        return Results.BadRequest(new { error = masker.Mask(ex.Message) });
     }
 })
 .WithName("SetupBooks")
@@ -159,66 +128,7 @@ app.MapGet("/api/export", async (IReportExporter exporter, CancellationToken can
 .WithName("ExportToExcel")
 .WithOpenApi();
 
-// Ledger endpoints: thin. Bind, call one use case, map rule violations to 400.
-// No auth until a later prompt, so every ledger action is attributed to the constant "local" user.
-const string LocalUserId = "local";
-
-app.MapPost("/api/ledger/entries", async (CreateEntryRequest request, CreateDraftEntry useCase, CancellationToken ct) =>
-{
-    try
-    {
-        var lines = request.Lines.Select(l => new DraftPostingLine(l.AccountId, l.Amount, l.Memo)).ToList();
-        var id = await useCase.HandleAsync(new CreateDraftEntryCommand(request.Date, request.Memo, request.PeriodId, lines, LocalUserId), ct);
-        return Results.Ok(new { id });
-    }
-    catch (LedgerRuleException ex) { return Results.BadRequest(new { error = ex.Message }); }
-})
-.WithName("CreateLedgerEntry")
-.WithOpenApi();
-
-app.MapPost("/api/ledger/entries/{id:guid}/post", async (Guid id, PostEntry useCase, CancellationToken ct) =>
-{
-    try
-    {
-        await useCase.HandleAsync(new PostEntryCommand(id, LocalUserId), ct);
-        return Results.Ok(new { id });
-    }
-    catch (LedgerRuleException ex) { return Results.BadRequest(new { error = ex.Message }); }
-})
-.WithName("PostLedgerEntry")
-.WithOpenApi();
-
-app.MapPost("/api/ledger/entries/{id:guid}/reverse", async (Guid id, ReverseEntryRequest request, ReverseEntry useCase, CancellationToken ct) =>
-{
-    try
-    {
-        var reversalId = await useCase.HandleAsync(new ReverseEntryCommand(id, request.ReversalDate, request.Memo, LocalUserId), ct);
-        return Results.Ok(new { id = reversalId });
-    }
-    catch (LedgerRuleException ex) { return Results.BadRequest(new { error = ex.Message }); }
-})
-.WithName("ReverseLedgerEntry")
-.WithOpenApi();
-
-app.MapPost("/api/ledger/periods/{id:guid}/lock", async (Guid id, LockPeriod useCase, CancellationToken ct) =>
-{
-    try
-    {
-        await useCase.HandleAsync(new LockPeriodCommand(id, LocalUserId), ct);
-        return Results.Ok(new { id });
-    }
-    catch (LedgerRuleException ex) { return Results.BadRequest(new { error = ex.Message }); }
-})
-.WithName("LockLedgerPeriod")
-.WithOpenApi();
-
-app.MapGet("/api/ledger/balances", async (GetAccountBalances useCase, CancellationToken ct) =>
-{
-    try { return Results.Ok(await useCase.HandleAsync(ct)); }
-    catch (LedgerRuleException ex) { return Results.BadRequest(new { error = ex.Message }); }
-})
-.WithName("GetLedgerBalances")
-.WithOpenApi();
+app.MapLedgerEndpoints();
 
 // Auto-migrate on startup for ease of deployment
 using (var scope = app.Services.CreateScope())

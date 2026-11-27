@@ -15,3 +15,8 @@ Parse recent entries with: `grep "^## \[" wiki/log.md | tail -5`
 - Added [[network-gate]]: ports in Application, default-deny `LocalNetworkGate`, module-scan adapter registration, `IAiAssist` interface with no implementation.
 - Renamed `ILocalFileParser` to `IStatementImporter` and `ISecureUploadStore` to `IDocumentVault`; moved the Excel export behind `IReportExporter`.
 - Updated the checked hashes and line anchors on every page that cites `Program.cs`, the upload store, the parser, the architecture tests, or `docs/architecture/modules.md`.
+
+## [2026-11-26] update | PII masking core (prompt 04b)
+- Added [[pii-masking]]: domain `PiiPolicy` behind `IPiiMasker`, four local detectors, last-4 plus HMAC token, masked console logs and upload error bodies, id-only transaction references.
+- Moved the upload route to `UploadEndpoints`; the folder watcher stores the generated id instead of the name and path.
+- Added `docs/privacy/masking-coverage.md` and the no-leak test that gates prompt 05. Refreshed the checked hashes on every page citing changed files.
