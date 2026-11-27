@@ -19,16 +19,20 @@ public sealed class PiiPolicy
     // Lower priority number wins an overlapping span. Routing numbers have
     // a check digit, so they outrank a plain nine-digit read; cards pass a
     // Luhn check, so they come next. Bank account patterns are the most
-    // greedy, so they go last.
+    // greedy, so they go last. An email goes first, because digits inside it
+    // would otherwise be claimed alone and leave the rest readable. Phone
+    // shapes rank just above account numbers.
     private static readonly IReadOnlyDictionary<PiiType, int> Priority = new Dictionary<PiiType, int>
     {
-        [PiiType.AbaRoutingNumber] = 0,
-        [PiiType.Card] = 1,
-        [PiiType.Ssn] = 2,
-        [PiiType.EinItin] = 3,
-        [PiiType.DateOfBirth] = 4,
-        [PiiType.StreetAddress] = 4,
-        [PiiType.BankAccountNumber] = 5,
+        [PiiType.Email] = 0,
+        [PiiType.AbaRoutingNumber] = 1,
+        [PiiType.Card] = 2,
+        [PiiType.Ssn] = 3,
+        [PiiType.EinItin] = 4,
+        [PiiType.DateOfBirth] = 5,
+        [PiiType.StreetAddress] = 5,
+        [PiiType.Phone] = 6,
+        [PiiType.BankAccountNumber] = 7,
     };
 
     private static readonly IReadOnlyDictionary<PiiType, string> TypeToken = new Dictionary<PiiType, string>
@@ -40,6 +44,8 @@ public sealed class PiiPolicy
         [PiiType.Card] = "CARD",
         [PiiType.DateOfBirth] = "DOB",
         [PiiType.StreetAddress] = "ADDR",
+        [PiiType.Phone] = "PHONE",
+        [PiiType.Email] = "EMAIL",
     };
 
     private const string UnknownTypeToken = "PII";
@@ -89,6 +95,7 @@ public sealed class PiiPolicy
         }
 
         CoverLongRuns(text, claimed, candidates.Select(c => c.Match));
+        CoverLeadingDigits(text, claimed, candidates.Select(c => c.Match));
         claimed.Sort((a, b) => a.Start.CompareTo(b.Start));
 
         var masked = new StringBuilder(text.Length);
@@ -103,7 +110,7 @@ public sealed class PiiPolicy
             matches.Add(new MaskedValue(
                 match.Type,
                 Last4Of(match),
-                Fingerprint(match.RawValue),
+                FingerprintOf(match),
                 TokenFor(match)));
         }
 
@@ -142,28 +149,64 @@ public sealed class PiiPolicy
         }
     }
 
+    // A phone or address that starts inside a grouped number takes its last
+    // group, and the account claim for the whole run is dropped as an overlap.
+    // The phone or address claim is then widened back over the earlier groups.
+    // It keeps its type, so the token still shows no digits.
+    private static void CoverLeadingDigits(string text, List<PiiMatch> claimed, IEnumerable<PiiMatch> candidates)
+    {
+        foreach (var run in candidates.Where(m => m.Type == PiiType.BankAccountNumber))
+        {
+            var head = claimed.Find(c => c.Type is PiiType.Phone or PiiType.StreetAddress
+                && c.Start > run.Start && c.Start < run.Start + run.Length);
+            if (head is null)
+            {
+                continue;
+            }
+
+            var exposed = Enumerable.Range(run.Start, head.Start - run.Start).Any(i =>
+                char.IsDigit(text[i]) && !claimed.Any(c => i >= c.Start && i < c.Start + c.Length));
+            if (!exposed)
+            {
+                continue;
+            }
+
+            var end = head.Start + head.Length;
+            claimed.RemoveAll(c => c.Start < end && c.Start + c.Length > run.Start);
+            claimed.Add(new PiiMatch(head.Type, text[run.Start..end], run.Start, end - run.Start));
+        }
+    }
+
     /// <summary>HMAC-SHA256 over the digits only, so "123-45-6789" and
     /// "123456789" produce the same fingerprint and still match.</summary>
-    public string Fingerprint(string rawValue)
+    public string Fingerprint(string rawValue) => Hmac(DigitsOf(ToAsciiDigits(rawValue)));
+
+    // An email is matched on its lowercased text: its digits alone would give
+    // most addresses the same fingerprint.
+    private string FingerprintOf(PiiMatch match) =>
+        match.Type == PiiType.Email
+            ? Hmac(match.RawValue.ToLowerInvariant())
+            : Fingerprint(match.RawValue);
+
+    private string Hmac(string value)
     {
-        rawValue = ToAsciiDigits(rawValue);
         using var hmac = new HMACSHA256(_key);
-        var digest = hmac.ComputeHash(Encoding.UTF8.GetBytes(DigitsOf(rawValue)));
-        return Convert.ToHexString(digest).ToLowerInvariant();
+        return Convert.ToHexString(hmac.ComputeHash(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
     }
 
     private string TokenFor(PiiMatch match)
     {
-        var fingerprint = Fingerprint(match.RawValue)[..FingerprintTokenLength];
+        var fingerprint = FingerprintOf(match)[..FingerprintTokenLength];
         var label = TypeToken.GetValueOrDefault(match.Type, UnknownTypeToken);
         var visible = KeepsLast4(match.Type) ? $"****{Last4Of(match)} " : string.Empty;
         return $"[{label} {visible}fp:{fingerprint}]";
     }
 
     // Numbers keep their last four digits for display and matching. A date of
-    // birth or street address keeps none: a year or house number would still
-    // narrow the value down, so only the fingerprint stays readable.
-    private static bool KeepsLast4(PiiType type) => type is not (PiiType.DateOfBirth or PiiType.StreetAddress);
+    // birth, street address, phone number or email keeps none: any readable
+    // part would narrow the value down, so only the fingerprint stays.
+    private static bool KeepsLast4(PiiType type) =>
+        type is not (PiiType.DateOfBirth or PiiType.StreetAddress or PiiType.Phone or PiiType.Email);
 
     private static string Last4Of(PiiMatch match) =>
         KeepsLast4(match.Type) ? DigitsOf(match.RawValue)[^4..] : string.Empty;

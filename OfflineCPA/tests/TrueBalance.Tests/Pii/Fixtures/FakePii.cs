@@ -41,6 +41,29 @@ public static class FakePii
     public const string DotGroupedAmount = "12.345.678";
     public const string VersionPrefixedAccount = "v.1.1234.5678.9012";
 
+    public const string Phone = "402-555-0182";
+    public const string PhoneBracketed = "(402) 555-0182";
+    public const string Email = "jane.doe@example.com";
+
+    // Prompt 06c: card-shaped runs that fail the card check.
+    public const string LabeledFourByFour = "1234 5678 9012 3456";
+    public const string LabeledFourSixFive = "1234 567890 12345";
+    public const string LabeledFourSixFour = "1234 567890 1234";
+
+    public const string DobTwoDigitYear = "04/12/80";
+    public const string DobMonthName = "April 12, 1980";
+    public const string DobDayMonthName = "12 Apr 1980";
+
+    public const string AddressHyphenName = "742 Jean-Luc Road";
+    public const string AddressApostropheName = "742 O'Brien Street";
+    public const string AddressValley = "12 Green Valley";
+    public const string AddressFiveWords = "100 Martin Luther King Jr Blvd";
+    public const string AddressOrdinal = "100 5th Avenue";
+    public const string AddressRuralRoute = "Rural Route 2 Box 15";
+    public const string AddressShortRural = "RR 2 Box 152";
+    public const string AddressContractRoute = "HC 68 Box 23A";
+    public const string PoBoxWithUnit = "PO Box 12 Apt 4";
+
     public static readonly string[] AllRaw =
     [
         SsnFormatted,
@@ -53,6 +76,8 @@ public static class FakePii
         CardNumberSpaced,
         DateOfBirth,
         StreetAddress,
+        Phone,
+        Email,
     ];
 
     /// <summary>Raw digits of each value, for fingerprint comparisons.</summary>
@@ -69,7 +94,7 @@ public static class FakePii
         $"Account {AccountNumberA} at routing {RoutingNumber}. " +
         $"Payroll for employee SSN {SsnFormatted} filed under EIN {EinFormatted}. " +
         $"Contractor ITIN {ItinFormatted}. Card {CardNumberSpaced}. " +
-        $"DOB {DateOfBirth}. Ship to {StreetAddress}. Amount 12.50 on 2024-11-25 to ACME Corp.";
+        $"DOB {DateOfBirth}. Ship to {StreetAddress}. Call {Phone} or write {Email}. Amount 12.50 on 2024-11-25 to ACME Corp.";
 
     /// <summary>The values that must never appear anywhere after masking.</summary>
     /// A date's bare digits are left out: the app treats them as a plain date.
