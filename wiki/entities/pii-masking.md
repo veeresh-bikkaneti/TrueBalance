@@ -2,19 +2,20 @@
 checked:
   OfflineCPA/tests/TrueBalance.Tests/Imports/ImportNoLeakTests.cs: 2ae563b07bca5b4676ef9be31ac73824c010c9ee
   docs/adr/0010-pii-masking-before-import.md: 99d7139b39965aef01e0ff0e94963e7b5e5db733
-  OfflineCPA/src/Domain/Pii/PiiPolicy.cs: 19d634138951366ef7e865386baf4dc99c078b39
+  OfflineCPA/src/Domain/Pii/PiiPolicy.cs: 2832d022095902579fc0588140f7fb843b4b3f1f
   OfflineCPA/src/Application/Interfaces/IPiiMasker.cs: c5a61065c626451d907e20e5f30172d52478ddaf
   OfflineCPA/src/Infrastructure/Pii/PiiMasker.cs: ec9afd578f6b17f61cdf1a4f35d6aefa1beaf75e
   OfflineCPA/src/Infrastructure/Pii/LocalFingerprintKeyStore.cs: 61d322ca1468d8c687bd5b828d19ff078ef52b1f
-  OfflineCPA/src/Infrastructure/Pii/PiiModule.cs: 8c690cff4a66ea442f07857c106683aeb449110f
+  OfflineCPA/src/Infrastructure/Pii/PiiModule.cs: 703da31435fd3254cf73a7321e7baae2e12a14a5
+  OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs: 33c34cedec49c541cfae8e468e5484c0df8759dc
   OfflineCPA/src/Infrastructure/Pii/Detectors/SsnDetector.cs: 8173fe31c27dce7c81a307a66efb9d6b4dfa54b1
   OfflineCPA/src/Infrastructure/Pii/Detectors/EinItinDetector.cs: 010b52872b3fc4f2cc8064cb204f33b6d390bf07
   OfflineCPA/src/Infrastructure/Pii/Detectors/AbaRoutingNumberDetector.cs: 9c7f47fe4ea374f862ae466ca2c7b4a57742c962
-  OfflineCPA/src/Infrastructure/Pii/Detectors/BankAccountNumberDetector.cs: b84a06f41470aa290fbfc33b08ee52b2426547d6
+  OfflineCPA/src/Infrastructure/Pii/Detectors/BankAccountNumberDetector.cs: 062fa3bd9c1a18ca0e95dedf3c6b85fcf1c40fd6
   OfflineCPA/src/Backend/Extensions/PiiRedactionLoggerProvider.cs: 50ff20605e62fc05011c5f6a16392eeb23aeb600
   OfflineCPA/src/Backend/Program.cs: 452674984015389ecb7473705b58db3f8a3cbf88
   OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs: 5c7efd00e3d56a2163cfaacab57769403ea3d8e3
-  OfflineCPA/tests/TrueBalance.Tests/Pii/Fixtures/FakePii.cs: fb3e9924da8c85022fa73680ea2d9ed11c5b99fb
+  OfflineCPA/tests/TrueBalance.Tests/Pii/Fixtures/FakePii.cs: 11d3166f83893c23edd016d5853befb512743e31
   OfflineCPA/tests/TrueBalance.Tests/Pii/PiiNoLeakTests.cs: 847b2efdf07f975305c68bdf7c07c5e3c8ba0eb9
 ---
 # PII masking core
@@ -28,6 +29,8 @@ The domain owns the policy: `PiiPolicy` takes a local HMAC key plus the detector
 The port is narrow: callers pass text through `IPiiMasker.Mask`, or `MaskDetailed` when they store structured matching keys (prompt 05), and hold no detection logic (repo: OfflineCPA/src/Application/Interfaces/IPiiMasker.cs#L6-L16). The adapter takes the key from `Pii:FingerprintKey` (base64) when set, otherwise generates 32 bytes once and persists them to `Pii:FingerprintKeyPath` (default `data/pii-fingerprint.key`, anchored to the app content root by a post-configure step and git-ignored via `**/pii-fingerprint.key`), so fingerprints survive restarts (repo: OfflineCPA/src/Infrastructure/Pii/PiiMasker.cs#L15-L50) (repo: OfflineCPA/src/Infrastructure/Pii/LocalFingerprintKeyStore.cs#L14-L89).
 
 The detectors are one class per type and register through the `PiiModule` adapter module, so prompt 06 adds detectors without touching the host (repo: OfflineCPA/src/Infrastructure/Pii/PiiModule.cs#L10-L20): SSN with invalid-range skips (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/SsnDetector.cs#L12-L53), EIN plus ITIN middle-digit ranges (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/EinItinDetector.cs#L13-L56), ABA routing by check digit (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/AbaRoutingNumberDetector.cs#L12-L40), and 8-17 digit bank account runs with phone, date, amount, and tax-id-shape exclusions (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/BankAccountNumberDetector.cs#L17-L165).
+
+Prompt 06 adds card numbers (Luhn-checked), dates of birth (only after a DOB-style label) and US street addresses. Dates and addresses keep no readable digits in their token (repo: OfflineCPA/src/Domain/Pii/PiiPolicy.cs#L23-L37). The three PR 45 gaps are closed in the account detector: unbroken runs of 18 or more digits, account groups joined to an SSN by an underscore (the run after its first separator is offered as a second candidate), and runs split by a double space, `--` or ` - ` (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/BankAccountNumberDetector.cs#L59-L70). A space-only run of five or more groups reads as a list, so invoice numbers stay unmasked (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/BankAccountNumberDetector.cs#L95-L96). Ledger memos on entry create and reverse pass through the masker (repo: OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs#L19-L22).
 
 ## Logs and errors
 

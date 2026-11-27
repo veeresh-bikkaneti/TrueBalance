@@ -23,7 +23,10 @@ The HMAC key is local and stable: set `Pii:FingerprintKey` (base64; generate wit
 | EIN | NN-NNNNNNN (also `.`, `_`, `/`) | The formatted Employer ID shape. |
 | ITIN | 9NN-NN-NNNN (4th–5th digits 50–65, 70–88, 90–92, 94–99) and the bare 9xx equivalents | Middle-digit ranges as published by the IRS (IRS Publication 1915: a nine-digit number beginning with 9, fourth and fifth digits from 50–65, 70–88, 90–92, or 94–99 [High 3/3] https://www.irs.gov/pub/irs-pdf/p1915.pdf). |
 | ABA routing number | Bare 9-digit run passing the check digit | Weights 3,7,1,3,7,1,3,7,1 with a weighted sum divisible by 10 (Apache Commons Validator ABANumberCheckDigit [High 3/3] https://commons.apache.org/proper/commons-validator/apidocs/org/apache/commons/validator/routines/checkdigit/ABANumberCheckDigit.html). Checksum-valid runs outrank SSN reads. |
-| Bank account number | 8–17 digit run, optionally grouped by hyphens or spaces, or by one of `.` `_` `/` used at least twice; a separated run over 17 digits is masked whole | The least certain detector; exclusions below. |
+| Bank account number | 8–17 digit run, optionally grouped by hyphens or spaces (double spaces, `--` and ` - ` included), or by one of `.` `_` `/` used at least twice; a run over 17 digits is masked whole unless it is a space-only list of five or more groups | The least certain detector; exclusions below. An account joined to an SSN by `_` is masked from its first group after the SSN. |
+| Card number | 13–19 digits, optionally grouped by single spaces or hyphens, passing the Luhn check | A card-shaped run that fails Luhn falls back to the account detector. |
+| Date of birth | The date after a label: `DOB`, `D.O.B.`, `date of birth`, `born on` | Unlabeled dates are never masked. Keeps no readable digits. |
+| Street address | House number, one to three name words, then a street suffix (Street, Avenue, Road, Lane, Drive, Way, Court, Boulevard and their short forms) | Shape check only. Keeps no readable digits. |
 
 Bank-account exclusions: phone-shaped 3-3-4 numbers, YYYYMMDD, YYYY-MM-DD, MM/DD/YYYY, DD/MM/YYYY and DD.MM.YYYY dates (same separators), dot-grouped amounts (`12.345.678`), currency amounts (a `$` before the run, or a decimal `.`+digit neighbor), and 9-digit values shaped like an SSN or EIN that failed their own validation (they stay untouched rather than being relabeled). Overlapping matches resolve by type: routing (check digit) first, then SSN, EIN/ITIN, then account number.
 
@@ -31,6 +34,7 @@ Bank-account exclusions: phone-shaped 3-3-4 numbers, YYYYMMDD, YYYY-MM-DD, MM/DD
 
 - A bare nine-digit EIN (no hyphen) is ambiguous: if it is not claimed as a routing number, SSN or ITIN, it is masked as an account number (`[ACCT ****5678 …]`), so it is hidden but carries the wrong type.
 - Invoice, order, or reference numbers of 8–17 digits with no date, phone, or amount shape.
+- Space-separated lists of four-digit numbers up to four groups long (`1001 1002 1003`), since a short run cannot be told from a grouped account number. Five or more groups are read as a list and stay unmasked.
 - Any other digit run of 8–17 digits, e.g. a long product code.
 - IP addresses or version strings with 8–17 digits, and `NN.NNNNNNN` shapes (read as an EIN).
 Masking these is non-destructive (last 4 digits and fingerprint stay), but expect tokens where a statement printed such codes.
@@ -46,7 +50,7 @@ Masking these is non-destructive (last 4 digits and fingerprint stay), but expec
 - `2024-11 25` (mixed separators; its 8 digits read as a YYYYMMDD date).
 - Digits outside the Basic Multilingual Plane (such as mathematical digit symbols).
 - Routing numbers printed with separators (rare) are not detected.
-- Card numbers, dates of birth, street addresses, emails, phone numbers as text: prompt 06.
+- Emails and phone numbers as text are not detected. Card numbers that fail Luhn are read as account numbers. Dates of birth without a label and addresses without a street suffix are not detected.
 - Values split across columns or misspelled.
 
 ## What waits for prompt 06
