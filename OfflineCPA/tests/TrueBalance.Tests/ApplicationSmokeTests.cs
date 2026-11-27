@@ -6,9 +6,9 @@ public class ApplicationSmokeTests
 {
     private sealed class StubStatementImporter : IStatementImporter
     {
-        public Task<string> ExtractTextAsync(string filePath, CancellationToken cancellationToken = default)
+        public Task<ParsedStatement> ParseAsync(string filePath, CsvColumnMap? map, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult($"extracted: {filePath}");
+            return Task.FromResult(new ParsedStatement(Array.Empty<ParsedRow>(), true));
         }
 
         public bool SupportsExtension(string extension)
@@ -28,12 +28,13 @@ public class ApplicationSmokeTests
     }
 
     [Fact]
-    public async Task Statement_importer_contract_extracts_text()
+    public async Task Statement_importer_contract_returns_rows_and_an_experimental_flag()
     {
         IStatementImporter parser = new StubStatementImporter();
 
-        var text = await parser.ExtractTextAsync("local-file.pdf");
+        var parsed = await parser.ParseAsync("local-file.pdf", null);
 
-        Assert.Equal("extracted: local-file.pdf", text);
+        Assert.Empty(parsed.Rows);
+        Assert.True(parsed.IsExperimental);
     }
 }

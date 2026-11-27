@@ -27,7 +27,9 @@ public class AdapterModuleTests
 
         using var provider = services.BuildServiceProvider();
         Assert.IsType<Infrastructure.Networking.LocalNetworkGate>(provider.GetRequiredService<INetworkGate>());
-        Assert.IsType<Infrastructure.Services.PdfFileParser>(provider.GetRequiredService<IStatementImporter>());
+        Assert.Equal(
+            new[] { "CsvStatementImporter", "OfxStatementImporter", "PdfFileParser" },
+            provider.GetServices<IStatementImporter>().Select(i => i.GetType().Name));
         Assert.IsType<Infrastructure.Services.SecureUploadStore>(provider.GetRequiredService<IDocumentVault>());
         Assert.IsType<Infrastructure.Reporting.ClosedXmlReportExporter>(provider.GetRequiredService<IReportExporter>());
     }

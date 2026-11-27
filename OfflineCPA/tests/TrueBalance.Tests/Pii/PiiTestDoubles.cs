@@ -107,12 +107,18 @@ public sealed class FakeVault : IDocumentVault
             length,
             Path.Combine(Path.GetTempPath(), $"{id:N}.pdf")));
     }
+
+    public string? FindPath(Guid documentId, string extension) => null;
 }
 
 /// <summary>Importer double returning synthetic statement text; the stub
 /// importer path for the no-leak test.</summary>
 public sealed class StubImporter(string extractedText) : IStatementImporter
 {
+    public Task<ParsedStatement> ParseAsync(string filePath, CsvColumnMap? map, CancellationToken cancellationToken = default)
+        => Task.FromResult(new ParsedStatement(
+            [new ParsedRow(1, new DateOnly(2026, 6, 15), extractedText, -1m, null)], false));
+
     public Task<string> ExtractTextAsync(string filePath, CancellationToken cancellationToken = default)
         => Task.FromResult(extractedText);
 

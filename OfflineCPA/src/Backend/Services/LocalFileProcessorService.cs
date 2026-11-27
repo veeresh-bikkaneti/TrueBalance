@@ -1,14 +1,19 @@
+using Application.Imports;
 using Application.Interfaces;
-using Domain.Entities;
-using Infrastructure.Data;
+using Application.Uploads;
 
 namespace Backend.Services;
 
+/// <summary>
+/// Watches the input folder. Each supported file is stored in the vault and
+/// queued for import; it is never parsed or posted here.
+/// </summary>
 public class LocalFileProcessorService : BackgroundService
 {
     private readonly ILogger<LocalFileProcessorService> _logger;
     private readonly string _inputDirectory;
     private readonly IServiceProvider _serviceProvider;
+    private readonly HashSet<(string, DateTime)> _queued = new();
 
     public LocalFileProcessorService(ILogger<LocalFileProcessorService> logger, IConfiguration configuration, IServiceProvider serviceProvider)
     {
@@ -35,7 +40,7 @@ public class LocalFileProcessorService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while processing files.");
+                _logger.LogError("Error occurred while processing files: {ErrorType}", ex.GetType().Name);
             }
 
             // Minimum delay before next scan
@@ -58,42 +63,44 @@ public class LocalFileProcessorService : BackgroundService
             _logger.LogInformation("Processing file {FileId}", fileId);
 
             using var scope = _serviceProvider.CreateScope();
-            var importer = scope.ServiceProvider.GetRequiredService<IStatementImporter>();
-            var extension = Path.GetExtension(file);
+            var extension = Path.GetExtension(file).ToLowerInvariant();
 
-            if (!importer.SupportsExtension(extension))
+            if (!scope.ServiceProvider.GetServices<IStatementImporter>().Any(i => i.SupportsExtension(extension)))
             {
                 _logger.LogWarning("Unsupported file type {FileId}", fileId);
                 continue;
             }
 
-            var dbContext = scope.ServiceProvider.GetRequiredService<OfflineCPADbContext>();
-            var text = await importer.ExtractTextAsync(file, stoppingToken);
-
-            // The transaction references only the generated id; the file name
-            // and the full path stay out of the database (ADR 0010).
-            var transaction = new Transaction
+            try
             {
-                Description = $"Auto-imported file {fileId}",
-                Date = DateTime.UtcNow,
-                ReferenceDocumentPath = fileId
-            };
+                // Remembered in case the move below fails, so one file is queued once.
+                var stamp = (file, File.GetLastWriteTimeUtc(file));
+                if (!_queued.Contains(stamp))
+                {
+                    var vault = scope.ServiceProvider.GetRequiredService<IDocumentVault>();
+                    var queue = scope.ServiceProvider.GetRequiredService<QueueImport>();
+                    StoredUpload stored;
+                    await using (var content = File.OpenRead(file))
+                    {
+                        stored = await vault.SaveAsync(content, content.Length, Path.GetFileName(file), null, stoppingToken);
+                    }
 
-            // TODO: Further basic NLP mapping based on text.
+                    await queue.HandleAsync(stored.Id, stored.Extension, stoppingToken);
+                    _queued.Add(stamp);
+                    _logger.LogInformation("Queued file {FileId} for import", fileId);
+                }
 
-            dbContext.Transactions.Add(transaction);
-            await dbContext.SaveChangesAsync(stoppingToken);
-
-            _logger.LogInformation("Successfully processed file {FileId}", fileId);
-
-            // Move or delete file after processing
-            var processedDir = Path.Combine(_inputDirectory, "processed");
-            if (!Directory.Exists(processedDir)) Directory.CreateDirectory(processedDir);
-
-            var destPath = Path.Combine(processedDir, Path.GetFileName(file));
-            if (File.Exists(destPath)) File.Delete(destPath);
-
-            File.Move(file, destPath);
+                var processedDir = Path.Combine(_inputDirectory, "processed");
+                if (!Directory.Exists(processedDir)) Directory.CreateDirectory(processedDir);
+                var destPath = Path.Combine(processedDir, Path.GetFileName(file));
+                if (File.Exists(destPath)) File.Delete(destPath);
+                File.Move(file, destPath);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                // Type name only: exception messages can quote file names and paths.
+                _logger.LogError("Could not queue file {FileId}: {ErrorType}", fileId, ex.GetType().Name);
+            }
         }
     }
 }
