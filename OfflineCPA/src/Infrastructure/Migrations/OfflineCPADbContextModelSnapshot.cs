@@ -68,6 +68,9 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<int>("AmountLayout")
+                        .HasColumnType("integer");
+
                     b.Property<string>("BalanceColumn")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
@@ -94,8 +97,26 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<bool>("DebitsCarryMinus")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("DescriptionColumn")
                         .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("IndicatorColumn")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("LayoutConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MoneyInMarker")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("MoneyOutMarker")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
@@ -112,6 +133,13 @@ namespace Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<int>("BalanceCheck")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BalanceReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
@@ -280,6 +308,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<decimal?>("Balance")
                         .HasColumnType("numeric(18,2)");
+
+                    b.Property<bool>("BalanceCheckFailed")
+                        .HasColumnType("boolean");
 
                     b.Property<Guid>("BankAccountId")
                         .HasColumnType("uuid");
