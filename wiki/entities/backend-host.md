@@ -1,6 +1,6 @@
 ---
 checked:
-  OfflineCPA/src/Backend/Program.cs: 17e6fc6fe3d31caa311ea9bc4bb5f99e074abfdd
+  OfflineCPA/src/Backend/Program.cs: c79e61f6b6c16d3d0d389113f8bbcadd5aca876f
   OfflineCPA/src/Backend/Configuration/DotEnv.cs: 7592be1aa2f9464e5fca5199c849a4b5f852aa25
   OfflineCPA/src/Infrastructure/AdapterModuleRegistration.cs: 98f6f27b02c94a2298b2860b84e40a66d8f1b56c
   OfflineCPA/src/Application/Networking/INetworkGate.cs: 77fab7a5d681fe7d25f236857a96c4ab8fe25914

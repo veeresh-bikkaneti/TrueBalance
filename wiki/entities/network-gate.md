@@ -11,7 +11,7 @@ checked:
   OfflineCPA/src/Application/Ai/IAiAssist.cs: b32faecea493216c82c0db7e88de674f29554945
   OfflineCPA/src/Infrastructure/IAdapterModule.cs: d8fef4533ad154804d873af75694525f05154305
   OfflineCPA/src/Infrastructure/AdapterModuleRegistration.cs: 98f6f27b02c94a2298b2860b84e40a66d8f1b56c
-  OfflineCPA/src/Backend/Program.cs: 17e6fc6fe3d31caa311ea9bc4bb5f99e074abfdd
+  OfflineCPA/src/Backend/Program.cs: c79e61f6b6c16d3d0d389113f8bbcadd5aca876f
   OfflineCPA/tests/TrueBalance.Tests/Networking/NetworkGateTests.cs: 9462be3d36fd4af7a920053bc0c86173e91c2ad1
   OfflineCPA/tests/TrueBalance.Tests/Networking/AdapterModuleTests.cs: 90a67c01e4cb95369f1ef4b4f03a90ec903c26f9
   OfflineCPA/tests/TrueBalance.Tests/Networking/GateLogIsolationTests.cs: 6fc0135e933a05e783edb15705f3b48891f0e462

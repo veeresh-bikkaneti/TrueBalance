@@ -1,10 +1,11 @@
 ---
 checked:
+  OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs: 80a26042df5de3cd4363a4e97018b372a2b36ba6
   OfflineCPA/src/Infrastructure/Data/OfflineCPADbContext.cs: 79af2ba8029ac2126a5a2367c395c30dc210b3ab
   OfflineCPA/src/Infrastructure/Migrations/20261124120000_InitialCreate.cs: eb9d9a85324ec58feec91a70cb926d375c48342b
   OfflineCPA/src/Infrastructure/Migrations/20261125000000_LedgerCore.cs: e9a88657b2bea914a76921239982eba4df689c19
   OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs: c241452235c4fd1d5dbe64d134c98008fc5cf610
-  OfflineCPA/src/Backend/Program.cs: 17e6fc6fe3d31caa311ea9bc4bb5f99e074abfdd
+  OfflineCPA/src/Backend/Program.cs: c79e61f6b6c16d3d0d389113f8bbcadd5aca876f
   docs/ledger.md: 2eba6c35c8c780c81a1572e5362ff66584445921
 ---
 # Data and migrations
@@ -15,7 +16,7 @@ checked:
 
 `InitialCreate` is the migration class in `20261124120000_InitialCreate.cs` (repo: OfflineCPA/src/Infrastructure/Migrations/20261124120000_InitialCreate.cs#L9). `LedgerCore` drops the old line-level `JournalEntries` table and creates `LedgerAuditRecords`, `Periods`, `JournalEntries`, and `Postings` (repo: OfflineCPA/src/Infrastructure/Migrations/20261125000000_LedgerCore.cs#L27-L88). It then adds three triggers: postings of a non-draft entry cannot be changed or deleted, a non-draft header freezes date, memo, and period, and audit rows reject update and delete (repo: OfflineCPA/src/Infrastructure/Migrations/20261125000000_LedgerCore.cs#L137-L205).
 
-`Ledger_model_matches_the_snapshot` asserts `HasPendingModelChanges()` is false. The comment says it does not open a database (repo: OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs#L133-L142). Startup calls `Database.Migrate()` (repo: OfflineCPA/src/Backend/Program.cs#L181-L188).
+`Ledger_model_matches_the_snapshot` asserts `HasPendingModelChanges()` is false. The comment says it does not open a database (repo: OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs#L133-L142). Startup calls `Database.Migrate()` (repo: OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs#L9-L71).
 
 ## Change it safely
 
