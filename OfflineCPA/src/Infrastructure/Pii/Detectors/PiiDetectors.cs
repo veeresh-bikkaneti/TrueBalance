@@ -18,6 +18,8 @@ public static class PiiDetectors
         new CardNumberDetector(),
         new DateOfBirthDetector(),
         new StreetAddressDetector(),
+        new PhoneNumberDetector(),
+        new EmailDetector(),
         new BankAccountNumberDetector(),
     ];
 }

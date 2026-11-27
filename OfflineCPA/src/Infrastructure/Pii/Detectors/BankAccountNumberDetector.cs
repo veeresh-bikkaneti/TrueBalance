@@ -97,12 +97,17 @@ public sealed partial class BankAccountNumberDetector : IPiiDetector
 
     // Space-grouped digits are masked by default. A run stays readable only as
     // a list: its label sits directly before it ("Invoices 1001 1002 1003")
-    // and every group is 3 to 6 digits.
+    // and every group is 3 to 6 digits. A card layout (4-4-4-4, 4-6-5, 4-6-4)
+    // is masked even after a label, so four 4-digit check numbers are too.
     [GeneratedRegex(@"\b(?:inv ?# *|(?:invoices?|inv|checks?|chk|orders?) +)$", RegexOptions.IgnoreCase | RegexOptions.RightToLeft)]
     private static partial Regex ListLabel();
 
+    [GeneratedRegex(@"^(?:[0-9]{4}(?: [0-9]{4}){3}|[0-9]{4} [0-9]{6} [0-9]{4,5})$")]
+    private static partial Regex CardLayout();
+
     private static bool IsLabeledList(string text, Match run) =>
-        run.Value.Split(' ').All(g => g.Length is >= 3 and <= 6 && g.All(char.IsAsciiDigit))
+        !CardLayout().IsMatch(run.Value)
+        && run.Value.Split(' ').All(g => g.Length is >= 3 and <= 6 && g.All(char.IsAsciiDigit))
         && ListLabel().IsMatch(text[..run.Index]);
 
     // Double spaces, "--" or " - " break a run apart.

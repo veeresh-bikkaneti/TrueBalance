@@ -23,6 +23,8 @@ public class PiiCoverageTests
             new EinItinDetector(),
             new DateOfBirthDetector(),
             new StreetAddressDetector(),
+            new PhoneNumberDetector(),
+            new EmailDetector(),
             new BankAccountNumberDetector(),
         ]);
 
@@ -65,11 +67,10 @@ public class PiiCoverageTests
     }
 
     [Theory]
-    [InlineData("Call 555-123-4567 today")]
     [InlineData("Paid 2024-11-25 and 11/25/2024")]
     [InlineData("Due 25/11/2024")]
     [InlineData("Range 2024-11-25 - 2024-12-01")]
-    public void Leaves_phone_numbers_and_plain_dates_unmasked(string text)
+    public void Leaves_plain_dates_unmasked(string text)
     {
         Assert.Equal(text, Policy.Mask(text).MaskedText);
     }
@@ -190,5 +191,6 @@ public class PiiCoverageTests
         var test = new MaskingPiiMasker().Detectors.Select(d => d.GetType().Name).Order();
 
         Assert.Equal(app, test);
+        Assert.Equal(9, app.Count());
     }
 }
