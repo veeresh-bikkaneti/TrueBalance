@@ -20,6 +20,7 @@ public class CsvMappingProfile
     public string? IndicatorColumn { get; set; }
     public string? MoneyInMarker { get; set; }
     public string? MoneyOutMarker { get; set; }
+    public BalanceMeaning BalanceMeaning { get; set; }
     /// <summary>A person confirmed the layout. The file alone can never set this.</summary>
     public bool LayoutConfirmed { get; set; }
 }

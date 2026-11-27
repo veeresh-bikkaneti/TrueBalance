@@ -12,7 +12,7 @@ checked:
   OfflineCPA/src/Infrastructure/Pii/Detectors/AbaRoutingNumberDetector.cs: 9c7f47fe4ea374f862ae466ca2c7b4a57742c962
   OfflineCPA/src/Infrastructure/Pii/Detectors/BankAccountNumberDetector.cs: b84a06f41470aa290fbfc33b08ee52b2426547d6
   OfflineCPA/src/Backend/Extensions/PiiRedactionLoggerProvider.cs: 50ff20605e62fc05011c5f6a16392eeb23aeb600
-  OfflineCPA/src/Backend/Program.cs: ff7bc791b2a78a74057f500567e8ffee7218f04a
+  OfflineCPA/src/Backend/Program.cs: 452674984015389ecb7473705b58db3f8a3cbf88
   OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs: 5c7efd00e3d56a2163cfaacab57769403ea3d8e3
   OfflineCPA/tests/TrueBalance.Tests/Pii/Fixtures/FakePii.cs: fb3e9924da8c85022fa73680ea2d9ed11c5b99fb
   OfflineCPA/tests/TrueBalance.Tests/Pii/PiiNoLeakTests.cs: 847b2efdf07f975305c68bdf7c07c5e3c8ba0eb9
