@@ -2,7 +2,7 @@
 checked:
   OfflineCPA/src/Application/Interfaces/IDocumentVault.cs: da4b7921dd9557cce52304e64a178ab627ebfb74
   OfflineCPA/src/Application/Uploads/StoredUpload.cs: d0f89183d09d583b499dbb4352993efda461b885
-  OfflineCPA/src/Application/Interfaces/IStatementImporter.cs: ba4a0fa808dc243bd3d61a74df52ca6b567b3bf0
+  OfflineCPA/src/Application/Interfaces/IStatementImporter.cs: 1257e035bcc803dd116492123dcd5bd7ff30a565
   OfflineCPA/src/Infrastructure/Options/UploadOptions.cs: 9ae8e83707e682d5fbaa3750ff62686ca5174e68
   OfflineCPA/src/Infrastructure/Services/SecureUploadStore.cs: ddabcdea7617797ac1c5251b09e9a1a4496cd84e
   OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs: 5c7efd00e3d56a2163cfaacab57769403ea3d8e3
@@ -15,7 +15,7 @@ checked:
 
 `IDocumentVault.SaveAsync` (before this rename: `ISecureUploadStore`) takes a stream, a length, the original file name, and a content type, and returns a `StoredUpload` (repo: OfflineCPA/src/Application/Interfaces/IDocumentVault.cs#L9-L15) (repo: OfflineCPA/src/Application/Uploads/StoredUpload.cs#L3-L11). `SecureUploadStore` is the adapter.
 
-`IStatementImporter` is the port for turning one local file into statement rows, with CSV, OFX and PDF adapters (repo: OfflineCPA/src/Application/Interfaces/IStatementImporter.cs#L8-L20). PDF output is experimental. See [[statement-import]].
+`IStatementImporter` is the port for turning one local file into statement rows, with CSV, OFX and PDF adapters (repo: OfflineCPA/src/Application/Interfaces/IStatementImporter.cs#L10-L22). PDF output is experimental. See [[statement-import]].
 
 ## What the store checks
 

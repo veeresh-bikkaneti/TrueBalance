@@ -19,6 +19,7 @@ public sealed class ImportFlowTests : IDisposable
         "06/16/2026,Fake Payer 1,$2000,2100.00\n" +
         "06/16/2026,Fake Payer 1,$2000,4100.00\n";
 
+    private static readonly ConfirmedLayout Signed = new(Domain.Enums.AmountLayout.Signed);
     private readonly string _path = Path.Combine(Path.GetTempPath(), $"tb-{Guid.NewGuid():N}.csv");
     private readonly string _db = Guid.NewGuid().ToString("N");
     private readonly Account _bank = LedgerTestData.Checking();
@@ -43,7 +44,7 @@ public sealed class ImportFlowTests : IDisposable
         var id = await new QueueImport(store, new SystemClock()).HandleAsync(Guid.NewGuid(), ".csv");
         var useCase = new ImportStatement(store, new PathVault(_path),
             new IStatementImporter[] { new CsvStatementImporter() }, new MaskingPiiMasker());
-        await useCase.HandleAsync(new ImportStatementCommand(id, _bank.Id, null));
+        await useCase.HandleAsync(new ImportStatementCommand(id, _bank.Id, "Fake Bank 1", Signed));
         return id;
     }
 
@@ -145,7 +146,7 @@ public sealed class ImportFlowTests : IDisposable
         var id = await new QueueImport(store, new SystemClock()).HandleAsync(Guid.NewGuid(), ".csv");
         var useCase = new ImportStatement(store, new PathVault(_path),
             new IStatementImporter[] { new CsvStatementImporter() }, new MaskingPiiMasker());
-        var command = new ImportStatementCommand(id, _bank.Id, null);
+        var command = new ImportStatementCommand(id, _bank.Id, "Fake Bank 1", Signed);
         await File.WriteAllTextAsync(_path, "wrong,headers\n1,2\n");
         await Assert.ThrowsAsync<LedgerRuleException>(() => useCase.HandleAsync(command));
 

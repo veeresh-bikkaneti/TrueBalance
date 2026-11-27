@@ -54,6 +54,7 @@ builder.Services.AddScoped<GetAccountBalances>();
 builder.Services.AddScoped<Application.Imports.QueueImport>();
 builder.Services.AddScoped<Application.Imports.ImportStatement>();
 builder.Services.AddScoped<Application.Imports.SaveCsvProfile>();
+builder.Services.AddScoped<Application.Imports.PreviewCsvLayout>();
 builder.Services.AddScoped<PostStagedRow>();
 builder.Services.Configure<UploadOptions>(builder.Configuration.GetSection(UploadOptions.SectionName));
 builder.Services.Configure<PiiOptions>(builder.Configuration.GetSection(PiiOptions.SectionName));

@@ -11,6 +11,7 @@ public sealed class ImportBatchConfiguration : IEntityTypeConfiguration<ImportBa
         entity.HasKey(e => e.Id);
         entity.Property(e => e.Extension).IsRequired().HasMaxLength(10);
         entity.Property(e => e.FailureReason).HasMaxLength(500);
+        entity.Property(e => e.BalanceReason).HasMaxLength(500);
         // Two imports of one batch cannot both stage it.
         entity.Property(e => e.Status).IsConcurrencyToken();
     }
@@ -48,5 +49,8 @@ public sealed class CsvMappingProfileConfiguration : IEntityTypeConfiguration<Cs
         entity.Property(e => e.CreditColumn).HasMaxLength(100);
         entity.Property(e => e.BalanceColumn).HasMaxLength(100);
         entity.Property(e => e.DateFormat).HasMaxLength(100);
+        entity.Property(e => e.IndicatorColumn).HasMaxLength(100);
+        entity.Property(e => e.MoneyInMarker).HasMaxLength(100);
+        entity.Property(e => e.MoneyOutMarker).HasMaxLength(100);
     }
 }

@@ -23,6 +23,7 @@ public class StagedRow
     public decimal Amount { get; private set; }
     public decimal? Balance { get; private set; }
     public bool IsExperimental { get; private set; }
+    public bool BalanceCheckFailed { get; private set; }
     public StagedRowStatus Status { get; private set; }
     public Guid? CategoryAccountId { get; private set; }
     public Guid? JournalEntryId { get; private set; }
@@ -51,6 +52,8 @@ public class StagedRow
 
     public void FlagDuplicate() => Status = StagedRowStatus.Duplicate;
 
+    public void FlagBalanceFailed() => BalanceCheckFailed = true;
+
     public void EnsureCanPost(bool allowDuplicate, bool reviewed)
     {
         if (Status == StagedRowStatus.Posted)
@@ -59,6 +62,8 @@ public class StagedRow
             throw new LedgerRuleException("This row looks like a duplicate; posting it needs an explicit override.");
         if (IsExperimental && !reviewed)
             throw new LedgerRuleException("This row came from an experimental import; confirm you reviewed it.");
+        if (BalanceCheckFailed && !reviewed)
+            throw new LedgerRuleException("The balance check failed for this import; confirm you reviewed this row.");
     }
 
     public void MarkPosted(Guid entryId, Guid categoryAccountId, DateTime nowUtc)
