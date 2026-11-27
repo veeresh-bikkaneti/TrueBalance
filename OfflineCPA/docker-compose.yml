@@ -27,11 +27,13 @@ services:
       - ConnectionStrings__DefaultConnection=Host=database;Port=5432;Database=OfflineCPADb;Username=bookkeeping
       - PGPASSWORD=${POSTGRES_PASSWORD:?required}
       - Uploads__Directory=/app/user-assets
+      - Pii__FingerprintKeyPath=/app/keys/pii-fingerprint.key
     ports:
       - "127.0.0.1:8080:8080"
     volumes:
       - ./data/input:/app/data/input
       - pb-userassets:/app/user-assets
+      - pb-keys:/app/keys
     depends_on:
       database:
         condition: service_healthy
@@ -59,3 +61,4 @@ networks:
 volumes:
   pb-pgdata:
   pb-userassets:
+  pb-keys:

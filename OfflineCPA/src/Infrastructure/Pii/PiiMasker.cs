@@ -16,13 +16,17 @@ public sealed class PiiMasker : IPiiMasker
 {
     private readonly PiiPolicy _policy;
 
+    /// <summary>The key file name when this instance created it, else null.</summary>
+    public string? GeneratedKeyFile { get; }
+
     public PiiMasker(IOptions<PiiOptions> options, IEnumerable<IPiiDetector> detectors)
     {
         var settings = options.Value;
         byte[] key;
         if (string.IsNullOrWhiteSpace(settings.FingerprintKey))
         {
-            key = LocalFingerprintKeyStore.LoadOrCreate(settings.FingerprintKeyPath);
+            key = LocalFingerprintKeyStore.LoadOrCreate(settings.FingerprintKeyPath, out var generated);
+            GeneratedKeyFile = generated ? Path.GetFileName(settings.FingerprintKeyPath) : null;
         }
         else
         {

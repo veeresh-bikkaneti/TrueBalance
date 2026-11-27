@@ -13,7 +13,7 @@ Text passes through the `IPiiMasker` port (`Application` layer) before it is sto
 - Separator variants of the same number ("123-45-6789" and "123456789") produce the same fingerprint.
 - Amounts, dates, and payee text that is not a detected value are never altered.
 
-The HMAC key is local and stable: set `Pii:FingerprintKey` (base64; generate with `openssl rand -base64 32`) when you want fingerprints tied to an explicit secret. When unset, the app generates a 32-byte key on first start and stores it at `data/pii-fingerprint.key` under the app content root (anchored there, not to the working directory; the pattern `**/pii-fingerprint.key` is git-ignored), so fingerprints survive restarts. The key never leaves the machine. Callers that store matching keys use `IPiiMasker.MaskDetailed`, which returns the structured last-4 and full fingerprint per match.
+The HMAC key is local and stable: set `Pii:FingerprintKey` (base64; generate with `openssl rand -base64 32`) when you want fingerprints tied to an explicit secret. When unset, the app generates a 32-byte key on first start and stores it at `data/pii-fingerprint.key` under the app content root (anchored there, not to the working directory; the pattern `**/pii-fingerprint.key` is git-ignored), so fingerprints survive restarts. Under docker-compose it lives on the `pb-keys` volume at `/app/keys/pii-fingerprint.key`. **Back up the key file: losing it breaks fingerprint matching** for everything masked earlier (prompt 13 covers backups). A key file that is unreadable or too short stops startup and is never overwritten. The key never leaves the machine. Callers that store matching keys use `IPiiMasker.MaskDetailed`, which returns the structured last-4 and full fingerprint per match.
 
 ## Detected types
 

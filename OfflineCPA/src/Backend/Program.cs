@@ -79,6 +79,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+Infrastructure.Pii.PiiStartup.WarnIfKeyGenerated(app.Services.GetRequiredService<IPiiMasker>(), app.Logger);
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
