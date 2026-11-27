@@ -22,19 +22,26 @@ public sealed partial class BankAccountNumberDetector : IPiiDetector
     [GeneratedRegex(@"[0-9][0-9 \-]*[0-9]")]
     private static partial Regex DigitRun();
 
+    // Dot, underscore or slash grouping: one separator kind, at least two of
+    // them, so decimal amounts ("12345678.90") never qualify.
+    [GeneratedRegex(@"[0-9]+(?:([._/])[0-9]+)(?:[0-9]+)+")]
+    private static partial Regex PunctuatedRun();
+
     // US phone shape: 555-123-4567 or 555 123 4567 (3-3-4 groups).
-    [GeneratedRegex(@"^[0-9]{3}[- ][0-9]{3}[- ][0-9]{4}$")]
+    [GeneratedRegex(@"^[0-9]{3}[- ._/][0-9]{3}[- ._/][0-9]{4}$")]
     private static partial Regex PhoneShape();
 
     // Typed tax-id shapes that failed their own validation: NN-NNNNNNN or
     // NNN-NN-NNNN. Relabeling those as account numbers would be a wrong
     // type, so they stay untouched instead.
-    [GeneratedRegex(@"^[0-9]{2}-[0-9]{7}$|^[0-9]{3}[- ][0-9]{2}[- ][0-9]{4}$")]
+    [GeneratedRegex(@"^[0-9]{2}[-._/][0-9]{7}$|^[0-9]{3}[- ._/][0-9]{2}[- ._/][0-9]{4}$")]
     private static partial Regex TaxIdShape();
 
     public PiiType Type => PiiType.BankAccountNumber;
 
-    public IEnumerable<PiiMatch> Find(string text)
+    public IEnumerable<PiiMatch> Find(string text) => FindSpaced(text).Concat(FindPunctuated(text));
+
+    private IEnumerable<PiiMatch> FindSpaced(string text)
     {
         foreach (Match match in DigitRun().Matches(text))
         {
@@ -45,6 +52,24 @@ public sealed partial class BankAccountNumberDetector : IPiiDetector
                 {
                     yield return new PiiMatch(Type, candidate, start, candidate.Length);
                 }
+            }
+        }
+    }
+
+    private static IEnumerable<PiiMatch> FindPunctuated(string text)
+    {
+        foreach (Match match in PunctuatedRun().Matches(text))
+        {
+            var digits = PiiText.OnlyDigits(match.Value);
+            var end = match.Index + match.Length;
+
+            // "12.345.678,90" is a European-style amount.
+            var isAmount = end + 1 < text.Length && text[end] == ',' && char.IsAsciiDigit(text[end + 1]);
+            if (digits.Length is >= MinDigits and <= MaxDigits
+                && !isAmount
+                && IsPlausibleAccountNumber(text, match.Value, match.Index))
+            {
+                yield return new PiiMatch(PiiType.BankAccountNumber, match.Value, match.Index, match.Length);
             }
         }
     }
@@ -146,8 +171,8 @@ public sealed partial class BankAccountNumberDetector : IPiiDetector
         return true;
     }
 
-    // ISO or US date shape: 2024-11-25, 2024 11 25.
-    [GeneratedRegex(@"^(18|19|20|21)[0-9]{2}[- ](0[1-9]|1[0-2])[- ](0[1-9]|[12][0-9]|3[01])$")]
+    // ISO or US date shape: 2024-11-25, 2024/11/25, 11.25.2024.
+    [GeneratedRegex(@"^(?:(18|19|20|21)[0-9]{2}(?<a>[- ._/])(0[1-9]|1[0-2])\k<a>(0[1-9]|[12][0-9]|3[01])|(0[1-9]|1[0-2])(?<b>[- ._/])(0[1-9]|[12][0-9]|3[01])\k<b>(18|19|20|21)[0-9]{2})$")]
     private static partial Regex DateShape();
 
     private static char PrecedingNonWhitespace(string text, int index)

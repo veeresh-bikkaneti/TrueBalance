@@ -42,6 +42,28 @@ public class PiiReviewFixTests
         Assert.DoesNotContain(FakePii.SsnFormatted, line, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("SSN 123.45.6789", "6789")]
+    [InlineData("statement_123_45_6789.pdf", "6789")]
+    [InlineData("Acct 1234.5678.9012", "9012")]
+    [InlineData("Acct 1234_5678_9012", "9012")]
+    [InlineData("Acct 1234/5678/9012", "9012")]
+    public void Dot_underscore_and_slash_separators_are_masked(string text, string last4)
+    {
+        Assert.Contains($"****{last4} fp:", new MaskingPiiMasker().Mask(text), StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("12,345,678.90")]
+    [InlineData("12345678.90")]
+    [InlineData("2024.11.25")]
+    [InlineData("11/25/2024")]
+    [InlineData("2024/11/25")]
+    public void Amounts_and_dates_stay_unmasked(string value)
+    {
+        Assert.Equal($"Paid {value} ok", new MaskingPiiMasker().Mask($"Paid {value} ok"));
+    }
+
     private sealed class ThrowingMasker : IPiiMasker
     {
         public string Mask(string text) => throw new FormatException(text);
