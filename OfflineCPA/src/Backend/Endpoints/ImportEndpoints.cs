@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Endpoints;
 
-public sealed record ImportBatchRequest(Guid BankAccountId, string? BankName);
+public sealed record ImportBatchRequest(Guid BankAccountId, string? BankName, ConfirmedLayout? Layout = null);
 
 public sealed record PostRowRequest(Guid CategoryAccountId, bool AllowDuplicate = false, bool Reviewed = false);
 
@@ -25,8 +25,13 @@ public static class ImportEndpoints
             (Guid batchId, ImportBatchRequest request, ImportStatement useCase, IPiiMasker masker, CancellationToken ct)
                 => RunAsync(masker, async () => new
                 {
-                    rows = await useCase.HandleAsync(new ImportStatementCommand(batchId, request.BankAccountId, request.BankName), ct)
+                    rows = await useCase.HandleAsync(new ImportStatementCommand(
+                        batchId, request.BankAccountId, request.BankName, request.Layout), ct)
                 }));
+
+        app.MapGet("/api/imports/{batchId:guid}/layout-preview",
+            (Guid batchId, string? bankName, PreviewCsvLayout useCase, IPiiMasker masker, CancellationToken ct)
+                => RunAsync(masker, () => useCase.HandleAsync(batchId, bankName, ct)));
 
         app.MapGet("/api/imports/{batchId:guid}/rows", async (Guid batchId, IImportStore store, CancellationToken ct) =>
         {

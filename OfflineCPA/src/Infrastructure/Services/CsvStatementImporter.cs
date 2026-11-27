@@ -1,5 +1,6 @@
 using System.Text;
 using Application.Interfaces;
+using Domain.Enums;
 
 namespace Infrastructure.Services;
 
@@ -27,19 +28,24 @@ public sealed class CsvStatementImporter : IStatementImporter
             return index >= 0 ? index : throw new StatementParseException(1, column);
         }
 
+        var layout = map.AmountLayout ?? (map.Amount is null ? AmountLayout.DebitCredit : AmountLayout.Signed);
         var date = Find(map.Date, "date");
         var description = Find(map.Description, "description");
-        int? amount = map.Amount is null ? null : Find(map.Amount, "amount");
+        int? amount = layout == AmountLayout.DebitCredit ? null : Find(map.Amount, "amount");
         int? debit = amount is null ? Find(map.Debit, "debit") : null;
         int? credit = amount is null ? Find(map.Credit, "credit") : null;
+        int? indicator = layout == AmountLayout.Indicator ? Find(map.IndicatorColumn, "indicator") : null;
         // Balance is optional, and its header may simply not be there.
         var balance = map.Balance is null ? -1 : header.FindIndex(h => h.Equals(map.Balance, StringComparison.OrdinalIgnoreCase));
 
+        // Only a starting guess for the preview: an import always names its layout.
         // If any debit in the file is positive, a negative one is a reversal. If none
         // is, the bank signs its debits and they are all money out.
         var positiveDebits = debit is { } d && records.Skip(1).Any(r => d < r.Count
             && r[d].Trim() is var cell && !cell.StartsWith('-') && !cell.StartsWith('(')
             && cell.Any(c => c is >= '1' and <= '9'));
+
+        var debitsCarryMinus = map.AmountLayout is null ? !positiveDebits : map.DebitsCarryMinus;
 
         var rows = new List<ParsedRow>();
         for (var i = 1; i < records.Count; i++)
@@ -53,6 +59,15 @@ public sealed class CsvStatementImporter : IStatementImporter
             if (amount is { } a)
             {
                 value = StatementValues.Amount(Cell(a), number, "amount");
+                if (layout == AmountLayout.SignedReversed) value = -value;
+                else if (indicator is { } mark)
+                {
+                    // The bank's marker alone decides the direction.
+                    bool Is(string? marker) => Cell(mark).Trim().Equals(marker?.Trim(), StringComparison.OrdinalIgnoreCase);
+                    value = Is(map.MoneyInMarker) ? Math.Abs(value)
+                        : Is(map.MoneyOutMarker) ? -Math.Abs(value)
+                        : throw new StatementParseException(number, "indicator");
+                }
             }
             else
             {
@@ -60,7 +75,7 @@ public sealed class CsvStatementImporter : IStatementImporter
                     => string.IsNullOrWhiteSpace(Cell(index)) ? 0m : StatementValues.Amount(Cell(index), number, column);
 
                 var signed = Side(debit!.Value, "debit");
-                var output = positiveDebits ? signed : Math.Abs(signed);
+                var output = debitsCarryMinus ? -signed : signed;
                 var input = Side(credit!.Value, "credit");
                 var bothEmpty = string.IsNullOrWhiteSpace(Cell(debit!.Value)) && string.IsNullOrWhiteSpace(Cell(credit!.Value));
                 if (bothEmpty || input < 0m || (input != 0m && output != 0m))
@@ -74,7 +89,10 @@ public sealed class CsvStatementImporter : IStatementImporter
                     ? null
                     : StatementValues.Amount(Cell(balance), number, "balance")));
         }
-        return new ParsedStatement(rows, false);
+        return new ParsedStatement(rows, false)
+        {
+            AppliedMap = map with { AmountLayout = layout, DebitsCarryMinus = debitsCarryMinus }
+        };
     }
 
     private static List<List<string>> Read(string text)

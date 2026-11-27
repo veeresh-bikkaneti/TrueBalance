@@ -1,3 +1,5 @@
+using Domain.Enums;
+
 namespace Application.Interfaces;
 
 /// <summary>
@@ -17,11 +19,17 @@ public interface IStatementImporter
 public sealed record ParsedRow(int RowNumber, DateOnly Date, string Description, decimal Amount, decimal? Balance);
 
 /// <summary>Experimental means the layout was guessed (PDF), so a person has to confirm each row.</summary>
-public sealed record ParsedStatement(IReadOnlyList<ParsedRow> Rows, bool IsExperimental);
+public sealed record ParsedStatement(IReadOnlyList<ParsedRow> Rows, bool IsExperimental)
+{
+    /// <summary>CSV only: the map used, with its layout filled in.</summary>
+    public CsvColumnMap? AppliedMap { get; init; }
+}
 
-/// <summary>CSV header names. Use either Amount, or Debit (money out) and Credit (money in).</summary>
+/// <summary>CSV header names and sign layout. A null layout asks the importer to guess one.</summary>
 public sealed record CsvColumnMap(
-    string Date, string Description, string? Amount, string? Debit, string? Credit, string? Balance, string? DateFormat);
+    string Date, string Description, string? Amount, string? Debit, string? Credit, string? Balance, string? DateFormat,
+    AmountLayout? AmountLayout = null, bool DebitsCarryMinus = false, string? IndicatorColumn = null,
+    string? MoneyInMarker = null, string? MoneyOutMarker = null);
 
 /// <summary>Carries only a row number and a logical column name, never a value from the file.</summary>
 public sealed class StatementParseException : Exception

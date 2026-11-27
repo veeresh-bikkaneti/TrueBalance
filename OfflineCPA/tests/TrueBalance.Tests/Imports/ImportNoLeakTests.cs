@@ -47,10 +47,11 @@ public class ImportNoLeakTests
                 ? $"date,description,amount\n2026-06-15,x,{FakePii.AccountNumberA}x\n"
                 : $"<STMTTRN><DTPOSTED>20260615<TRNAMT>{FakePii.AccountNumberA}x</STMTTRN>";
 
-            await import.HandleAsync(new ImportStatementCommand(await QueueAsync(good), bank.Id, null));
+            await import.HandleAsync(new ImportStatementCommand(await QueueAsync(good), bank.Id, extension == ".csv" ? "Fake Bank 1" : null, new ConfirmedLayout(Domain.Enums.AmountLayout.Signed)));
             var badId = await QueueAsync(bad);
             var error = await Assert.ThrowsAsync<LedgerRuleException>(
-                () => import.HandleAsync(new ImportStatementCommand(badId, bank.Id, null)));
+                () => import.HandleAsync(new ImportStatementCommand(badId, bank.Id,
+                    extension == ".csv" ? "Fake Bank 1" : null, new ConfirmedLayout(Domain.Enums.AmountLayout.Signed))));
 
             Assert.Single(db.StagedRows);
             var stored = db.ChangeTracker.Entries()
