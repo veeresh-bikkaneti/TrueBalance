@@ -22,7 +22,8 @@ public class ImportNoLeakTests
         try
         {
             var text = FakePii.SampleStatementText().ReplaceLineEndings(" ");
-            var vault = new SecureUploadStore(Microsoft.Extensions.Options.Options.Create(new UploadOptions { Directory = root }));
+            var vault = new Infrastructure.Vault.EncryptedFileVault(Microsoft.Extensions.Options.Options.Create(new UploadOptions { Directory = root }));
+            await vault.UnlockAsync("fake passphrase for tests");
             using var db = new OfflineCPADbContext(new DbContextOptionsBuilder<OfflineCPADbContext>()
                 .UseInMemoryDatabase(Guid.NewGuid().ToString("N")).Options);
             var bank = LedgerTestData.Checking();

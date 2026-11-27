@@ -7,6 +7,12 @@ namespace Infrastructure.Services;
 /// <summary>Strict, invariant-culture reading of amounts and dates. When in doubt, reject.</summary>
 internal static class StatementValues
 {
+    public static async Task<string> TextAsync(Stream content, CancellationToken cancellationToken)
+    {
+        using var reader = new StreamReader(content, leaveOpen: true);
+        return await reader.ReadToEndAsync(cancellationToken);
+    }
+
     // Commas are accepted only as thousands separators, so "1,5" never becomes 15.
     private static readonly Regex Number = new(@"^[+-]?(\d{1,3}(,\d{3})+|\d+)?(\.\d+)?$", RegexOptions.Compiled);
     private static readonly string[] DefaultDateFormats = { "yyyy-MM-dd", "M/d/yyyy" };

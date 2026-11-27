@@ -68,6 +68,15 @@ builder.Services.PostConfigure<PiiOptions>(options =>
         ? options.FingerprintKeyPath
         : Path.Combine(builder.Environment.ContentRootPath, options.FingerprintKeyPath);
 });
+// Keep uploads in memory: the framework would otherwise spill a large request
+// body to a plain temporary file before the vault can encrypt it.
+builder.Services.AddOptions<Microsoft.AspNetCore.Http.Features.FormOptions>()
+    .Configure<IOptions<UploadOptions>>((form, uploads) =>
+    {
+        var limit = uploads.Value.MaxBytes + 1024 * 1024;
+        form.MultipartBodyLengthLimit = limit;
+        form.MemoryBufferThreshold = (int)Math.Min(limit, int.MaxValue);
+    });
 // No IAiAssist implementation is registered: the app ships offline and AI is
 // an opt-in integration; any future implementation receives tokenized text
 // from the PII layer, never raw values.
@@ -98,6 +107,7 @@ app.UseSecureErrorHandling();
 
 // Endpoints
 app.MapUploadEndpoints();
+app.MapVaultEndpoints();
 
 app.MapPost("/api/books/setup", async (SetupBooksRequest request, IChartOfAccountsSeeder seeder, IPiiMasker masker) =>
 {

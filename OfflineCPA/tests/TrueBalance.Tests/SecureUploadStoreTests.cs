@@ -1,7 +1,7 @@
 using System.Text;
 using Application.Uploads;
 using Infrastructure.Options;
-using Infrastructure.Services;
+using Infrastructure.Vault;
 using Microsoft.Extensions.Options;
 
 namespace TrueBalance.Tests;
@@ -23,9 +23,11 @@ public class SecureUploadStoreTests : IDisposable
         }
     }
 
-    private SecureUploadStore CreateStore(long maxBytes = 20 * 1024 * 1024)
+    private EncryptedFileVault CreateStore(long maxBytes = 20 * 1024 * 1024)
     {
-        return new SecureUploadStore(Options.Create(new UploadOptions { Directory = _root, MaxBytes = maxBytes }));
+        var vault = new EncryptedFileVault(Options.Create(new UploadOptions { Directory = _root, MaxBytes = maxBytes }));
+        vault.UnlockAsync("fake passphrase for tests").GetAwaiter().GetResult();
+        return vault;
     }
 
     private static MemoryStream Content(string text)

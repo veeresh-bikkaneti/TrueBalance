@@ -16,6 +16,5 @@ public sealed class ServicesModule : IAdapterModule
         services.AddSingleton<ITaxMapCatalog>(new JsonTaxMapCatalog(Path.Combine(AppContext.BaseDirectory, "tax-maps")));
         services.AddScoped<GetActiveTaxMap>();
         services.AddScoped<IChartOfAccountsSeeder, JsonChartOfAccountsSeeder>();
-        services.AddScoped<IDocumentVault, SecureUploadStore>();
     }
 }

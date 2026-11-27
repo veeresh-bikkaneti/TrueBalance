@@ -36,6 +36,10 @@ public static class UploadEndpoints
                     file.ContentType,
                     cancellationToken);
             }
+            catch (VaultLockedException ex)
+            {
+                return Results.BadRequest(new { error = ex.Message });
+            }
             catch (InvalidUploadException ex)
             {
                 // Upload messages quote parts of the input, so they pass the

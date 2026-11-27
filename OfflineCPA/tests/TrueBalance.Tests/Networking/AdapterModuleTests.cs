@@ -30,7 +30,7 @@ public class AdapterModuleTests
         Assert.Equal(
             new[] { "CsvStatementImporter", "OfxStatementImporter", "PdfFileParser" },
             provider.GetServices<IStatementImporter>().Select(i => i.GetType().Name));
-        Assert.IsType<Infrastructure.Services.SecureUploadStore>(provider.GetRequiredService<IDocumentVault>());
+        Assert.IsType<Infrastructure.Vault.EncryptedFileVault>(provider.GetRequiredService<IDocumentVault>());
         Assert.IsType<Infrastructure.Reporting.ClosedXmlReportExporter>(provider.GetRequiredService<IReportExporter>());
     }
 
@@ -44,7 +44,7 @@ public class AdapterModuleTests
             .ToArray();
 
         Assert.Equal(
-            new[] { "Infrastructure.Data", "Infrastructure.Networking", "Infrastructure.Pii", "Infrastructure.Reporting", "Infrastructure.Services" },
+            new[] { "Infrastructure.Data", "Infrastructure.Networking", "Infrastructure.Pii", "Infrastructure.Reporting", "Infrastructure.Services", "Infrastructure.Vault" },
             modules);
     }
 

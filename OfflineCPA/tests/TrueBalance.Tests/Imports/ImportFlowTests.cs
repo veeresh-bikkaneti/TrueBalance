@@ -165,7 +165,7 @@ public sealed class ImportFlowTests : IDisposable
     public async Task Parse_errors_name_row_and_column_but_never_the_value(string csv, string column)
     {
         await File.WriteAllTextAsync(_path, csv);
-        var ex = await Assert.ThrowsAsync<StatementParseException>(() => new CsvStatementImporter().ParseAsync(_path, null));
+        var ex = await Assert.ThrowsAsync<StatementParseException>(() => new CsvStatementImporter().ParseAsync(new MemoryStream(File.ReadAllBytes(_path)), null));
         Assert.Equal($"Row 2, column '{column}': the value could not be read.", ex.Message);
     }
 
@@ -173,13 +173,13 @@ public sealed class ImportFlowTests : IDisposable
     public async Task Debit_columns_are_money_out_and_ofx_sgml_and_xml_parse()
     {
         await File.WriteAllTextAsync(_path, "date,description,debit,credit\n2026-06-15,a,5.25,\n2026-06-15,b,,7\n");
-        var csv = await new CsvStatementImporter().ParseAsync(_path, null);
+        var csv = await new CsvStatementImporter().ParseAsync(new MemoryStream(File.ReadAllBytes(_path)), null);
         Assert.Equal(new[] { -5.25m, 7m }, csv.Rows.Select(r => r.Amount));
 
         await File.WriteAllTextAsync(_path,
             "<BANKACCTFROM><ACCTID>000</BANKACCTFROM><BANKTRANLIST>\n<STMTTRN>\n<DTPOSTED>20260615120000\n<TRNAMT>-12.30\n<NAME>Fake Vendor 1\n</STMTTRN>\n" +
             "<STMTTRN><DTPOSTED>20260616</DTPOSTED><TRNAMT>4.00</TRNAMT><MEMO>A &amp; B</MEMO></STMTTRN></BANKTRANLIST>");
-        var ofx = await new OfxStatementImporter().ParseAsync(_path, null);
+        var ofx = await new OfxStatementImporter().ParseAsync(new MemoryStream(File.ReadAllBytes(_path)), null);
         Assert.Equal(new[] { -12.30m, 4.00m }, ofx.Rows.Select(r => r.Amount));
         Assert.Equal(new[] { "Fake Vendor 1", "A & B" }, ofx.Rows.Select(r => r.Description));
         Assert.False(ofx.IsExperimental);
@@ -190,6 +190,8 @@ public sealed class ImportFlowTests : IDisposable
         public Task<Application.Uploads.StoredUpload> SaveAsync(Stream content, long length, string originalFileName,
             string? contentType, CancellationToken cancellationToken = default) => throw new NotSupportedException();
 
-        public string? FindPath(Guid documentId, string extension) => path;
+        public bool IsUnlocked => true;
+        public Task<Stream?> OpenReadAsync(Guid documentId, string extension, CancellationToken cancellationToken = default)
+            => Task.FromResult<Stream?>(File.OpenRead(path));
     }
 }

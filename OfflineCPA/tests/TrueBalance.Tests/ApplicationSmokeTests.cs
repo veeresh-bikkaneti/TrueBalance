@@ -6,7 +6,7 @@ public class ApplicationSmokeTests
 {
     private sealed class StubStatementImporter : IStatementImporter
     {
-        public Task<ParsedStatement> ParseAsync(string filePath, CsvColumnMap? map, CancellationToken cancellationToken = default)
+        public Task<ParsedStatement> ParseAsync(Stream content, CsvColumnMap? map, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(new ParsedStatement(Array.Empty<ParsedRow>(), true));
         }
@@ -32,7 +32,7 @@ public class ApplicationSmokeTests
     {
         IStatementImporter parser = new StubStatementImporter();
 
-        var parsed = await parser.ParseAsync("local-file.pdf", null);
+        var parsed = await parser.ParseAsync(Stream.Null, null);
 
         Assert.Empty(parsed.Rows);
         Assert.True(parsed.IsExperimental);
