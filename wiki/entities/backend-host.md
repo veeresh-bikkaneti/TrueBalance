@@ -1,11 +1,11 @@
 ---
 checked:
-  OfflineCPA/src/Backend/Program.cs: 17e6fc6fe3d31caa311ea9bc4bb5f99e074abfdd
+  OfflineCPA/src/Backend/Program.cs: 153e78f333ac9b25969edaef934534cbb64e786b
   OfflineCPA/src/Backend/Configuration/DotEnv.cs: 7592be1aa2f9464e5fca5199c849a4b5f852aa25
   OfflineCPA/src/Infrastructure/AdapterModuleRegistration.cs: 98f6f27b02c94a2298b2860b84e40a66d8f1b56c
   OfflineCPA/src/Application/Networking/INetworkGate.cs: 77fab7a5d681fe7d25f236857a96c4ab8fe25914
   OfflineCPA/src/Backend/Extensions/SecureErrorHandling.cs: e57f61396acc5f925a3b7e45d170ed977a741596
-  OfflineCPA/docker-compose.yml: 0a79ce20514571bcf91d957214efe822bf930bdc
+  OfflineCPA/docker-compose.yml: 6439009f0b9afa1a6a9268de1ffef78da789df47
   OfflineCPA/docker-compose.dev.yml: 85710bca8c67616598ad95d352f47c551a33d1e1
 ---
 # Backend host
@@ -18,7 +18,7 @@ The host registers adapters by convention: `AddInfrastructureAdapterModules` fin
 
 ## Compose
 
-The default compose file builds the backend connection string with `Host=database` and passes the password as `PGPASSWORD`. It publishes the API on `127.0.0.1:8080` and does not publish a database port. The backend waits until Postgres is healthy (repo: OfflineCPA/docker-compose.yml#L20-L38). `docker-compose.dev.yml` publishes Postgres on `127.0.0.1:5432` for a host `dotnet run` (repo: OfflineCPA/docker-compose.dev.yml#L1-L6).
+The default compose file builds the backend connection string with `Host=database` and passes the password as `PGPASSWORD`. It publishes the API on `127.0.0.1:8080` and does not publish a database port. The backend waits until Postgres is healthy (repo: OfflineCPA/docker-compose.yml#L20-L40). `docker-compose.dev.yml` publishes Postgres on `127.0.0.1:5432` for a host `dotnet run` (repo: OfflineCPA/docker-compose.dev.yml#L1-L6).
 
 ## Change it safely
 
