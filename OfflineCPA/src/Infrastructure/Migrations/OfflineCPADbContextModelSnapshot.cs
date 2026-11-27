@@ -75,6 +75,9 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<int>("BalanceMeaning")
+                        .HasColumnType("integer");
+
                     b.Property<string>("BankName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -155,6 +158,12 @@ namespace Infrastructure.Migrations
                     b.Property<string>("FailureReason")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("LastResetAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ResetCount")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Status")
                         .IsConcurrencyToken()

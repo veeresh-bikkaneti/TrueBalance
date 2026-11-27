@@ -1,5 +1,6 @@
 ---
 checked:
+  OfflineCPA/src/Infrastructure/Migrations/20261127135749_CardBalanceAndDiscard.cs: f722d2f1aa50070d35441554477d14bcda624505
   OfflineCPA/src/Infrastructure/Migrations/20261127054233_StatementImport.cs: b1a5dc047d31c5c85b864e2fddc5f23f3cf8d2c4
   OfflineCPA/src/Infrastructure/Data/ImportConfigurations.cs: 15164318598785c1d3261ee25db502412b6cccf9
   OfflineCPA/src/Infrastructure/Data/OfflineCPADbContext.cs: 3722c8129033d5fa805f1277b55c83cde13a5c91
@@ -16,6 +17,8 @@ checked:
 ## Migrations
 
 `InitialCreate` is the migration class in `20261124120000_InitialCreate.cs` (repo: OfflineCPA/src/Infrastructure/Migrations/20261124120000_InitialCreate.cs#L9). `LedgerCore` drops the old line-level `JournalEntries` table and creates `LedgerAuditRecords`, `Periods`, `JournalEntries`, and `Postings` (repo: OfflineCPA/src/Infrastructure/Migrations/20261125000000_LedgerCore.cs#L27-L88). It then adds three triggers: postings of a non-draft entry cannot be changed or deleted, a non-draft header freezes date, memo, and period, and audit rows reject update and delete (repo: OfflineCPA/src/Infrastructure/Migrations/20261125000000_LedgerCore.cs#L137-L205).
+
+`CardBalanceAndDiscard` only adds columns: the balance meaning on a bank profile (0 is `FromAccountType`, so old profiles keep working) and the reset count and time on an import batch (repo: OfflineCPA/src/Infrastructure/Migrations/20261127135749_CardBalanceAndDiscard.cs#L12-L31).
 
 `Ledger_model_matches_the_snapshot` asserts `HasPendingModelChanges()` is false. The comment says it does not open a database (repo: OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs#L133-L142). Startup calls `Database.Migrate()` (repo: OfflineCPA/src/Backend/Program.cs#L140-L145).
 
