@@ -24,7 +24,7 @@ public sealed partial class BankAccountNumberDetector : IPiiDetector
 
     // Dot, underscore or slash grouping: one separator kind, at least two of
     // them, so decimal amounts ("12345678.90") never qualify.
-    [GeneratedRegex(@"[0-9]+(?:([._/])[0-9]+)(?:[0-9]+)+")]
+    [GeneratedRegex(@"[0-9]+(?:([._/])[0-9]+)(?:\1[0-9]+)+")]
     private static partial Regex PunctuatedRun();
 
     // US phone shape: 555-123-4567 or 555 123 4567 (3-3-4 groups).

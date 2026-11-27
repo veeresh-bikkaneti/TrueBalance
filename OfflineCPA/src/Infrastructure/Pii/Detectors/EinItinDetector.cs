@@ -15,7 +15,7 @@ public sealed partial class EinItinDetector : IPiiDetector
     [GeneratedRegex(@"(?<![0-9-])[0-9]{2}[-._/][0-9]{7}(?![0-9-])")]
     private static partial Regex FormattedEin();
 
-    [GeneratedRegex(@"(?<![0-9-])9[0-9]{2}([- ._/])[0-9]{2}[0-9]{4}(?![0-9-])")]
+    [GeneratedRegex(@"(?<![0-9-])9[0-9]{2}([- ._/])[0-9]{2}\1[0-9]{4}(?![0-9-])")]
     private static partial Regex FormattedItin();
 
     [GeneratedRegex(@"(?<![0-9-])9[0-9]{8}(?![0-9-])")]
