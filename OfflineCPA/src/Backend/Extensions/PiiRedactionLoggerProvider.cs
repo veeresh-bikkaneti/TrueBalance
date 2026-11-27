@@ -61,10 +61,20 @@ public sealed class PiiRedactionLoggerProvider : ILoggerProvider
             Exception? exception,
             Func<TState, Exception?, string> formatter)
         {
-            var masked = _masker.Mask(formatter(state, exception));
-            if (exception is not null)
+            string masked;
+            try
             {
-                exception = Sanitize(exception);
+                masked = _masker.Mask(formatter(state, exception));
+                if (exception is not null)
+                {
+                    exception = Sanitize(exception);
+                }
+            }
+            catch (Exception)
+            {
+                // Fail closed: the raw line and exception never go further.
+                masked = "[log line withheld: masking failed]";
+                exception = null;
             }
 
             _inner.Log(logLevel, eventId, new MaskedState(masked), exception, static (s, _) => s.Message);

@@ -12,13 +12,13 @@ namespace Infrastructure.Pii.Detectors;
 /// </summary>
 public sealed partial class EinItinDetector : IPiiDetector
 {
-    [GeneratedRegex(@"(?<![\d-])\d{2}-\d{7}(?![\d-])")]
+    [GeneratedRegex(@"(?<![0-9-])[0-9]{2}-[0-9]{7}(?![0-9-])")]
     private static partial Regex FormattedEin();
 
-    [GeneratedRegex(@"(?<![\d-])9\d{2}[- ]\d{2}[- ]\d{4}(?![\d-])")]
+    [GeneratedRegex(@"(?<![0-9-])9[0-9]{2}[- ][0-9]{2}[- ][0-9]{4}(?![0-9-])")]
     private static partial Regex FormattedItin();
 
-    [GeneratedRegex(@"(?<![\d-])9\d{8}(?![\d-])")]
+    [GeneratedRegex(@"(?<![0-9-])9[0-9]{8}(?![0-9-])")]
     private static partial Regex BareItinShaped();
 
     public PiiType Type => PiiType.EinItin;

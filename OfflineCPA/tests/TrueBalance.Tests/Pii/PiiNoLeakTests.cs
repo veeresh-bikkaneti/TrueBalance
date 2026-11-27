@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using System.Net.Http.Headers;
 using Backend.Endpoints;
 using Domain.Entities;
@@ -40,8 +41,17 @@ public class PiiNoLeakTests
         builder.Logging.Services.AddSingleton<ILoggerProvider>(
             _ => new Backend.Extensions.PiiRedactionLoggerProvider(logs, masker));
 
+        builder.Services.AddScoped<Application.Interfaces.ILedgerStore, Infrastructure.Data.EfLedgerStore>();
+        builder.Services.AddSingleton<Application.Interfaces.IClock, Infrastructure.Services.SystemClock>();
+        builder.Services.AddScoped<Application.Ledger.CreateDraftEntry>();
+        builder.Services.AddScoped<Application.Ledger.PostEntry>();
+        builder.Services.AddScoped<Application.Ledger.ReverseEntry>();
+        builder.Services.AddScoped<Application.Ledger.LockPeriod>();
+        builder.Services.AddScoped<Application.Ledger.GetAccountBalances>();
+
         var app = builder.Build();
         app.MapUploadEndpoints();
+        app.MapLedgerEndpoints();
 
         var db = app.Services.CreateScope().ServiceProvider.GetRequiredService<OfflineCPADbContext>();
         db.Database.EnsureCreated();
@@ -164,6 +174,33 @@ public class PiiNoLeakTests
             {
                 Assert.DoesNotContain(raw, body, StringComparison.Ordinal);
             }
+        }
+        finally
+        {
+            await app.StopAsync();
+        }
+    }
+
+    [Fact]
+    public async Task Ledger_error_bodies_never_echo_raw_values()
+    {
+        var (app, db, _) = BuildApp();
+        var period = Domain.Entities.Period.Create(
+            $"Q4 {FakePii.AccountNumberA}", new DateOnly(2024, 10, 1), new DateOnly(2024, 12, 31));
+        period.Lock();
+        period.PullEvents();
+        db.Add(period);
+        db.SaveChanges();
+        await app.StartAsync();
+        try
+        {
+            var response = await app.GetTestClient().PostAsJsonAsync("/api/ledger/entries", new CreateEntryRequest(
+                new DateOnly(2024, 11, 25), "memo", period.Id,
+                [new(Guid.NewGuid(), 5m, null), new(Guid.NewGuid(), -5m, null)]));
+            var body = await response.Content.ReadAsStringAsync();
+
+            Assert.Contains("is locked", body, StringComparison.Ordinal);
+            Assert.DoesNotContain(FakePii.AccountNumberA, body, StringComparison.Ordinal);
         }
         finally
         {

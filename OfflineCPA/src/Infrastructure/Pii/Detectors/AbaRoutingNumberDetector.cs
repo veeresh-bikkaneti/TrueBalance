@@ -13,7 +13,7 @@ public sealed partial class AbaRoutingNumberDetector : IPiiDetector
 {
     private static readonly int[] Weights = [3, 7, 1, 3, 7, 1, 3, 7, 1];
 
-    [GeneratedRegex(@"(?<![\d-])\d{9}(?![\d-])")]
+    [GeneratedRegex(@"(?<![0-9-])[0-9]{9}(?![0-9-])")]
     private static partial Regex BareNineDigits();
 
     public PiiType Type => PiiType.AbaRoutingNumber;

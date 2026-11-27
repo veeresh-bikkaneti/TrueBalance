@@ -12,10 +12,10 @@ namespace Infrastructure.Pii.Detectors;
 public sealed partial class SsnDetector : IPiiDetector
 {
     // Separator forms only: a hyphen or one space between the groups.
-    [GeneratedRegex(@"(?<![\d-])\d{3}[- ]\d{2}[- ]\d{4}(?![\d-])")]
+    [GeneratedRegex(@"(?<![0-9-])[0-9]{3}[- ][0-9]{2}[- ][0-9]{4}(?![0-9-])")]
     private static partial Regex FormattedSsn();
 
-    [GeneratedRegex(@"(?<![\d-])\d{9}(?![\d-])")]
+    [GeneratedRegex(@"(?<![0-9-])[0-9]{9}(?![0-9-])")]
     private static partial Regex BareNineDigits();
 
     public PiiType Type => PiiType.Ssn;

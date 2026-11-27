@@ -126,66 +126,7 @@ app.MapGet("/api/export", async (IReportExporter exporter, CancellationToken can
 .WithName("ExportToExcel")
 .WithOpenApi();
 
-// Ledger endpoints: thin. Bind, call one use case, map rule violations to 400.
-// No auth until a later prompt, so every ledger action is attributed to the constant "local" user.
-const string LocalUserId = "local";
-
-app.MapPost("/api/ledger/entries", async (CreateEntryRequest request, CreateDraftEntry useCase, CancellationToken ct) =>
-{
-    try
-    {
-        var lines = request.Lines.Select(l => new DraftPostingLine(l.AccountId, l.Amount, l.Memo)).ToList();
-        var id = await useCase.HandleAsync(new CreateDraftEntryCommand(request.Date, request.Memo, request.PeriodId, lines, LocalUserId), ct);
-        return Results.Ok(new { id });
-    }
-    catch (LedgerRuleException ex) { return Results.BadRequest(new { error = ex.Message }); }
-})
-.WithName("CreateLedgerEntry")
-.WithOpenApi();
-
-app.MapPost("/api/ledger/entries/{id:guid}/post", async (Guid id, PostEntry useCase, CancellationToken ct) =>
-{
-    try
-    {
-        await useCase.HandleAsync(new PostEntryCommand(id, LocalUserId), ct);
-        return Results.Ok(new { id });
-    }
-    catch (LedgerRuleException ex) { return Results.BadRequest(new { error = ex.Message }); }
-})
-.WithName("PostLedgerEntry")
-.WithOpenApi();
-
-app.MapPost("/api/ledger/entries/{id:guid}/reverse", async (Guid id, ReverseEntryRequest request, ReverseEntry useCase, CancellationToken ct) =>
-{
-    try
-    {
-        var reversalId = await useCase.HandleAsync(new ReverseEntryCommand(id, request.ReversalDate, request.Memo, LocalUserId), ct);
-        return Results.Ok(new { id = reversalId });
-    }
-    catch (LedgerRuleException ex) { return Results.BadRequest(new { error = ex.Message }); }
-})
-.WithName("ReverseLedgerEntry")
-.WithOpenApi();
-
-app.MapPost("/api/ledger/periods/{id:guid}/lock", async (Guid id, LockPeriod useCase, CancellationToken ct) =>
-{
-    try
-    {
-        await useCase.HandleAsync(new LockPeriodCommand(id, LocalUserId), ct);
-        return Results.Ok(new { id });
-    }
-    catch (LedgerRuleException ex) { return Results.BadRequest(new { error = ex.Message }); }
-})
-.WithName("LockLedgerPeriod")
-.WithOpenApi();
-
-app.MapGet("/api/ledger/balances", async (GetAccountBalances useCase, CancellationToken ct) =>
-{
-    try { return Results.Ok(await useCase.HandleAsync(ct)); }
-    catch (LedgerRuleException ex) { return Results.BadRequest(new { error = ex.Message }); }
-})
-.WithName("GetLedgerBalances")
-.WithOpenApi();
+app.MapLedgerEndpoints();
 
 // Auto-migrate on startup for ease of deployment
 using (var scope = app.Services.CreateScope())

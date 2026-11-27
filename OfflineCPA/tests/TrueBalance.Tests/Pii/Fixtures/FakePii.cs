@@ -37,6 +37,10 @@ public static class FakePii
         .Select(v => new string(v.Where(char.IsDigit).ToArray()))
         .ToArray();
 
+    /// <summary>The same fake value written with another script's digits.</summary>
+    public static string InDigits(string value, char zero) =>
+        new(value.Select(c => char.IsAsciiDigit(c) ? (char)(zero + (c - '0')) : c).ToArray());
+
     /// <summary>A synthetic statement body carrying every fake value.</summary>
     public static string SampleStatementText() =>
         $"Account {AccountNumberA} at routing {RoutingNumber}. " +

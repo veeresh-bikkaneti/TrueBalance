@@ -19,17 +19,17 @@ public sealed partial class BankAccountNumberDetector : IPiiDetector
     private const int MinDigits = 8;
     private const int MaxDigits = 17;
 
-    [GeneratedRegex(@"\d[\d \-]*\d")]
+    [GeneratedRegex(@"[0-9][0-9 \-]*[0-9]")]
     private static partial Regex DigitRun();
 
     // US phone shape: 555-123-4567 or 555 123 4567 (3-3-4 groups).
-    [GeneratedRegex(@"^\d{3}[- ]\d{3}[- ]\d{4}$")]
+    [GeneratedRegex(@"^[0-9]{3}[- ][0-9]{3}[- ][0-9]{4}$")]
     private static partial Regex PhoneShape();
 
     // Typed tax-id shapes that failed their own validation: NN-NNNNNNN or
     // NNN-NN-NNNN. Relabeling those as account numbers would be a wrong
     // type, so they stay untouched instead.
-    [GeneratedRegex(@"^\d{2}-\d{7}$|^\d{3}[- ]\d{2}[- ]\d{4}$")]
+    [GeneratedRegex(@"^[0-9]{2}-[0-9]{7}$|^[0-9]{3}[- ][0-9]{2}[- ][0-9]{4}$")]
     private static partial Regex TaxIdShape();
 
     public PiiType Type => PiiType.BankAccountNumber;
@@ -147,7 +147,7 @@ public sealed partial class BankAccountNumberDetector : IPiiDetector
     }
 
     // ISO or US date shape: 2024-11-25, 2024 11 25.
-    [GeneratedRegex(@"^(18|19|20|21)\d{2}[- ](0[1-9]|1[0-2])[- ](0[1-9]|[12]\d|3[01])$")]
+    [GeneratedRegex(@"^(18|19|20|21)[0-9]{2}[- ](0[1-9]|1[0-2])[- ](0[1-9]|[12][0-9]|3[01])$")]
     private static partial Regex DateShape();
 
     private static char PrecedingNonWhitespace(string text, int index)

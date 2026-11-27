@@ -53,8 +53,11 @@ public sealed class PiiPolicy
         // a formatted SSN that starts later must still outrank a greedy
         // account run that swallows it. Within one type, the earliest match
         // claims its span.
+        // Detectors read an ASCII-digit copy of the same length, so their
+        // spans index straight into the original text.
+        var ascii = ToAsciiDigits(text);
         var candidates = _detectors
-            .SelectMany((detector, index) => detector.Find(text).Select(match => (DetectorIndex: index, Match: match)))
+            .SelectMany((detector, index) => detector.Find(ascii).Select(match => (DetectorIndex: index, Match: match)))
             .OrderBy(c => Priority.GetValueOrDefault(c.Match.Type, int.MaxValue))
             .ThenBy(c => c.Match.Start)
             .ThenByDescending(c => c.Match.Length)
@@ -103,6 +106,7 @@ public sealed class PiiPolicy
     /// "123456789" produce the same fingerprint and still match.</summary>
     public string Fingerprint(string rawValue)
     {
+        rawValue = ToAsciiDigits(rawValue);
         using var hmac = new HMACSHA256(_key);
         var digest = hmac.ComputeHash(Encoding.UTF8.GetBytes(DigitsOf(rawValue)));
         return Convert.ToHexString(digest).ToLowerInvariant();
@@ -115,6 +119,16 @@ public sealed class PiiPolicy
         var fingerprint = Fingerprint(match.RawValue)[..FingerprintTokenLength];
         return $"[{TypeToken.GetValueOrDefault(match.Type, UnknownTypeToken)} ****{last4} fp:{fingerprint}]";
     }
+
+    private static string ToAsciiDigits(string text) =>
+        string.Create(text.Length, text, static (copy, source) =>
+        {
+            for (var i = 0; i < source.Length; i++)
+            {
+                var c = source[i];
+                copy[i] = char.IsDigit(c) ? (char)('0' + (int)char.GetNumericValue(c)) : c;
+            }
+        });
 
     private static string DigitsOf(string value)
     {

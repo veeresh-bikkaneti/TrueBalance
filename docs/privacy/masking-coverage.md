@@ -29,13 +29,16 @@ Bank-account exclusions: phone-shaped 3-3-4 numbers, YYYYMMDD and YYYY-MM-DD dat
 
 ## Known false positives (masked even though they are not account numbers)
 
+- A bare nine-digit EIN (no hyphen) is ambiguous: if it is not claimed as a routing number, SSN or ITIN, it is masked as an account number (`[ACCT ****5678 …]`), so it is hidden but carries the wrong type.
 - Invoice, order, or reference numbers of 8–17 digits with no date, phone, or amount shape.
 - Any other digit run of 8–17 digits, e.g. a long product code.
 Masking these is non-destructive (last 4 digits and fingerprint stay), but expect tokens where a statement printed such codes.
 
 ## Known false negatives (not detected — do not rely on masking for these)
 
-- A bare nine-digit EIN (NNNNNNNNN with no hyphen) that does not pass the routing checksum and is not in SSN or ITIN ranges: ambiguous, left unmasked. EINs are usually printed NN-NNNNNNN, which is detected.
+- Account numbers shorter than 8 digits.
+- 8-digit account numbers that read as a YYYYMMDD date (for example `20151231`).
+- Digits outside the Basic Multilingual Plane (such as mathematical digit symbols).
 - Routing numbers printed with separators (rare) are not detected.
 - Card numbers, dates of birth, street addresses, emails, phone numbers as text: prompt 06.
 - Values split across columns or misspelled.
