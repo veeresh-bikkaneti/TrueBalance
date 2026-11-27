@@ -1,12 +1,12 @@
 ---
 checked:
-  OfflineCPA/tests/TrueBalance.Tests/Imports/CardBalanceDiscardTests.cs: 33bb12fd543cf45e7dafe8ad2528f242c882220d
+  OfflineCPA/tests/TrueBalance.Tests/Imports/CardBalanceDiscardTests.cs: 7417606fbc5232ec841d43fb587cda5b5e98a2c5
   OfflineCPA/src/Domain/Entities/ImportBatch.cs: ed8dea2449750155438c18427a33473863c7f83d
   OfflineCPA/src/Application/Ledger/DiscardStagedBatch.cs: 05d1968589c9e9fbbce4a99cc5316a406f19063e
   OfflineCPA/src/Domain/Ledger/RunningBalance.cs: 7a503963374e18376d00fbeebd049f72a72bd08c
   OfflineCPA/tests/TrueBalance.Tests/Imports/SignLayoutTests.cs: ca0f219d9031d42504ed26f462de2ba165497579
   OfflineCPA/src/Infrastructure/Services/CsvStatementImporter.cs: f50a111b1a468fffa2641b95d54a90856271e449
-  OfflineCPA/src/Application/Imports/ImportUseCases.cs: 9fe2a94d800320a6c989bc4d38a4b1f93f86b499
+  OfflineCPA/src/Application/Imports/ImportUseCases.cs: 61de92abe8652d347414f0c56a67adb4c567c2eb
   OfflineCPA/src/Application/Ledger/PostStagedRow.cs: dbe439fe628be79db3f66feafa128bced70f0ed7
   OfflineCPA/src/Application/Interfaces/IStatementImporter.cs: 1257e035bcc803dd116492123dcd5bd7ff30a565
   OfflineCPA/src/Backend/Endpoints/ImportEndpoints.cs: 95871dd1b17a55b0f6591570d2e097c6c93d823e
@@ -34,7 +34,7 @@ The running balance is checked in both file orders; any row without a balance, o
 
 ## Balance meaning
 
-A balance column counts money available (previous plus amount) or an amount owed (previous minus amount). The meaning is confirmed with the sign layout and saved on the profile; `FromAccountType` reads a liability account, such as a credit card, as owed (repo: OfflineCPA/src/Domain/Ledger/RunningBalance.cs#L5-L32). When the check fails but the other meaning would pass, the batch reason says so. That is the same arithmetic as reversed signs, so the reason names both (repo: OfflineCPA/src/Domain/Entities/ImportBatch.cs#L38-L52). The preview takes an optional `bankAccountId`; without one it reads the balance as available and says so (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L207-L287).
+A balance column counts money available (previous plus amount) or an amount owed (previous minus amount). The meaning is confirmed with the sign layout and saved on the profile, and a later confirmation that omits it keeps the saved one; `FromAccountType` reads a liability account, such as a credit card, as owed (repo: OfflineCPA/src/Domain/Ledger/RunningBalance.cs#L5-L32). When the check fails but the other meaning would pass, the batch reason says so. That is the same arithmetic as reversed signs, so the reason names both (repo: OfflineCPA/src/Domain/Entities/ImportBatch.cs#L38-L52). The preview takes an optional `bankAccountId`; without one it reads the balance as available and says so (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L207-L287).
 
 ## Discard and import again
 
@@ -52,7 +52,7 @@ A row is flagged when an earlier batch on the same account has the same date, am
 
 `ImportFlowTests` covers signs and decimals, duplicates, single posting, and parse errors (repo: OfflineCPA/tests/TrueBalance.Tests/Imports/ImportFlowTests.cs#L58-L170). `ImportNoLeakTests` runs fake values through the real importers (repo: OfflineCPA/tests/TrueBalance.Tests/Imports/ImportNoLeakTests.cs#L14-L19). They use the EF in-memory provider, so Postgres behavior is not covered.
 
-`CardBalanceDiscardTests` covers balance meaning and discard (repo: OfflineCPA/tests/TrueBalance.Tests/Imports/CardBalanceDiscardTests.cs#L66-L184). `SignLayoutTests` covers the layouts, preview, refusal and balance check (repo: OfflineCPA/tests/TrueBalance.Tests/Imports/SignLayoutTests.cs#L17-L60).
+`CardBalanceDiscardTests` covers balance meaning and discard (repo: OfflineCPA/tests/TrueBalance.Tests/Imports/CardBalanceDiscardTests.cs#L66-L199). `SignLayoutTests` covers the layouts, preview, refusal and balance check (repo: OfflineCPA/tests/TrueBalance.Tests/Imports/SignLayoutTests.cs#L17-L60).
 
 ## Parser limits
 
