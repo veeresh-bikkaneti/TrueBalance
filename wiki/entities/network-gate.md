@@ -11,9 +11,9 @@ checked:
   OfflineCPA/src/Application/Ai/IAiAssist.cs: b32faecea493216c82c0db7e88de674f29554945
   OfflineCPA/src/Infrastructure/IAdapterModule.cs: d8fef4533ad154804d873af75694525f05154305
   OfflineCPA/src/Infrastructure/AdapterModuleRegistration.cs: 98f6f27b02c94a2298b2860b84e40a66d8f1b56c
-  OfflineCPA/src/Backend/Program.cs: 452674984015389ecb7473705b58db3f8a3cbf88
+  OfflineCPA/src/Backend/Program.cs: 4000a270a06e4648a68e0d0b9f83186ef7776106
   OfflineCPA/tests/TrueBalance.Tests/Networking/NetworkGateTests.cs: 9462be3d36fd4af7a920053bc0c86173e91c2ad1
-  OfflineCPA/tests/TrueBalance.Tests/Networking/AdapterModuleTests.cs: bd290f10e23745071fab3a1916055a8392e5ae2e
+  OfflineCPA/tests/TrueBalance.Tests/Networking/AdapterModuleTests.cs: bf24343ea96b0d6db9f4d9cb8bafc1b3a434e3f7
   OfflineCPA/tests/TrueBalance.Tests/Networking/GateLogIsolationTests.cs: 6fc0135e933a05e783edb15705f3b48891f0e462
   OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs: c241452235c4fd1d5dbe64d134c98008fc5cf610
   OfflineCPA/tests/TrueBalance.Tests/Ledger/TypeNameHelper.cs: f04a70cc2a904c6be3bc1426315b5f50a10bf8d4

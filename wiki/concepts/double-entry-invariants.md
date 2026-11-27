@@ -7,8 +7,8 @@ checked:
   OfflineCPA/src/Domain/Entities/JournalEntry.cs: 60a5b3d1e5b424ba8d60bd599e5a6072b3de7e87
   OfflineCPA/src/Infrastructure/Data/EfLedgerStore.cs: 4cd65b156acdb9137bc2e5656d1663c61fb300fa
   OfflineCPA/src/Domain/Entities/Period.cs: bcc4fe128753b85180c4567b93e875337cb7df6c
-  OfflineCPA/src/Domain/Ledger/LedgerRuleException.cs: 17a075cde4cb15a500cb0ad2a16db76dda06ab7a
-  OfflineCPA/src/Backend/Program.cs: 452674984015389ecb7473705b58db3f8a3cbf88
+  OfflineCPA/src/Domain/Ledger/LedgerRuleException.cs: 92027b237a61fba254c7ea8da00f866c1ecf3788
+  OfflineCPA/src/Backend/Program.cs: 4000a270a06e4648a68e0d0b9f83186ef7776106
   OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerTests.cs: 32143217f410c0b14792b66a476804be626dbab6
   docs/ledger.md: 2eba6c35c8c780c81a1572e5362ff66584445921
 ---

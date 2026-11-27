@@ -2,7 +2,7 @@
 checked:
   OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs: 33c34cedec49c541cfae8e468e5484c0df8759dc
   OfflineCPA/src/Domain/Entities/JournalEntry.cs: 60a5b3d1e5b424ba8d60bd599e5a6072b3de7e87
-  OfflineCPA/src/Backend/Program.cs: 452674984015389ecb7473705b58db3f8a3cbf88
+  OfflineCPA/src/Backend/Program.cs: 4000a270a06e4648a68e0d0b9f83186ef7776106
   OfflineCPA/src/Domain/Entities/Posting.cs: 53956565729f8b7d009c0bcc9997481f9ea6e4f5
   OfflineCPA/src/Domain/Entities/Period.cs: bcc4fe128753b85180c4567b93e875337cb7df6c
   OfflineCPA/src/Domain/Enums/JournalEntryStatus.cs: 8eb3b37ef9b17fad255980f39c475a6dfcde9fd3

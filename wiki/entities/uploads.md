@@ -1,36 +1,47 @@
 ---
 checked:
-  OfflineCPA/src/Application/Interfaces/IDocumentVault.cs: da4b7921dd9557cce52304e64a178ab627ebfb74
+  OfflineCPA/src/Application/Interfaces/IDocumentVault.cs: 8d3b7ddb7f73004bd41d40945ee4c05cac3b97ea
   OfflineCPA/src/Application/Uploads/StoredUpload.cs: d0f89183d09d583b499dbb4352993efda461b885
-  OfflineCPA/src/Application/Interfaces/IStatementImporter.cs: 1257e035bcc803dd116492123dcd5bd7ff30a565
+  OfflineCPA/src/Application/Interfaces/IStatementImporter.cs: 815216298b5b0524f1ab804254586bce3abc1586
   OfflineCPA/src/Infrastructure/Options/UploadOptions.cs: 9ae8e83707e682d5fbaa3750ff62686ca5174e68
-  OfflineCPA/src/Infrastructure/Services/SecureUploadStore.cs: ddabcdea7617797ac1c5251b09e9a1a4496cd84e
-  OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs: 5c7efd00e3d56a2163cfaacab57769403ea3d8e3
-  OfflineCPA/src/Infrastructure/Services/PdfFileParser.cs: 60f06e3346140d6e125a62e37376cf13637cfe0e
-  OfflineCPA/src/Backend/Services/LocalFileProcessorService.cs: c9c938cf7002f8117b0d97c5db76bec228eda379
-  OfflineCPA/tests/TrueBalance.Tests/SecureUploadStoreTests.cs: 466fcc91ef34691cb13c9adc0975d01aa87fca26
-  OfflineCPA/tests/TrueBalance.Tests/FolderWatchLogTests.cs: b1d72233acaf1cf3e726003353ad70b68a229d65
+  OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs: 7ece069c6c1c068bcf26fe6e7932bbd8c2551059
+  OfflineCPA/src/Infrastructure/Vault/VaultModule.cs: 7aa8b0627d4d668f174506877f24f62d8bbdc862
+  OfflineCPA/src/Backend/Endpoints/VaultEndpoints.cs: fb4cc6cf911dec518d89439b1feefe1774366600
+  OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs: 8eebefad33f134ade84e8f918dda3c647dbe3be3
+  OfflineCPA/src/Application/Uploads/PurgeOriginals.cs: 0be9488eb3fbae8596b74925e8332eb09fe16df1
+  OfflineCPA/src/Backend/Program.cs: 4000a270a06e4648a68e0d0b9f83186ef7776106
+  OfflineCPA/src/Infrastructure/Services/PdfFileParser.cs: b269b192cbf46fbd51d256ac9404d0be8f8b31df
+  OfflineCPA/src/Backend/Services/LocalFileProcessorService.cs: 386a38d5ea989a34871a17c5bc3c26a2d4626304
+  OfflineCPA/tests/TrueBalance.Tests/SecureUploadStoreTests.cs: 1466e7c579a91cd7d48c19b61ff6db726aed373b
+  OfflineCPA/tests/TrueBalance.Tests/FolderWatchLogTests.cs: 233e7d97e6762cc53b49014f64494eb1031c6230
+  OfflineCPA/tests/TrueBalance.Tests/Vault/VaultTests.cs: 6047014d8e6f8dfd43cb0c562f10f28293a4df6e
 ---
 # Uploads
 
-`IDocumentVault.SaveAsync` (before this rename: `ISecureUploadStore`) takes a stream, a length, the original file name, and a content type, and returns a `StoredUpload` (repo: OfflineCPA/src/Application/Interfaces/IDocumentVault.cs#L9-L15) (repo: OfflineCPA/src/Application/Uploads/StoredUpload.cs#L3-L11). `SecureUploadStore` is the adapter.
+`IDocumentVault.SaveAsync` takes a stream, a length, the original file name, and a content type, and returns a `StoredUpload` (repo: OfflineCPA/src/Application/Interfaces/IDocumentVault.cs#L9-L28) (repo: OfflineCPA/src/Application/Uploads/StoredUpload.cs#L3-L9). `EncryptedFileVault` is the adapter, registered once so it can hold the key (repo: OfflineCPA/src/Infrastructure/Vault/VaultModule.cs#L9-L15).
 
-`IStatementImporter` is the port for turning one local file into statement rows, with CSV, OFX and PDF adapters (repo: OfflineCPA/src/Application/Interfaces/IStatementImporter.cs#L10-L22). PDF output is experimental. See [[statement-import]].
+`IStatementImporter` is the port for turning one file's content into statement rows, with CSV, OFX and PDF adapters (repo: OfflineCPA/src/Application/Interfaces/IStatementImporter.cs#L10-L15). It reads a stream, never a path. PDF output is experimental. See [[statement-import]].
 
-## What the store checks
+## What the vault checks
 
-Empty files and files over `MaxBytes` (default 20 MB) are rejected. The extension must be in the allow list (`.csv`, `.ofx`, `.qfx`, `.pdf`, `.png`, `.jpg`, `.jpeg`) and the content type, when present, must be in the allow list (repo: OfflineCPA/src/Infrastructure/Options/UploadOptions.cs#L3-L25) (repo: OfflineCPA/src/Infrastructure/Services/SecureUploadStore.cs#L29-L50). The stored name is a new GUID in `N` format plus the extension. The full path must stay under the upload root (repo: OfflineCPA/src/Infrastructure/Services/SecureUploadStore.cs#L52-L66). `SanitizeFileName` strips the directory part and null bytes. That cleaned name is data on `StoredUpload`, not the path (repo: OfflineCPA/src/Infrastructure/Services/SecureUploadStore.cs#L81-L92).
+Empty files and files over `MaxBytes` (default 20 MB) are rejected, by declared length and by bytes read. The extension must be in the allow list and the content type, when present, must be too (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L61-L110). The stored name is a new GUID in `N` format plus the extension, with `.enc` on disk. `SanitizeFileName` strips the directory part and null bytes; that cleaned name is data on `StoredUpload`, not the path (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L137-L147).
+
+## Encryption and unlock
+
+Files are sealed with AES-256-GCM: nonce, tag, ciphertext, with the file name authenticated (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L253-L259). The key is PBKDF2-HMAC-SHA256 over the passphrase (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L248-L249) and stays in memory. The first unlock creates `vault.json`; missing settings beside sealed files, damaged settings and a wrong passphrase all fail closed (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L163-L180). Unlock also seals leftover plain uploads and deletes each only after it opens again (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L218-L236).
+
+Routes: `POST /api/vault/unlock` and `POST /api/vault/purge-originals` (repo: OfflineCPA/src/Backend/Endpoints/VaultEndpoints.cs#L12-L32). Purge needs a confirmation and an unlocked vault, returns an IRS retention warning, and deletes stored documents only (repo: OfflineCPA/src/Application/Uploads/PurgeOriginals.cs#L8-L19).
 
 ## Entry points
 
-`POST /api/upload` stores the file through the vault and, when an importer supports the extension, queues an import batch. It parses and posts nothing (repo: OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs#L16-L53).
+`POST /api/upload` stores the file through the vault and, when an importer supports the extension, queues an import batch (repo: OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs#L16-L52). Form bodies stay in memory so no plain temporary file is written (repo: OfflineCPA/src/Backend/Program.cs#L73-L78).
 
-`LocalFileProcessorService` scans `Bookkeeping:InputDirectory` (default `/app/data/input`) every 30 seconds. For each supported file it first moves the file to `processing`, saves a vault copy, queues a batch, and moves it on to `processed` without overwriting. If queueing fails the file goes back; if the last move fails it stays in `processing`, which is never scanned, so a restart cannot queue it twice. Logs use a generated id, not the file name (repo: OfflineCPA/src/Backend/Services/LocalFileProcessorService.cs#L57-L127).
+`LocalFileProcessorService` scans `Bookkeeping:InputDirectory` every 30 seconds. While the vault is locked it leaves files where they are. Otherwise it moves a file to `processing`, saves a vault copy, queues a batch, and deletes the staging file. If queueing fails the file goes back (repo: OfflineCPA/src/Backend/Services/LocalFileProcessorService.cs#L57-L117).
 
 ## Tests
 
-`SecureUploadStoreTests` covers hostile names, the allow list, empty files, and oversize files (repo: OfflineCPA/tests/TrueBalance.Tests/SecureUploadStoreTests.cs#L44-L97). `FolderWatchLogTests` asserts the log has no original file name (repo: OfflineCPA/tests/TrueBalance.Tests/FolderWatchLogTests.cs#L28-L51).
+`VaultTests` covers the round trip, wrong passphrase, tampering, locked refusals, plain-text absence, folder intake, older uploads and purge (repo: OfflineCPA/tests/TrueBalance.Tests/Vault/VaultTests.cs#L21-L65). `SecureUploadStoreTests` keeps the hostile-name and allow-list cases against the vault (repo: OfflineCPA/tests/TrueBalance.Tests/SecureUploadStoreTests.cs#L1-L40). `FolderWatchLogTests` asserts the log has no original file name (repo: OfflineCPA/tests/TrueBalance.Tests/FolderWatchLogTests.cs#L28-L51).
 
 ## Change it safely
 
-A new file type goes in a new adapter folder with its own module class; see [[network-gate]] for the convention. Do not build a path from the client file name. Anything that persists or echoes extracted text passes [[pii-masking]] first.
+A new file type goes in a new adapter folder with its own module class; see [[network-gate]] for the convention. Do not build a path from the client file name, and do not write plain content to disk. Anything that persists or echoes extracted text passes [[pii-masking]] first.

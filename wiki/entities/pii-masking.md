@@ -1,6 +1,6 @@
 ---
 checked:
-  OfflineCPA/tests/TrueBalance.Tests/Imports/ImportNoLeakTests.cs: 2ae563b07bca5b4676ef9be31ac73824c010c9ee
+  OfflineCPA/tests/TrueBalance.Tests/Imports/ImportNoLeakTests.cs: ca30e071a437dffe0c14cac59d577daddc43ba12
   docs/adr/0010-pii-masking-before-import.md: 99d7139b39965aef01e0ff0e94963e7b5e5db733
   OfflineCPA/src/Domain/Pii/PiiPolicy.cs: 2832d022095902579fc0588140f7fb843b4b3f1f
   OfflineCPA/src/Application/Interfaces/IPiiMasker.cs: c5a61065c626451d907e20e5f30172d52478ddaf
@@ -14,8 +14,8 @@ checked:
   OfflineCPA/src/Infrastructure/Pii/Detectors/AbaRoutingNumberDetector.cs: 9c7f47fe4ea374f862ae466ca2c7b4a57742c962
   OfflineCPA/src/Infrastructure/Pii/Detectors/BankAccountNumberDetector.cs: 0d1281b59f4aa58dd7747ca5e1ea7be65b8fd818
   OfflineCPA/src/Backend/Extensions/PiiRedactionLoggerProvider.cs: 50ff20605e62fc05011c5f6a16392eeb23aeb600
-  OfflineCPA/src/Backend/Program.cs: 452674984015389ecb7473705b58db3f8a3cbf88
-  OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs: 5c7efd00e3d56a2163cfaacab57769403ea3d8e3
+  OfflineCPA/src/Backend/Program.cs: 4000a270a06e4648a68e0d0b9f83186ef7776106
+  OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs: 8eebefad33f134ade84e8f918dda3c647dbe3be3
   OfflineCPA/tests/TrueBalance.Tests/Pii/Fixtures/FakePii.cs: 0313be7b15a4696b19ae160d947cd56d43eaea4c
   OfflineCPA/tests/TrueBalance.Tests/Pii/PiiNoLeakTests.cs: 847b2efdf07f975305c68bdf7c07c5e3c8ba0eb9
 ---
@@ -35,7 +35,7 @@ Prompt 06 adds card numbers (Luhn-checked), dates of birth (only after a birth l
 
 ## Logs and errors
 
-Every console log line is masked before the provider writes it; every message on the exception chain is checked, and a chain that changes under masking is rebuilt from type names and masked messages (repo: OfflineCPA/src/Backend/Extensions/PiiRedactionLoggerProvider.cs#L14-L142). `Program.cs` clears the default providers and wraps the console provider (repo: OfflineCPA/src/Backend/Program.cs#L24-L30). Upload errors quote input, so the route masks the message before returning it (repo: OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs#L43-L44).
+Every console log line is masked before the provider writes it; every message on the exception chain is checked, and a chain that changes under masking is rebuilt from type names and masked messages (repo: OfflineCPA/src/Backend/Extensions/PiiRedactionLoggerProvider.cs#L14-L142). `Program.cs` clears the default providers and wraps the console provider (repo: OfflineCPA/src/Backend/Program.cs#L24-L30). Upload errors quote input, so the route masks the message before returning it (repo: OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs#L47-L48).
 
 ## Tests and fixtures
 
