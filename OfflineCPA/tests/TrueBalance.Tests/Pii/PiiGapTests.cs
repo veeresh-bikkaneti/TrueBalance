@@ -72,6 +72,41 @@ public class PiiGapTests
     }
 
     [Theory]
+    [InlineData("Paid 12 invoices this is late")]
+    [InlineData("Paid 50 to John via Zelle")]
+    [InlineData("ZELLE PAYMENT 50 TO JOHN VIA APP")]
+    [InlineData("Bought 2 bottles of vitamin C")]
+    [InlineData("Paid 3 invoices for the club")]
+    [InlineData("Refund 25 for order at the mall")]
+    [InlineData("Coffee 4 cups at the mill")]
+    [InlineData("Lunch 3 people at Pine Key")]
+    [InlineData("Uber 2 trips to the airport way")]
+    [InlineData("Bought 10 tickets for the course")]
+    [InlineData("Transfer 500 from savings via online banking")]
+    [InlineData("Paid 1200 rent for the park space")]
+    [InlineData("Paid 100 for the union dues")]
+    public void Leaves_ordinary_memos_readable(string memo)
+    {
+        Assert.Equal(memo, Mask(memo));
+    }
+
+    [Theory]
+    [InlineData("742 Evergreen Terrace", "")]
+    [InlineData("742 Jean-Luc Road", "")]
+    [InlineData("12 Green Valley", "")]
+    [InlineData("100 Martin Luther King Jr Blvd", "")]
+    [InlineData("1600 PENNSYLVANIA AVE", " NW")]
+    [InlineData("Rural Route 2 Box 15", "")]
+    [InlineData("PO Box 12 Apt 4", "")]
+    [InlineData("742 Example Street, Apt 4", "")]
+    public void Still_masks_a_street_line(string address, string readableTail)
+    {
+        Assert.Matches(
+            $@"^Ship to \[ADDR fp:[0-9a-f]+\]{readableTail} today$",
+            Mask($"Ship to {address}{readableTail} today"));
+    }
+
+    [Theory]
     [InlineData(FakePii.Phone)]
     [InlineData(FakePii.PhoneBracketed)]
     [InlineData("402.555.0182")]

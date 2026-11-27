@@ -1,10 +1,5 @@
 ---
 checked:
-  OfflineCPA/src/Infrastructure/Pii/Detectors/EmailDetector.cs: 0d40ef03c2d9715aa534baf01fcb72cfe17a55f8
-  OfflineCPA/src/Infrastructure/Pii/Detectors/PhoneNumberDetector.cs: 42ff20a98eb4c2abda9baeca9d6cedde5b3fbb02
-  OfflineCPA/src/Infrastructure/Pii/Detectors/StreetAddressDetector.cs: 15520c319ccb34bf9ba3fcef1a6406720873b78b
-  OfflineCPA/src/Infrastructure/Pii/Detectors/DateOfBirthDetector.cs: 9f286594f11e24b0448283cbf7f77586159489fe
-  OfflineCPA/tests/TrueBalance.Tests/Imports/ImportNoLeakTests.cs: ca30e071a437dffe0c14cac59d577daddc43ba12
   docs/adr/0010-pii-masking-before-import.md: 99d7139b39965aef01e0ff0e94963e7b5e5db733
   OfflineCPA/src/Domain/Pii/PiiPolicy.cs: 0dbb64486f1ea7d7b790145624f4b2d3cd8a8f09
   OfflineCPA/src/Application/Interfaces/IPiiMasker.cs: c5a61065c626451d907e20e5f30172d52478ddaf
@@ -12,16 +7,21 @@ checked:
   OfflineCPA/src/Infrastructure/Pii/LocalFingerprintKeyStore.cs: 61d322ca1468d8c687bd5b828d19ff078ef52b1f
   OfflineCPA/src/Infrastructure/Pii/PiiModule.cs: 46bdf6555102ff58bf2241609ac04084c67bf2e9
   OfflineCPA/src/Infrastructure/Pii/Detectors/PiiDetectors.cs: 322da7c5bed306d343010cce9d0103d646bb9035
-  OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs: 33c34cedec49c541cfae8e468e5484c0df8759dc
   OfflineCPA/src/Infrastructure/Pii/Detectors/SsnDetector.cs: 8173fe31c27dce7c81a307a66efb9d6b4dfa54b1
   OfflineCPA/src/Infrastructure/Pii/Detectors/EinItinDetector.cs: 010b52872b3fc4f2cc8064cb204f33b6d390bf07
   OfflineCPA/src/Infrastructure/Pii/Detectors/AbaRoutingNumberDetector.cs: 9c7f47fe4ea374f862ae466ca2c7b4a57742c962
   OfflineCPA/src/Infrastructure/Pii/Detectors/BankAccountNumberDetector.cs: dd2e304407ee28dc3aa71c0fb9b46605902d8404
+  OfflineCPA/src/Infrastructure/Pii/Detectors/DateOfBirthDetector.cs: 9f286594f11e24b0448283cbf7f77586159489fe
+  OfflineCPA/src/Infrastructure/Pii/Detectors/StreetAddressDetector.cs: 5f1b849307de8381792f5fb91db927eef4178d81
+  OfflineCPA/src/Infrastructure/Pii/Detectors/PhoneNumberDetector.cs: 42ff20a98eb4c2abda9baeca9d6cedde5b3fbb02
+  OfflineCPA/src/Infrastructure/Pii/Detectors/EmailDetector.cs: 0d40ef03c2d9715aa534baf01fcb72cfe17a55f8
+  OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs: 33c34cedec49c541cfae8e468e5484c0df8759dc
   OfflineCPA/src/Backend/Extensions/PiiRedactionLoggerProvider.cs: 50ff20605e62fc05011c5f6a16392eeb23aeb600
   OfflineCPA/src/Backend/Program.cs: 4000a270a06e4648a68e0d0b9f83186ef7776106
   OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs: 8eebefad33f134ade84e8f918dda3c647dbe3be3
   OfflineCPA/tests/TrueBalance.Tests/Pii/Fixtures/FakePii.cs: 862083bc55b6f480ea7f19694bc08750f2eaacf4
   OfflineCPA/tests/TrueBalance.Tests/Pii/PiiNoLeakTests.cs: 847b2efdf07f975305c68bdf7c07c5e3c8ba0eb9
+  OfflineCPA/tests/TrueBalance.Tests/Imports/ImportNoLeakTests.cs: ca30e071a437dffe0c14cac59d577daddc43ba12
 ---
 # PII masking core
 
@@ -35,7 +35,7 @@ The port is narrow: callers pass text through `IPiiMasker.Mask`, or `MaskDetaile
 
 The detectors are one class per type and register through the `PiiModule` adapter module, so prompt 06 adds detectors without touching the host (repo: OfflineCPA/src/Infrastructure/Pii/PiiModule.cs#L9-L20). The set is listed once, in `PiiDetectors.All()`, which the app and the test masker both read (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/PiiDetectors.cs#L9-L25): SSN with invalid-range skips (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/SsnDetector.cs#L12-L53), EIN plus ITIN middle-digit ranges (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/EinItinDetector.cs#L13-L56), ABA routing by check digit (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/AbaRoutingNumberDetector.cs#L12-L40), and 8-17 digit bank account runs with phone, date, amount, and tax-id-shape exclusions (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/BankAccountNumberDetector.cs#L17-L254).
 
-Prompt 06 adds card numbers (Luhn-checked), dates of birth (only after a birth label such as `DOB`, `born` or `birth date`), and US street addresses with any unit, plus PO boxes. Dates and addresses keep no readable digits in their token (repo: OfflineCPA/src/Domain/Pii/PiiPolicy.cs#L38-L49). The three PR 45 gaps are closed in the account detector: unbroken runs of 18 or more digits, account groups joined to an SSN by an underscore (the run after its first separator is offered as a second candidate), and runs split by a double space, `--` or ` - ` (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/BankAccountNumberDetector.cs#L44-L111). Space-grouped runs of eight or more digits are masked by default. A run stays readable only when a list label (`Invoice(s)`, `Inv`, `Inv #`, `Check(s)`, `Chk`, `Order(s)`) sits directly before it and every group is 3 to 6 digits; a card layout (4-4-4-4, 4-6-5, 4-6-4) is masked even then (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/BankAccountNumberDetector.cs#L98-L111). Prompt 06c widened the shapes. Dates of birth take a dash, two-digit years and English month names (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/DateOfBirthDetector.cs#L1-L42). Addresses take the full USPS suffix list, up to five name words, rural and contract routes, and a unit after a PO box (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/StreetAddressDetector.cs#L1-L80). US phone numbers (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/PhoneNumberDetector.cs#L1-L43) and email addresses (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/EmailDetector.cs#L1-L26) have their own detectors and tokens with no readable part; an email's fingerprint covers its lowercased text (repo: OfflineCPA/src/Domain/Pii/PiiPolicy.cs#L184-L191). Names are still not detected; docs/privacy/masking-coverage.md lists every gap. Ledger memos on entry create and reverse pass through the masker (repo: OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs#L19-L22).
+Prompt 06 adds card numbers (Luhn-checked), dates of birth (only after a birth label such as `DOB`, `born` or `birth date`), and US street addresses with any unit, plus PO boxes. Dates and addresses keep no readable digits in their token (repo: OfflineCPA/src/Domain/Pii/PiiPolicy.cs#L38-L49). The three PR 45 gaps are closed in the account detector: unbroken runs of 18 or more digits, account groups joined to an SSN by an underscore (the run after its first separator is offered as a second candidate), and runs split by a double space, `--` or ` - ` (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/BankAccountNumberDetector.cs#L44-L111). Space-grouped runs of eight or more digits are masked by default. A run stays readable only when a list label (`Invoice(s)`, `Inv`, `Inv #`, `Check(s)`, `Chk`, `Order(s)`) sits directly before it and every group is 3 to 6 digits; a card layout (4-4-4-4, 4-6-5, 4-6-4) is masked even then (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/BankAccountNumberDetector.cs#L98-L111). Prompt 06c widened the shapes. Dates of birth take a dash, two-digit years and English month names (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/DateOfBirthDetector.cs#L1-L42). Addresses take the USPS suffix list (without `C`, `Un`, `Is`, `Iss` and `Via`), up to five name words that are not common function words, rural and contract routes, and a unit after a PO box (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/StreetAddressDetector.cs#L1-L89). US phone numbers (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/PhoneNumberDetector.cs#L1-L43) and email addresses (repo: OfflineCPA/src/Infrastructure/Pii/Detectors/EmailDetector.cs#L1-L26) have their own detectors and tokens with no readable part; an email's fingerprint covers its lowercased text (repo: OfflineCPA/src/Domain/Pii/PiiPolicy.cs#L184-L191). Names are still not detected; docs/privacy/masking-coverage.md lists every gap. Ledger memos on entry create and reverse pass through the masker (repo: OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs#L19-L22).
 
 ## Logs and errors
 
