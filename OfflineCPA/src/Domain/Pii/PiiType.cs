@@ -10,4 +10,7 @@ public enum PiiType
     AbaRoutingNumber,
     Ssn,
     EinItin,
+    Card,
+    DateOfBirth,
+    StreetAddress,
 }

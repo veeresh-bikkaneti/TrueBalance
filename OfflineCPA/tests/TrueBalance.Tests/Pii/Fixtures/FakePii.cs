@@ -26,6 +26,16 @@ public static class FakePii
     public const string LongRunUnderscoreFile = "acct_1234_5678_9012_2024_11_25.pdf";
     public const string LongRunHyphenFile = "acct-1234-5678-9012-2024-11-25.pdf";
     public const string LongRunAroundRouting = "123456780 1234 5678 9012";
+    public const string LongUnbrokenRun = "100456789012345678";
+    public const string SsnJoinedToAccount = "123-45-6789_1234_5678_9012";
+    public const string SplitByDoubleSpace = "1234  5678  9012";
+    public const string SplitByDoubleDash = "1234--5678--9012";
+    public const string SplitByDashPair = "1234 - 5678 - 9012";
+    public const string InvoiceList = "Invoices 1001 1002 1003 1004 1005";
+    public const string CardNumberSpaced = "4111 1111 1111 1111";
+    public const string CardNumberBadCheck = "4111 1111 1111 1112";
+    public const string DateOfBirth = "04/12/1980";
+    public const string StreetAddress = "742 Example Street";
     public const string DateDayFirstSlash = "25/11/2024";
     public const string DateDayFirstDot = "25.11.2024";
     public const string DotGroupedAmount = "12.345.678";

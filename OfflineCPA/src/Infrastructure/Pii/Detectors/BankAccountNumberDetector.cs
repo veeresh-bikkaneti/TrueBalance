@@ -60,19 +60,48 @@ public sealed partial class BankAccountNumberDetector : IPiiDetector
     {
         foreach (Match match in PunctuatedRun().Matches(text))
         {
-            var digits = PiiText.OnlyDigits(match.Value);
             var end = match.Index + match.Length;
 
             // "12.345.678,90" is a European-style amount.
             var isAmount = end + 1 < text.Length && text[end] == ',' && char.IsAsciiDigit(text[end + 1]);
-            if (digits.Length >= MinDigits
-                && !isAmount
-                && IsPlausibleAccountNumber(text, match.Value, match.Index))
+            if (isAmount)
             {
-                yield return new PiiMatch(PiiType.BankAccountNumber, match.Value, match.Index, match.Length);
+                continue;
+            }
+
+            // The whole run, then the run after its first separator. An account
+            // that follows an SSN ("123-45-6789_1234_5678_9012") starts inside
+            // the SSN's claim, so only this tail can survive the overlap check.
+            var firstBreak = match.Value.IndexOfAny(['.', '_', '/']) + 1;
+            var candidates = new[]
+            {
+                (Value: match.Value, Start: match.Index),
+                (Value: match.Value[firstBreak..], Start: match.Index + firstBreak),
+            };
+
+            foreach (var (value, start) in candidates)
+            {
+                if (PiiText.OnlyDigits(value).Length >= MinDigits
+                    && IsPlausibleAccountNumber(text, value, start))
+                {
+                    yield return new PiiMatch(PiiType.BankAccountNumber, value, start, value.Length);
+                }
             }
         }
     }
+
+    // Space-only groups, five or more: a list of numbers ("Invoices 1001 1002
+    // 1003 1004 1005"), not one account, so the whole run is not offered.
+    private static bool IsSpaceList(string run) =>
+        run.Contains(' ') && !run.Contains("  ") && !run.Contains('-') && run.Split(' ').Length > 4;
+
+    // Double spaces, "--" or " - " break a run apart.
+    private static bool IsBrokenRun(string candidate) =>
+        candidate.Contains("  ") || candidate.Contains("--") || candidate.Contains(" - ");
+
+    // Any date-shaped group inside a run: 2024-11-25 or 25-11-2024 style.
+    [GeneratedRegex(@"[0-9]{4}[-._/ ][0-9]{2}[-._/ ][0-9]{2}|[0-9]{2}[-._/ ][0-9]{2}[-._/ ][0-9]{4}")]
+    private static partial Regex DateFragment();
 
     private static IEnumerable<(string Candidate, int Offset)> CandidatesFor(string run)
     {
@@ -86,7 +115,7 @@ public sealed partial class BankAccountNumberDetector : IPiiDetector
         // are still masked per value when a higher-priority detector claims
         // its span and the policy drops the whole-run candidate. Overlap
         // resolution keeps at most one of them.
-        if (digits.Length >= MinDigits && (digits.Length <= MaxDigits || hasSeparators))
+        if (digits.Length >= MinDigits && (digits.Length <= MaxDigits || !IsSpaceList(run)))
         {
             yield return (run, 0);
         }
@@ -121,8 +150,8 @@ public sealed partial class BankAccountNumberDetector : IPiiDetector
     {
         var digits = PiiText.OnlyDigits(candidate);
 
-        // A run broken by repeated separators is prose, not an account number.
-        if (candidate.Contains("  ") || candidate.Contains("--") || candidate.Contains("- "))
+        // Two dates joined by a range dash ("2024-11-25 - 2024-12-01") are prose.
+        if (IsBrokenRun(candidate) && DateFragment().IsMatch(candidate))
         {
             return false;
         }
