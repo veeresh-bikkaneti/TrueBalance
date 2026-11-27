@@ -15,6 +15,9 @@ public sealed class PiiModule : IAdapterModule
         services.AddSingleton<IPiiDetector, AbaRoutingNumberDetector>();
         services.AddSingleton<IPiiDetector, SsnDetector>();
         services.AddSingleton<IPiiDetector, EinItinDetector>();
+        services.AddSingleton<IPiiDetector, CardNumberDetector>();
+        services.AddSingleton<IPiiDetector, DateOfBirthDetector>();
+        services.AddSingleton<IPiiDetector, StreetAddressDetector>();
         services.AddSingleton<IPiiDetector, BankAccountNumberDetector>();
         services.AddSingleton<IPiiMasker, PiiMasker>();
     }

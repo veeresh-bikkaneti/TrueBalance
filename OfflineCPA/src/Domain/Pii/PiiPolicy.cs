@@ -17,14 +17,18 @@ public sealed class PiiPolicy
     private const int LongestSingleValue = 17;
 
     // Lower priority number wins an overlapping span. Routing numbers have
-    // a check digit, so they outrank a plain nine-digit read; bank account
-    // patterns are the most greedy, so they go last.
+    // a check digit, so they outrank a plain nine-digit read; cards pass a
+    // Luhn check, so they come next. Bank account patterns are the most
+    // greedy, so they go last.
     private static readonly IReadOnlyDictionary<PiiType, int> Priority = new Dictionary<PiiType, int>
     {
         [PiiType.AbaRoutingNumber] = 0,
-        [PiiType.Ssn] = 1,
-        [PiiType.EinItin] = 2,
-        [PiiType.BankAccountNumber] = 3,
+        [PiiType.Card] = 1,
+        [PiiType.Ssn] = 2,
+        [PiiType.EinItin] = 3,
+        [PiiType.DateOfBirth] = 4,
+        [PiiType.StreetAddress] = 4,
+        [PiiType.BankAccountNumber] = 5,
     };
 
     private static readonly IReadOnlyDictionary<PiiType, string> TypeToken = new Dictionary<PiiType, string>
@@ -33,6 +37,9 @@ public sealed class PiiPolicy
         [PiiType.EinItin] = "EIN",
         [PiiType.AbaRoutingNumber] = "ABA",
         [PiiType.BankAccountNumber] = "ACCT",
+        [PiiType.Card] = "CARD",
+        [PiiType.DateOfBirth] = "DOB",
+        [PiiType.StreetAddress] = "ADDR",
     };
 
     private const string UnknownTypeToken = "PII";
@@ -95,7 +102,7 @@ public sealed class PiiPolicy
 
             matches.Add(new MaskedValue(
                 match.Type,
-                DigitsOf(match.RawValue)[^4..],
+                Last4Of(match),
                 Fingerprint(match.RawValue),
                 TokenFor(match)));
         }
@@ -147,11 +154,19 @@ public sealed class PiiPolicy
 
     private string TokenFor(PiiMatch match)
     {
-        var digits = DigitsOf(match.RawValue);
-        var last4 = digits[^4..];
         var fingerprint = Fingerprint(match.RawValue)[..FingerprintTokenLength];
-        return $"[{TypeToken.GetValueOrDefault(match.Type, UnknownTypeToken)} ****{last4} fp:{fingerprint}]";
+        var label = TypeToken.GetValueOrDefault(match.Type, UnknownTypeToken);
+        var visible = KeepsLast4(match.Type) ? $"****{Last4Of(match)} " : string.Empty;
+        return $"[{label} {visible}fp:{fingerprint}]";
     }
+
+    // Numbers keep their last four digits for display and matching. A date of
+    // birth or street address keeps none: a year or house number would still
+    // narrow the value down, so only the fingerprint stays readable.
+    private static bool KeepsLast4(PiiType type) => type is not (PiiType.DateOfBirth or PiiType.StreetAddress);
+
+    private static string Last4Of(PiiMatch match) =>
+        KeepsLast4(match.Type) ? DigitsOf(match.RawValue)[^4..] : string.Empty;
 
     private static string ToAsciiDigits(string text) =>
         string.Create(text.Length, text, static (copy, source) =>
