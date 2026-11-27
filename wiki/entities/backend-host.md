@@ -1,6 +1,6 @@
 ---
 checked:
-  OfflineCPA/src/Backend/Program.cs: ff7bc791b2a78a74057f500567e8ffee7218f04a
+  OfflineCPA/src/Backend/Program.cs: 452674984015389ecb7473705b58db3f8a3cbf88
   OfflineCPA/src/Backend/Configuration/DotEnv.cs: 7592be1aa2f9464e5fca5199c849a4b5f852aa25
   OfflineCPA/src/Infrastructure/AdapterModuleRegistration.cs: 98f6f27b02c94a2298b2860b84e40a66d8f1b56c
   OfflineCPA/src/Application/Networking/INetworkGate.cs: 77fab7a5d681fe7d25f236857a96c4ab8fe25914
@@ -14,7 +14,7 @@ checked:
 
 ## Wiring
 
-The host registers adapters by convention: `AddInfrastructureAdapterModules` finds one `IAdapterModule` per Infrastructure folder, so adding an adapter needs no core edit (repo: OfflineCPA/src/Backend/Program.cs#L35-L48) (repo: OfflineCPA/src/Infrastructure/AdapterModuleRegistration.cs#L8-L22). On top of the adapters, the host registers the folder watcher, its five ledger use cases, the statement import use cases, upload options, and no `IAiAssist` (repo: OfflineCPA/src/Backend/Program.cs#L38-L48). The gate and its ports are on [[network-gate]] (repo: OfflineCPA/src/Application/Networking/INetworkGate.cs#L10-L36). CORS allows `http://localhost:3000` and `http://localhost:5173` (repo: OfflineCPA/src/Backend/Program.cs#L51-L64). `UseSecureErrorHandling` turns on the exception handler (repo: OfflineCPA/src/Backend/Extensions/SecureErrorHandling.cs#L11-L14). Logging clears the default providers and wraps the console one in the masking redaction provider, and `PiiOptions` binds `Pii:FingerprintKey` and anchors the key file to the app content root (repo: OfflineCPA/src/Backend/Program.cs#L24-L30) (repo: OfflineCPA/src/Backend/Program.cs#L60-L71). The upload route moved to `UploadEndpoints`; see [[pii-masking]] and [[uploads]]. Swagger is only in Development (repo: OfflineCPA/src/Backend/Program.cs#L78-L82).
+The host registers adapters by convention: `AddInfrastructureAdapterModules` finds one `IAdapterModule` per Infrastructure folder, so adding an adapter needs no core edit (repo: OfflineCPA/src/Backend/Program.cs#L35-L48) (repo: OfflineCPA/src/Infrastructure/AdapterModuleRegistration.cs#L8-L22). On top of the adapters, the host registers the folder watcher, its five ledger use cases, the statement import use cases, upload options, and no `IAiAssist` (repo: OfflineCPA/src/Backend/Program.cs#L38-L48). The gate and its ports are on [[network-gate]] (repo: OfflineCPA/src/Application/Networking/INetworkGate.cs#L10-L36). CORS allows `http://localhost:3000` and `http://localhost:5173` (repo: OfflineCPA/src/Backend/Program.cs#L51-L65). `UseSecureErrorHandling` turns on the exception handler (repo: OfflineCPA/src/Backend/Extensions/SecureErrorHandling.cs#L11-L14). Logging clears the default providers and wraps the console one in the masking redaction provider, and `PiiOptions` binds `Pii:FingerprintKey` and anchors the key file to the app content root (repo: OfflineCPA/src/Backend/Program.cs#L24-L30) (repo: OfflineCPA/src/Backend/Program.cs#L61-L72). The upload route moved to `UploadEndpoints`; see [[pii-masking]] and [[uploads]]. Swagger is only in Development (repo: OfflineCPA/src/Backend/Program.cs#L79-L83).
 
 ## Compose
 

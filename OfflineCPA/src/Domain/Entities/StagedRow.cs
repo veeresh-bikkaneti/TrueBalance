@@ -3,7 +3,7 @@ using Domain.Ledger;
 
 namespace Domain.Entities;
 
-/// <summary>One parsed statement line held outside the ledger. Pending or Duplicate -> Posted.</summary>
+/// <summary>One parsed statement line held outside the ledger. Pending or Duplicate -> Posted; any may be Discarded.</summary>
 public class StagedRow
 {
     public const int MaxDescription = 500;
@@ -54,8 +54,13 @@ public class StagedRow
 
     public void FlagBalanceFailed() => BalanceCheckFailed = true;
 
+    /// <summary>The row stays as the record of what was imported.</summary>
+    public void Discard() => Status = StagedRowStatus.Discarded;
+
     public void EnsureCanPost(bool allowDuplicate, bool reviewed)
     {
+        if (Status == StagedRowStatus.Discarded)
+            throw new LedgerRuleException("This row was discarded.");
         if (Status == StagedRowStatus.Posted)
             throw new LedgerRuleException("This row is already posted.");
         if (Status == StagedRowStatus.Duplicate && !allowDuplicate)

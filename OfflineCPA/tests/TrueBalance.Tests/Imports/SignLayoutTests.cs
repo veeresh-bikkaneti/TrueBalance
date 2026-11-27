@@ -167,8 +167,9 @@ public sealed class SignLayoutTests : IDisposable
         await ImportAsync(db, "date,description,amount,balance\n2026-06-15,a,-10,110\n2026-06-16,b,5,105\n");
         var rows = db.StagedRows.ToList();
 
-        Assert.Equal("The running balance does not match these amounts. The opposite sign would match, " +
-            "so check this bank's sign layout. Review each row before posting.", db.ImportBatches.Single().BalanceReason);
+        Assert.Equal("The running balance does not match these amounts. The balance column reads as an amount owed, " +
+            "or the signs are reversed. Check this bank's sign layout and balance meaning. Review each row before posting.",
+            db.ImportBatches.Single().BalanceReason);
         foreach (var row in rows)
             Assert.Throws<LedgerRuleException>(() => row.EnsureCanPost(false, reviewed: false));
         await Poster(db).HandleAsync(new PostStagedRowCommand(rows[0].Id, _category.Id, false, true, "local"));

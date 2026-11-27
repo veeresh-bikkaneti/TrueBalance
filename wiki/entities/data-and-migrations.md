@@ -1,12 +1,13 @@
 ---
 checked:
+  OfflineCPA/src/Infrastructure/Migrations/20261127135749_CardBalanceAndDiscard.cs: f722d2f1aa50070d35441554477d14bcda624505
   OfflineCPA/src/Infrastructure/Migrations/20261127054233_StatementImport.cs: b1a5dc047d31c5c85b864e2fddc5f23f3cf8d2c4
   OfflineCPA/src/Infrastructure/Data/ImportConfigurations.cs: 15164318598785c1d3261ee25db502412b6cccf9
   OfflineCPA/src/Infrastructure/Data/OfflineCPADbContext.cs: 3722c8129033d5fa805f1277b55c83cde13a5c91
   OfflineCPA/src/Infrastructure/Migrations/20261124120000_InitialCreate.cs: eb9d9a85324ec58feec91a70cb926d375c48342b
   OfflineCPA/src/Infrastructure/Migrations/20261125000000_LedgerCore.cs: e9a88657b2bea914a76921239982eba4df689c19
   OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs: c241452235c4fd1d5dbe64d134c98008fc5cf610
-  OfflineCPA/src/Backend/Program.cs: ff7bc791b2a78a74057f500567e8ffee7218f04a
+  OfflineCPA/src/Backend/Program.cs: 452674984015389ecb7473705b58db3f8a3cbf88
   docs/ledger.md: 2eba6c35c8c780c81a1572e5362ff66584445921
 ---
 # Data and migrations
@@ -17,7 +18,9 @@ checked:
 
 `InitialCreate` is the migration class in `20261124120000_InitialCreate.cs` (repo: OfflineCPA/src/Infrastructure/Migrations/20261124120000_InitialCreate.cs#L9). `LedgerCore` drops the old line-level `JournalEntries` table and creates `LedgerAuditRecords`, `Periods`, `JournalEntries`, and `Postings` (repo: OfflineCPA/src/Infrastructure/Migrations/20261125000000_LedgerCore.cs#L27-L88). It then adds three triggers: postings of a non-draft entry cannot be changed or deleted, a non-draft header freezes date, memo, and period, and audit rows reject update and delete (repo: OfflineCPA/src/Infrastructure/Migrations/20261125000000_LedgerCore.cs#L137-L205).
 
-`Ledger_model_matches_the_snapshot` asserts `HasPendingModelChanges()` is false. The comment says it does not open a database (repo: OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs#L133-L142). Startup calls `Database.Migrate()` (repo: OfflineCPA/src/Backend/Program.cs#L139-L144).
+`CardBalanceAndDiscard` only adds columns: the balance meaning on a bank profile (0 is `FromAccountType`, so old profiles keep working) and the reset count and time on an import batch (repo: OfflineCPA/src/Infrastructure/Migrations/20261127135749_CardBalanceAndDiscard.cs#L12-L31).
+
+`Ledger_model_matches_the_snapshot` asserts `HasPendingModelChanges()` is false. The comment says it does not open a database (repo: OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs#L133-L142). Startup calls `Database.Migrate()` (repo: OfflineCPA/src/Backend/Program.cs#L140-L145).
 
 `StatementImport` adds the tables for import batches, staged rows, and CSV mapping profiles (repo: OfflineCPA/src/Infrastructure/Migrations/20261127054233_StatementImport.cs#L1-L20); their EF configuration lives in its own file (repo: OfflineCPA/src/Infrastructure/Data/ImportConfigurations.cs#L1-L56). See [[statement-import]].
 

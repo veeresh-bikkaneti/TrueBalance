@@ -2,7 +2,7 @@
 checked:
   OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs: 80a26042df5de3cd4363a4e97018b372a2b36ba6
   docs/adr/0011-local-modular-monolith.md: 4792ef60fdc033c952b3dc6d252ba9138881bb26
-  OfflineCPA/src/Backend/Program.cs: ff7bc791b2a78a74057f500567e8ffee7218f04a
+  OfflineCPA/src/Backend/Program.cs: 452674984015389ecb7473705b58db3f8a3cbf88
   OfflineCPA/src/Application/Networking/INetworkGate.cs: 77fab7a5d681fe7d25f236857a96c4ab8fe25914
   OfflineCPA/src/Infrastructure/Networking/LocalNetworkGate.cs: 9b776c957e947fa9159fe6cc21371dfa74ae1058
   OfflineCPA/src/Infrastructure/AdapterModuleRegistration.cs: 98f6f27b02c94a2298b2860b84e40a66d8f1b56c
@@ -28,7 +28,7 @@ The app is one local process. ADR 0011 (accepted) names the modules Ledger, Impo
 
 [[network-gate]] is the plug-in boundary: the ports in Application, the default-deny `INetworkGate` adapter, and `IAiAssist` with no implementation. Adapters register by module scan (repo: OfflineCPA/src/Application/Networking/INetworkGate.cs#L10-L36) (repo: OfflineCPA/src/Infrastructure/Networking/LocalNetworkGate.cs#L16-L56) (repo: OfflineCPA/src/Infrastructure/AdapterModuleRegistration.cs#L8-L22). The types renamed with it: `ILocalFileParser` is now `IStatementImporter` (repo: OfflineCPA/src/Application/Interfaces/IStatementImporter.cs#L10-L16).
 
-[[statement-import]] stages statement rows for review before posting. [[uploads]] stores a file under a generated name (repo: OfflineCPA/src/Infrastructure/Services/SecureUploadStore.cs#L52-L53). [[pii-boundary]] records what that does and does not mask. [[charts-of-accounts]] seeds three JSON kinds through `POST /api/books/setup` (repo: OfflineCPA/src/Infrastructure/Services/JsonChartOfAccountsSeeder.cs#L13) (repo: OfflineCPA/src/Backend/Program.cs#L131). [[data-and-migrations]] is the EF model and the `InitialCreate` and `LedgerCore` migrations (repo: OfflineCPA/src/Infrastructure/Data/OfflineCPADbContext.cs#L6) (repo: OfflineCPA/src/Infrastructure/Migrations/20261124120000_InitialCreate.cs#L9) (repo: OfflineCPA/src/Infrastructure/Migrations/20261125000000_LedgerCore.cs#L17). [[backend-host]] loads `.env`, requires a connection string, and the compose file points the backend at `Host=database` (repo: OfflineCPA/src/Backend/Program.cs#L26-L35) (repo: OfflineCPA/docker-compose.yml#L27).
+[[statement-import]] stages statement rows for review before posting. [[uploads]] stores a file under a generated name (repo: OfflineCPA/src/Infrastructure/Services/SecureUploadStore.cs#L52-L53). [[pii-boundary]] records what that does and does not mask. [[charts-of-accounts]] seeds three JSON kinds through `POST /api/books/setup` (repo: OfflineCPA/src/Infrastructure/Services/JsonChartOfAccountsSeeder.cs#L13) (repo: OfflineCPA/src/Backend/Program.cs#L132). [[data-and-migrations]] is the EF model and the `InitialCreate` and `LedgerCore` migrations (repo: OfflineCPA/src/Infrastructure/Data/OfflineCPADbContext.cs#L6) (repo: OfflineCPA/src/Infrastructure/Migrations/20261124120000_InitialCreate.cs#L9) (repo: OfflineCPA/src/Infrastructure/Migrations/20261125000000_LedgerCore.cs#L17). [[backend-host]] loads `.env`, requires a connection string, and the compose file points the backend at `Host=database` (repo: OfflineCPA/src/Backend/Program.cs#L26-L35) (repo: OfflineCPA/docker-compose.yml#L27).
 
 [[frontend-shell]] is one dashboard. The setup wizard, reconcile, reports, and settings screens are planned in ADR 0003, not built (repo: docs/adr/0003-clean-architecture-ports-adapters.md#L15) (repo: OfflineCPA/frontend/src/App.tsx#L6-L28).
 

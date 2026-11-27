@@ -18,7 +18,8 @@ public sealed class QueueImport(IImportStore store, IClock clock)
 
 /// <summary>The sign layout a person confirmed. Column names stay with the bank profile.</summary>
 public sealed record ConfirmedLayout(AmountLayout AmountLayout, bool DebitsCarryMinus = false,
-    string? IndicatorColumn = null, string? MoneyInMarker = null, string? MoneyOutMarker = null);
+    string? IndicatorColumn = null, string? MoneyInMarker = null, string? MoneyOutMarker = null,
+    BalanceMeaning BalanceMeaning = BalanceMeaning.FromAccountType);
 
 public sealed record ImportStatementCommand(
     Guid BatchId, Guid BankAccountId, string? BankName, ConfirmedLayout? Layout = null);
@@ -33,11 +34,11 @@ public sealed class ImportStatement(
         var batch = await store.FindBatchAsync(command.BatchId, ct)
             ?? throw new LedgerRuleException("The import batch does not exist.");
         batch.EnsureImportable();
-        if (!await store.AccountExistsAsync(command.BankAccountId, ct))
-            throw new LedgerRuleException("The bank account does not exist.");
-        var map = batch.Extension == ".csv"
+        var accountType = await store.FindAccountTypeAsync(command.BankAccountId, ct)
+            ?? throw new LedgerRuleException("The bank account does not exist.");
+        var (map, meaning) = batch.Extension == ".csv"
             ? await ConfirmedCsvMapAsync(command, ct)
-            : await FindMapAsync(command.BankName, ct);
+            : (await FindMapAsync(command.BankName, ct), BalanceMeaning.FromAccountType);
 
         ParsedStatement parsed;
         try
@@ -72,10 +73,11 @@ public sealed class ImportStatement(
             row.FlagDuplicate();
 
         var signed = parsed.Rows.Select(r => (r.Amount, r.Balance)).ToList();
-        var check = RunningBalance.Check(signed);
-        var opposite = check == BalanceCheck.Failed && RunningBalance.Check(
-            signed.Select(r => (-r.Amount, r.Balance)).ToList()) == BalanceCheck.Passed;
-        batch.RecordBalanceCheck(check, opposite);
+        var used = RunningBalance.Resolve(meaning, accountType);
+        var check = RunningBalance.Check(signed, used);
+        var other = used == BalanceMeaning.Owed ? BalanceMeaning.Available : BalanceMeaning.Owed;
+        batch.RecordBalanceCheck(check, used,
+            check == BalanceCheck.Failed && RunningBalance.Check(signed, other) == BalanceCheck.Passed);
         if (check == BalanceCheck.Failed) rows.ForEach(r => r.FlagBalanceFailed());
 
         await store.AddRowsAsync(rows, ct);
@@ -93,13 +95,15 @@ public sealed class ImportStatement(
     }
 
     /// <summary>A CSV file never decides its own signs: a person confirmed them, now or earlier.</summary>
-    private async Task<CsvColumnMap> ConfirmedCsvMapAsync(ImportStatementCommand command, CancellationToken ct)
+    private async Task<(CsvColumnMap Map, BalanceMeaning Meaning)> ConfirmedCsvMapAsync(ImportStatementCommand command, CancellationToken ct)
     {
         const string refusal = "Confirm how this bank signs amounts first.";
         if (string.IsNullOrWhiteSpace(command.BankName)) throw new LedgerRuleException(refusal);
         var profile = await store.FindProfileAsync(masker.Mask(command.BankName.Trim()), ct);
         if (command.Layout is not { } layout)
-            return profile is { LayoutConfirmed: true } ? CsvProfiles.ToMap(profile) : throw new LedgerRuleException(refusal);
+            return profile is { LayoutConfirmed: true }
+                ? (CsvProfiles.ToMap(profile), profile.BalanceMeaning)
+                : throw new LedgerRuleException(refusal);
 
         var debitCredit = layout.AmountLayout == AmountLayout.DebitCredit;
         var columns = profile is not null ? CsvProfiles.ToMap(profile) : new CsvColumnMap("date", "description",
@@ -112,8 +116,8 @@ public sealed class ImportStatement(
             MoneyInMarker = layout.MoneyInMarker,
             MoneyOutMarker = layout.MoneyOutMarker
         };
-        await CsvProfiles.ApplyAsync(store, masker, command.BankName, map, confirmed: true, ct);
-        return map;
+        await CsvProfiles.ApplyAsync(store, masker, command.BankName, map, confirmed: true, ct, layout.BalanceMeaning);
+        return (map, layout.BalanceMeaning);
     }
 
     private async Task<int> FailAsync(ImportBatch batch, string reason, CancellationToken ct)
@@ -142,8 +146,10 @@ internal static class CsvProfiles
 
     /// <summary>Validates, masks and sets the profile. The caller saves.</summary>
     public static async Task ApplyAsync(IImportStore store, IPiiMasker masker, string bankName, CsvColumnMap map,
-        bool confirmed, CancellationToken ct)
+        bool confirmed, CancellationToken ct, BalanceMeaning meaning = BalanceMeaning.FromAccountType)
     {
+        if (!Enum.IsDefined(meaning))
+            throw new LedgerRuleException("That balance meaning is not supported.");
         if (string.IsNullOrWhiteSpace(bankName) || string.IsNullOrWhiteSpace(map.Date) || string.IsNullOrWhiteSpace(map.Description))
             throw new LedgerRuleException("A profile needs a bank name, a date column and a description column.");
         var layout = map.AmountLayout
@@ -187,6 +193,7 @@ internal static class CsvProfiles
         profile.IndicatorColumn = map.IndicatorColumn;
         profile.MoneyInMarker = map.MoneyInMarker;
         profile.MoneyOutMarker = map.MoneyOutMarker;
+        profile.BalanceMeaning = meaning;
         profile.LayoutConfirmed = confirmed;
     }
 }
@@ -194,13 +201,15 @@ internal static class CsvProfiles
 public sealed record PreviewRow(DateOnly Date, string Description, string Direction, decimal Amount);
 
 public sealed record CsvLayoutPreview(
-    ConfirmedLayout Layout, BalanceCheck BalanceCheck, bool BalanceBacksIt, IReadOnlyList<PreviewRow> Rows);
+    ConfirmedLayout Layout, BalanceCheck BalanceCheck, bool BalanceBacksIt, IReadOnlyList<PreviewRow> Rows,
+    BalanceMeaning BalanceMeaning = BalanceMeaning.FromAccountType, string? BalanceMeaningNote = null);
 
 /// <summary>Proposes a sign layout for one queued CSV batch. Writes nothing.</summary>
 public sealed class PreviewCsvLayout(
     IImportStore store, IDocumentVault vault, IEnumerable<IStatementImporter> importers, IPiiMasker masker)
 {
-    public async Task<CsvLayoutPreview> HandleAsync(Guid batchId, string? bankName, CancellationToken ct = default)
+    public async Task<CsvLayoutPreview> HandleAsync(Guid batchId, string? bankName, Guid? bankAccountId = null,
+        CancellationToken ct = default)
     {
         var batch = await store.FindBatchAsync(batchId, ct)
             ?? throw new LedgerRuleException("The import batch does not exist.");
@@ -215,8 +224,18 @@ public sealed class PreviewCsvLayout(
         if (!confirmed && map is { AmountLayout: not AmountLayout.Indicator })
             map = map with { AmountLayout = null };
 
+        AccountType? accountType = bankAccountId is { } accountId
+            ? await store.FindAccountTypeAsync(accountId, ct)
+                ?? throw new LedgerRuleException("The bank account does not exist.")
+            : null;
+        var saved = confirmed ? profile!.BalanceMeaning : BalanceMeaning.FromAccountType;
+        var meaning = RunningBalance.Resolve(saved, accountType);
+        var note = saved == BalanceMeaning.FromAccountType && accountType is null
+            ? "No bank account was given, so the balance was read as money available."
+            : null;
+
         var parsed = await ParseAsync(batch, map, ct);
-        var check = Check(parsed);
+        var check = Check(parsed, meaning);
         var applied = parsed.AppliedMap!;
         if (!confirmed && check == BalanceCheck.Failed && applied.AmountLayout != AmountLayout.Indicator)
         {
@@ -226,21 +245,23 @@ public sealed class PreviewCsvLayout(
                 AmountLayout.Signed => applied with { AmountLayout = AmountLayout.SignedReversed },
                 _ => applied with { AmountLayout = AmountLayout.Signed }
             }, ct);
-            if (Check(other) == BalanceCheck.Passed)
+            if (Check(other, meaning) == BalanceCheck.Passed)
                 (parsed, check, applied) = (other, BalanceCheck.Passed, other.AppliedMap!);
         }
 
         return new CsvLayoutPreview(
             new ConfirmedLayout(applied.AmountLayout!.Value, applied.DebitsCarryMinus, applied.IndicatorColumn,
-                applied.MoneyInMarker, applied.MoneyOutMarker),
+                applied.MoneyInMarker, applied.MoneyOutMarker, saved),
             check,
             check == BalanceCheck.Passed,
             parsed.Rows.Take(3).Select(r => new PreviewRow(r.Date, masker.Mask(r.Description),
-                r.Amount < 0m ? "MoneyOut" : "MoneyIn", Math.Abs(r.Amount))).ToList());
+                r.Amount < 0m ? "MoneyOut" : "MoneyIn", Math.Abs(r.Amount))).ToList(),
+            meaning,
+            note);
     }
 
-    private static BalanceCheck Check(ParsedStatement parsed)
-        => RunningBalance.Check(parsed.Rows.Select(r => (r.Amount, r.Balance)).ToList());
+    private static BalanceCheck Check(ParsedStatement parsed, BalanceMeaning meaning)
+        => RunningBalance.Check(parsed.Rows.Select(r => (r.Amount, r.Balance)).ToList(), meaning);
 
     private async Task<ParsedStatement> ParseAsync(ImportBatch batch, CsvColumnMap? map, CancellationToken ct)
     {

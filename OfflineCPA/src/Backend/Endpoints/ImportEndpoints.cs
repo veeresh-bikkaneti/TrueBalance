@@ -1,6 +1,7 @@
 using Application.Imports;
 using Application.Interfaces;
 using Application.Ledger;
+using Domain.Enums;
 using Domain.Ledger;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,15 +31,24 @@ public static class ImportEndpoints
                 }));
 
         app.MapGet("/api/imports/{batchId:guid}/layout-preview",
-            (Guid batchId, string? bankName, PreviewCsvLayout useCase, IPiiMasker masker, CancellationToken ct)
-                => RunAsync(masker, () => useCase.HandleAsync(batchId, bankName, ct)));
+            (Guid batchId, string? bankName, Guid? bankAccountId, PreviewCsvLayout useCase, IPiiMasker masker,
+                    CancellationToken ct)
+                => RunAsync(masker, () => useCase.HandleAsync(batchId, bankName, bankAccountId, ct)));
 
-        app.MapGet("/api/imports/{batchId:guid}/rows", async (Guid batchId, IImportStore store, CancellationToken ct) =>
+        app.MapPost("/api/imports/{batchId:guid}/discard",
+            (Guid batchId, DiscardStagedBatch useCase, IPiiMasker masker, CancellationToken ct)
+                => RunAsync(masker, async () => new { discarded = await useCase.HandleAsync(batchId, ct) }));
+
+        app.MapGet("/api/imports/{batchId:guid}/rows", async (Guid batchId, IImportStore store, CancellationToken ct,
+            bool includeDiscarded = false) =>
         {
             var result = new List<object>();
-            foreach (var row in await store.GetRowsAsync(batchId, ct))
+            foreach (var row in await store.GetRowsAsync(batchId, ct, includeDiscarded))
             {
-                result.Add(new { row, suggestedCategoryAccountId = await store.LastPostedCategoryAsync(row.MatchKey, ct) });
+                Guid? suggested = row.Status == StagedRowStatus.Discarded
+                    ? null
+                    : await store.LastPostedCategoryAsync(row.MatchKey, ct);
+                result.Add(new { row, suggestedCategoryAccountId = suggested });
             }
             return Results.Ok(result);
         });
