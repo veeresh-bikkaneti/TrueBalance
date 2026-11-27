@@ -8,11 +8,11 @@ checked:
   OfflineCPA/src/Infrastructure/AdapterModuleRegistration.cs: 98f6f27b02c94a2298b2860b84e40a66d8f1b56c
   OfflineCPA/src/Application/Interfaces/IStatementImporter.cs: 1257e035bcc803dd116492123dcd5bd7ff30a565
   OfflineCPA/src/Infrastructure/Services/SecureUploadStore.cs: ddabcdea7617797ac1c5251b09e9a1a4496cd84e
-  OfflineCPA/src/Infrastructure/Services/JsonChartOfAccountsSeeder.cs: 068b242b1c9b1ab4ad4773cf925766b1c6e6c717
-  OfflineCPA/src/Infrastructure/Data/OfflineCPADbContext.cs: 3722c8129033d5fa805f1277b55c83cde13a5c91
+  OfflineCPA/src/Infrastructure/Services/JsonChartOfAccountsSeeder.cs: dfc92b704f4cd8693ce88715c6d40fdf2884d201
+  OfflineCPA/src/Infrastructure/Data/OfflineCPADbContext.cs: 8382eb3de930dd971227f05a0cabefa92b192d8a
   OfflineCPA/src/Infrastructure/Migrations/20261124120000_InitialCreate.cs: eb9d9a85324ec58feec91a70cb926d375c48342b
   OfflineCPA/src/Infrastructure/Migrations/20261125000000_LedgerCore.cs: e9a88657b2bea914a76921239982eba4df689c19
-  OfflineCPA/docker-compose.yml: 6439009f0b9afa1a6a9268de1ffef78da789df47
+  OfflineCPA/docker-compose.yml: bf787f349e19e2ea266c10a9dc5f17cf1f114962
   docs/adr/0003-clean-architecture-ports-adapters.md: c9c7256eea1b992b1d2443ea30a1356ec0de5388
   OfflineCPA/frontend/src/App.tsx: 306f2244e219b1665f4b5690625fd8068725ca70
 ---

@@ -1,0 +1,40 @@
+{
+  "form": "Household categories (not a tax form)",
+  "taxYear": 2026,
+  "chart": "household",
+  "revision": "Not a tax form. Categories only.",
+  "sources": [ "TrueBalance household chart categories; no IRS line applies [Inferred]" ],
+  "lines": [
+    { "id": "HH-BANK", "label": "Bank account", "confidence": "[Inferred]" },
+    { "id": "HH-LIAB", "label": "Credit or other liability", "confidence": "[Inferred]" },
+    { "id": "HH-EQUITY", "label": "Opening balances and equity", "confidence": "[Inferred]" },
+    { "id": "HH-INC-WAGES", "label": "Wages and salary", "confidence": "[Inferred]" },
+    { "id": "HH-INC-OTHER", "label": "Other income", "confidence": "[Inferred]" },
+    { "id": "HH-HOUSING", "label": "Housing", "confidence": "[Inferred]" },
+    { "id": "HH-UTILITIES", "label": "Utilities", "confidence": "[Inferred]" },
+    { "id": "HH-GROCERIES", "label": "Groceries", "confidence": "[Inferred]" },
+    { "id": "HH-TRANSPORT", "label": "Transportation", "confidence": "[Inferred]" },
+    { "id": "HH-HEALTH", "label": "Healthcare", "confidence": "[Inferred]" },
+    { "id": "HH-ENTERTAIN", "label": "Entertainment", "confidence": "[Inferred]" },
+    { "id": "HH-PERSONAL", "label": "Personal care", "confidence": "[Inferred]" },
+    { "id": "HH-GIFTS", "label": "Gifts and donations", "confidence": "[Inferred]" },
+    { "id": "HH-MISC", "label": "Miscellaneous", "confidence": "[Inferred]" }
+  ],
+  "accounts": {
+    "1000": "HH-BANK",
+    "1010": "HH-BANK",
+    "2000": "HH-LIAB",
+    "3000": "HH-EQUITY",
+    "4000": "HH-INC-WAGES",
+    "4100": "HH-INC-OTHER",
+    "5000": "HH-HOUSING",
+    "5100": "HH-UTILITIES",
+    "5200": "HH-GROCERIES",
+    "5300": "HH-TRANSPORT",
+    "5400": "HH-HEALTH",
+    "5500": "HH-ENTERTAIN",
+    "5600": "HH-PERSONAL",
+    "5700": "HH-GIFTS",
+    "5800": "HH-MISC"
+  }
+}

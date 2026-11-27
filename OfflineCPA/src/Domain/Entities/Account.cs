@@ -11,7 +11,11 @@ public class Account
     
     public AccountType Type { get; set; }
     
-    public TaxLineItem TaxFormLine { get; set; } = TaxLineItem.None;
+    /// <summary>Line in the active tax map, for example SCHC-8. Null means no line.</summary>
+    public string? TaxLineId { get; set; }
+
+    /// <summary>Meals are flagged so a CPA can apply the limit in IRS Publication 463.</summary>
+    public bool IsMeals { get; set; }
     
     public string? Description { get; set; }
     

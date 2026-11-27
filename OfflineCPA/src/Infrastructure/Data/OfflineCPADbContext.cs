@@ -18,6 +18,8 @@ public class OfflineCPADbContext : DbContext
     public DbSet<ImportBatch> ImportBatches { get; set; } = null!;
     public DbSet<StagedRow> StagedRows { get; set; } = null!;
     public DbSet<CsvMappingProfile> CsvMappingProfiles { get; set; } = null!;
+    public DbSet<BookSettings> BookSettings { get; set; } = null!;
+    public DbSet<MileageLogEntry> MileageLog { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,6 +34,23 @@ public class OfflineCPADbContext : DbContext
             entity.Property(e => e.Name).IsRequired().HasMaxLength(150);
             entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
             entity.HasIndex(e => e.Code).IsUnique();
+            entity.Property(e => e.TaxLineId).HasMaxLength(20);
+        });
+
+        modelBuilder.Entity<BookSettings>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.Chart).IsRequired().HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<MileageLogEntry>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Purpose).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Miles).HasColumnType("numeric(10,1)");
+            entity.Property(e => e.StartOdometer).HasColumnType("numeric(10,1)");
+            entity.Property(e => e.EndOdometer).HasColumnType("numeric(10,1)");
         });
 
         modelBuilder.Entity<Transaction>(entity =>

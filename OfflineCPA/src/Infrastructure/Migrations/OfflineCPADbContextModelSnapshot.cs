@@ -39,13 +39,17 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsMeals")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
-                    b.Property<int>("TaxFormLine")
-                        .HasColumnType("integer");
+                    b.Property<string>("TaxLineId")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
@@ -56,6 +60,24 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Accounts");
+                });
+
+            modelBuilder.Entity("Domain.Entities.BookSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Chart")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("TaxYear")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BookSettings");
                 });
 
             modelBuilder.Entity("Domain.Entities.CsvMappingProfile", b =>
@@ -251,6 +273,34 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("LedgerAuditRecords");
+                });
+
+            modelBuilder.Entity("Domain.Entities.MileageLogEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("EndOdometer")
+                        .HasColumnType("numeric(10,1)");
+
+                    b.Property<decimal>("Miles")
+                        .HasColumnType("numeric(10,1)");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<decimal>("StartOdometer")
+                        .HasColumnType("numeric(10,1)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MileageLog");
                 });
 
             modelBuilder.Entity("Domain.Entities.Period", b =>

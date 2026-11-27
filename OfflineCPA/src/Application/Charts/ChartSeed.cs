@@ -12,6 +12,7 @@ public sealed class SeedAccount
     public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
-    public string TaxFormLine { get; set; } = "None";
+    public string? TaxLineId { get; set; }
+    public bool IsMeals { get; set; }
     public string? Description { get; set; }
 }

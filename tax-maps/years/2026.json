@@ -1,0 +1,7 @@
+{
+  "taxYear": 2026,
+  "form1099Threshold": 2000,
+  "note": "For 2026 payments. May be adjusted for inflation beginning in calendar year 2027.",
+  "sources": [ "https://www.irs.gov/pub/irs-pdf/i1099mec.pdf" ],
+  "confidence": "[Moderate 1/1]"
+}

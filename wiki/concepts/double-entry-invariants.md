@@ -3,7 +3,7 @@ checked:
   OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs: 33c34cedec49c541cfae8e468e5484c0df8759dc
   OfflineCPA/src/Domain/Entities/Posting.cs: 53956565729f8b7d009c0bcc9997481f9ea6e4f5
   OfflineCPA/src/Domain/Ledger/Money.cs: a2a10d99251e73d37eedc059e1b804a57e1e3f36
-  OfflineCPA/src/Infrastructure/Data/OfflineCPADbContext.cs: 3722c8129033d5fa805f1277b55c83cde13a5c91
+  OfflineCPA/src/Infrastructure/Data/OfflineCPADbContext.cs: 8382eb3de930dd971227f05a0cabefa92b192d8a
   OfflineCPA/src/Domain/Entities/JournalEntry.cs: 60a5b3d1e5b424ba8d60bd599e5a6072b3de7e87
   OfflineCPA/src/Infrastructure/Data/EfLedgerStore.cs: 4cd65b156acdb9137bc2e5656d1663c61fb300fa
   OfflineCPA/src/Domain/Entities/Period.cs: bcc4fe128753b85180c4567b93e875337cb7df6c
@@ -14,7 +14,7 @@ checked:
 ---
 # Double-entry invariants
 
-A posting amount is a signed `decimal`. Positive is a debit and negative is a credit. There is no side column (repo: OfflineCPA/src/Domain/Entities/Posting.cs#L5-L11). Zero amounts are rejected, and amounts with more than two decimal places are rejected without rounding (repo: OfflineCPA/src/Domain/Entities/Posting.cs#L22-L31) (repo: OfflineCPA/src/Domain/Ledger/Money.cs#L3-L19). The column type is `numeric(18,2)` (repo: OfflineCPA/src/Infrastructure/Data/OfflineCPADbContext.cs#L72-L75).
+A posting amount is a signed `decimal`. Positive is a debit and negative is a credit. There is no side column (repo: OfflineCPA/src/Domain/Entities/Posting.cs#L5-L11). Zero amounts are rejected, and amounts with more than two decimal places are rejected without rounding (repo: OfflineCPA/src/Domain/Entities/Posting.cs#L22-L31) (repo: OfflineCPA/src/Domain/Ledger/Money.cs#L3-L19). The column type is `numeric(18,2)` (repo: OfflineCPA/src/Infrastructure/Data/OfflineCPADbContext.cs#L93-L96).
 
 ## Draft, post, reverse
 

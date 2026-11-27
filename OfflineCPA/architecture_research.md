@@ -4,7 +4,7 @@ This document replaces the earlier research report. That report described librar
 
 ## Current structure
 
-- `src/Domain` — no dependencies. Entities: `Account`, `Transaction`, `JournalEntry`. Enums: `AccountType`, `TaxLineItem` (1120-S line numbers as a hard-coded enum; `docs/adr/0007` decides the target is versioned data instead).
+- `src/Domain` — no dependencies. Entities: `Account`, `Transaction`, `JournalEntry`. Enums: `AccountType`. Tax lines are versioned data in `tax-maps/` (`docs/adr/0007`).
 - `src/Application` — one port: `ILocalFileParser` (extract text, check extension). Nothing else.
 - `src/Infrastructure` — `OfflineCPADbContext` (EF Core model for the three entities, Npgsql provider), `PdfFileParser` (PdfPig page text).
 - `src/Backend` — minimal API: `/api/upload` writes the uploaded file and inserts a `Transaction` row; `/api/transactions` lists all rows; `/api/export` writes an XLSX (date, description, file path) with ClosedXML. A `BackgroundService` scans an input directory every 30 seconds and moves PDFs to `processed/` after inserting a row.

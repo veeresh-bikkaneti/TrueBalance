@@ -17,9 +17,12 @@ public class JsonChartOfAccountsSeeder : IChartOfAccountsSeeder
 
     private readonly OfflineCPADbContext _db;
 
-    public JsonChartOfAccountsSeeder(OfflineCPADbContext db)
+    private readonly ITaxMapCatalog _maps;
+
+    public JsonChartOfAccountsSeeder(OfflineCPADbContext db, ITaxMapCatalog maps)
     {
         _db = db;
+        _maps = maps;
     }
 
     public IReadOnlyList<string> SupportedKinds => Kinds;
@@ -41,7 +44,16 @@ public class JsonChartOfAccountsSeeder : IChartOfAccountsSeeder
 
     public async Task<int> SeedAsync(string kind, CancellationToken cancellationToken = default)
     {
-        var seed = await LoadAsync(kind, cancellationToken);
+        return await SeedAsync(await LoadAsync(kind, cancellationToken), cancellationToken);
+    }
+
+    public async Task<int> SeedAsync(ChartSeedFile seed, CancellationToken cancellationToken = default)
+    {
+        var chart = NormalizeKind(seed.Kind);
+        var settings = await _db.BookSettings.SingleOrDefaultAsync(cancellationToken);
+        // Books keep their first chart and year. A second chart is checked against its own latest map.
+        var year = settings?.Chart == chart ? settings.TaxYear : _maps.LatestYear(chart);
+        var map = _maps.Find(chart, year);
         var existingCodes = (await _db.Accounts
             .Select(a => a.Code)
             .ToListAsync(cancellationToken))
@@ -60,9 +72,9 @@ public class JsonChartOfAccountsSeeder : IChartOfAccountsSeeder
                 throw new InvalidOperationException($"Seed account '{seedAccount.Code}' has invalid type '{seedAccount.Type}'.");
             }
 
-            if (!Enum.TryParse<TaxLineItem>(seedAccount.TaxFormLine, out var taxLine))
+            if (seedAccount.TaxLineId is not null && !map.LineIds.Contains(seedAccount.TaxLineId))
             {
-                throw new InvalidOperationException($"Seed account '{seedAccount.Code}' has invalid tax form line '{seedAccount.TaxFormLine}'.");
+                throw new InvalidOperationException($"Seed account '{seedAccount.Code}' has unknown tax line '{seedAccount.TaxLineId}'.");
             }
 
             _db.Accounts.Add(new Account
@@ -70,11 +82,17 @@ public class JsonChartOfAccountsSeeder : IChartOfAccountsSeeder
                 Code = seedAccount.Code,
                 Name = seedAccount.Name,
                 Type = accountType,
-                TaxFormLine = taxLine,
+                TaxLineId = seedAccount.TaxLineId,
+                IsMeals = seedAccount.IsMeals,
                 Description = seedAccount.Description
             });
             existingCodes.Add(seedAccount.Code);
             added++;
+        }
+
+        if (settings is null)
+        {
+            _db.BookSettings.Add(new BookSettings { Chart = chart, TaxYear = year });
         }
 
         await _db.SaveChangesAsync(cancellationToken);

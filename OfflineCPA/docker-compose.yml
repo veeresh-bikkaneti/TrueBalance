@@ -21,6 +21,8 @@ services:
     build:
       context: ./src
       dockerfile: Backend/Dockerfile
+      additional_contexts:
+        taxmaps: ../tax-maps
     container_name: pb-backend
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
