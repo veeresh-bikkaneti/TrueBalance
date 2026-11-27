@@ -137,6 +137,28 @@ public class TaxLineTests
         Assert.Contains(new TaxLineIds().DownOperations, o => o is AddColumnOperation { Name: "TaxFormLine" });
     }
 
+    // Old value 21 was Meals. It shares line 20 after the move, so the flag is what remembers it.
+    [Fact]
+    public void Migration_keeps_the_meals_flag_up_and_down()
+    {
+        var up = new TaxLineIds().UpOperations.ToList();
+        var flagAdded = up.FindIndex(o => o is AddColumnOperation { Name: "IsMeals" });
+        var flagSet = IndexOfSql(up, "SET \"IsMeals\" = TRUE WHERE \"TaxFormLine\" = 21;");
+        var oldDropped = up.FindIndex(o => o is DropColumnOperation { Name: "TaxFormLine" });
+        Assert.True(flagAdded >= 0 && flagAdded < flagSet && flagSet < oldDropped, $"up: {flagAdded}, {flagSet}, {oldDropped}");
+
+        var down = new TaxLineIds().DownOperations.ToList();
+        var restored = IndexOfSql(down, "CASE \"TaxLineId\"");
+        var meals = IndexOfSql(down, "SET \"TaxFormLine\" = 21 WHERE \"IsMeals\" AND \"TaxLineId\" = '1120S-20';");
+        var flagDropped = down.FindIndex(o => o is DropColumnOperation { Name: "IsMeals" });
+        var lineDropped = down.FindIndex(o => o is DropColumnOperation { Name: "TaxLineId" });
+        Assert.True(restored >= 0 && restored < meals && meals < flagDropped && meals < lineDropped,
+            $"down: {restored}, {meals}, {flagDropped}, {lineDropped}");
+
+        static int IndexOfSql(List<MigrationOperation> operations, string text) =>
+            operations.FindIndex(o => o is SqlOperation s && s.Sql.Contains(text));
+    }
+
     [Theory]
     [InlineData(10, 100, 120, true)]
     [InlineData(0, 100, 120, false)]

@@ -1,6 +1,6 @@
 ---
 checked:
-  OfflineCPA/src/Infrastructure/Migrations/20261127185050_TaxLineIds.cs: 966d990ea258f29e0770c02c52a306789607d761
+  OfflineCPA/src/Infrastructure/Migrations/20261127185050_TaxLineIds.cs: 02788d132741c47b24d2ac28336dfd1dfb4ff246
   OfflineCPA/src/Infrastructure/Migrations/20261127135749_CardBalanceAndDiscard.cs: f722d2f1aa50070d35441554477d14bcda624505
   OfflineCPA/src/Infrastructure/Migrations/20261127054233_StatementImport.cs: b1a5dc047d31c5c85b864e2fddc5f23f3cf8d2c4
   OfflineCPA/src/Infrastructure/Data/ImportConfigurations.cs: 15164318598785c1d3261ee25db502412b6cccf9
@@ -25,7 +25,9 @@ checked:
 
 `StatementImport` adds the tables for import batches, staged rows, and CSV mapping profiles (repo: OfflineCPA/src/Infrastructure/Migrations/20261127054233_StatementImport.cs#L1-L20); their EF configuration lives in its own file (repo: OfflineCPA/src/Infrastructure/Data/ImportConfigurations.cs#L1-L56). See [[statement-import]].
 
-`TaxLineIds` adds `TaxLineId`, `IsMeals`, the mileage log table, and the book settings table. It copies each old tax line number to a 1120-S line ID, then drops `TaxFormLine` (repo: OfflineCPA/src/Infrastructure/Migrations/20261127185050_TaxLineIds.cs#L56-L76). `Down` restores the column; travel and meals come back as other deductions (repo: OfflineCPA/src/Infrastructure/Migrations/20261127185050_TaxLineIds.cs#L110-L135). See [[tax-maps]].
+`TaxLineIds` adds `TaxLineId`, `IsMeals`, the mileage log table, and the book settings table. It copies each old tax line number to a 1120-S line ID, then drops `TaxFormLine` (repo: OfflineCPA/src/Infrastructure/Migrations/20261127185050_TaxLineIds.cs#L56-L79). `Down` restores the column; travel and meals come back as other deductions (repo: OfflineCPA/src/Infrastructure/Migrations/20261127185050_TaxLineIds.cs#L113-L139). See [[tax-maps]].
+
+The migration keeps the meals flag: old value 21 sets `IsMeals`, and `Down` brings 21 back (repo: OfflineCPA/src/Infrastructure/Migrations/20261127185050_TaxLineIds.cs#L76) (repo: OfflineCPA/src/Infrastructure/Migrations/20261127185050_TaxLineIds.cs#L132).
 
 ## Change it safely
 

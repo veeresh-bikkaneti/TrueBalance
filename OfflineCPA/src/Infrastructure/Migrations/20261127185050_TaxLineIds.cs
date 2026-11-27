@@ -72,6 +72,9 @@ namespace Infrastructure.Migrations
             var toLine = string.Join(" ", LineIdByOldValue.Select(p => $"WHEN {p.Key} THEN '{p.Value}'"));
             migrationBuilder.Sql($@"UPDATE ""Accounts"" SET ""TaxLineId"" = CASE ""TaxFormLine"" {toLine} ELSE NULL END;");
 
+            // 21 was Meals. It shares line 20 now, so the flag has to remember it.
+            migrationBuilder.Sql(@"UPDATE ""Accounts"" SET ""IsMeals"" = TRUE WHERE ""TaxFormLine"" = 21;");
+
             migrationBuilder.DropColumn(
                 name: "TaxFormLine",
                 table: "Accounts");
@@ -115,10 +118,6 @@ namespace Infrastructure.Migrations
             migrationBuilder.DropTable(
                 name: "MileageLog");
 
-            migrationBuilder.DropColumn(
-                name: "IsMeals",
-                table: "Accounts");
-
             migrationBuilder.AddColumn<int>(
                 name: "TaxFormLine",
                 table: "Accounts",
@@ -130,6 +129,11 @@ namespace Infrastructure.Migrations
             var toValue = string.Join(" ", LineIdByOldValue.GroupBy(p => p.Value)
                 .Select(g => $"WHEN '{g.Key}' THEN {g.Min(p => p.Key)}"));
             migrationBuilder.Sql($@"UPDATE ""Accounts"" SET ""TaxFormLine"" = CASE ""TaxLineId"" {toValue} ELSE 0 END;");
+            migrationBuilder.Sql(@"UPDATE ""Accounts"" SET ""TaxFormLine"" = 21 WHERE ""IsMeals"" AND ""TaxLineId"" = '1120S-20';");
+
+            migrationBuilder.DropColumn(
+                name: "IsMeals",
+                table: "Accounts");
 
             migrationBuilder.DropColumn(
                 name: "TaxLineId",

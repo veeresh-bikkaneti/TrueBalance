@@ -1,5 +1,6 @@
 ---
 checked:
+  OfflineCPA/src/Infrastructure/Services/JsonChartOfAccountsSeeder.cs: dfc92b704f4cd8693ce88715c6d40fdf2884d201
   OfflineCPA/src/Infrastructure/TaxMaps/JsonTaxMapCatalog.cs: 9dd32867b5d590e799ce9800ef487081be8ff8ec
   OfflineCPA/src/Infrastructure/TaxMaps/TaxMapValidator.cs: 7450f184bae0286fba30d0860b155721c8875f4b
   OfflineCPA/src/Application/Charts/GetActiveTaxMap.cs: 30a4827bbe9cbbd4ca07f15b84e9ced489c34109
@@ -22,6 +23,8 @@ Each `tax-maps/*.json` file holds a form, chart, tax year, sources, lines with a
 ## Code
 
 `JsonTaxMapCatalog` finds a map by chart and year and reads the 1099 threshold (repo: OfflineCPA/src/Infrastructure/TaxMaps/JsonTaxMapCatalog.cs#L11-L30). `GetActiveTaxMap` picks the map named by the book settings (repo: OfflineCPA/src/Application/Charts/GetActiveTaxMap.cs#L6-L11). `TaxMapValidator` returns one message per problem in a file (repo: OfflineCPA/src/Infrastructure/TaxMaps/TaxMapValidator.cs#L17-L67). `MileageLogEntry` requires a purpose, and miles that fit between the odometer readings (repo: OfflineCPA/src/Domain/Entities/MileageLogEntry.cs#L17-L29). No route or screen uses the mileage log yet.
+
+Books seeded before this change have no book settings row until setup records the chart and year (prompt 10); today the seeder writes the row when it runs (repo: OfflineCPA/src/Infrastructure/Services/JsonChartOfAccountsSeeder.cs#L95).
 
 ## Checks and packaging
 
