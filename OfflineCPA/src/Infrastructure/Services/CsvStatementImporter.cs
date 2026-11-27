@@ -35,6 +35,12 @@ public sealed class CsvStatementImporter : IStatementImporter
         // Balance is optional, and its header may simply not be there.
         var balance = map.Balance is null ? -1 : header.FindIndex(h => h.Equals(map.Balance, StringComparison.OrdinalIgnoreCase));
 
+        // If any debit in the file is positive, a negative one is a reversal. If none
+        // is, the bank signs its debits and they are all money out.
+        var positiveDebits = debit is { } d && records.Skip(1).Any(r => d < r.Count
+            && r[d].Trim() is var cell && !cell.StartsWith('-') && !cell.StartsWith('(')
+            && cell.Any(c => c is >= '1' and <= '9'));
+
         var rows = new List<ParsedRow>();
         for (var i = 1; i < records.Count; i++)
         {
@@ -53,8 +59,8 @@ public sealed class CsvStatementImporter : IStatementImporter
                 decimal Side(int index, string column)
                     => string.IsNullOrWhiteSpace(Cell(index)) ? 0m : StatementValues.Amount(Cell(index), number, column);
 
-                // Debit is money out, whether or not the bank writes it with a minus sign.
-                var output = Math.Abs(Side(debit!.Value, "debit"));
+                var signed = Side(debit!.Value, "debit");
+                var output = positiveDebits ? signed : Math.Abs(signed);
                 var input = Side(credit!.Value, "credit");
                 var bothEmpty = string.IsNullOrWhiteSpace(Cell(debit!.Value)) && string.IsNullOrWhiteSpace(Cell(credit!.Value));
                 if (bothEmpty || input < 0m || (input != 0m && output != 0m))

@@ -1,4 +1,5 @@
 using Application.Interfaces;
+using Domain.Entities;
 using Domain.Ledger;
 
 namespace Application.Ledger;
@@ -7,8 +8,7 @@ public sealed record PostStagedRowCommand(
     Guid RowId, Guid CategoryAccountId, bool AllowDuplicate, bool Reviewed, string LocalUserId);
 
 /// <summary>Turns one staged row into one balanced entry: bank account against the chosen category.</summary>
-public sealed class PostStagedRow(
-    IImportStore imports, ILedgerStore ledger, CreateDraftEntry createDraft, PostEntry postEntry, IClock clock)
+public sealed class PostStagedRow(IImportStore imports, ILedgerStore ledger, IClock clock)
 {
     public async Task<Guid> HandleAsync(PostStagedRowCommand command, CancellationToken ct = default)
     {
@@ -25,16 +25,48 @@ public sealed class PostStagedRow(
 
         // Positive amounts are debits: money in debits the bank account.
         var memo = row.Description.Length == 0 ? "Imported statement row" : row.Description;
-        var entryId = await createDraft.HandleAsync(new CreateDraftEntryCommand(row.Date, memo, period.Id,
+        // Both ledger use cases run against one buffered store, so the draft, the
+        // post and the row are saved together or not at all.
+        var once = new SingleSaveLedger(ledger);
+        var entryId = await new CreateDraftEntry(once, clock).HandleAsync(new CreateDraftEntryCommand(row.Date, memo, period.Id,
             new[]
             {
                 new DraftPostingLine(row.BankAccountId, row.Amount, null),
                 new DraftPostingLine(command.CategoryAccountId, -row.Amount, null)
             }, command.LocalUserId), ct);
 
-        // Marked before PostEntry saves, so the row and the posted entry commit together.
+        await new PostEntry(once, clock).HandleAsync(new PostEntryCommand(entryId, command.LocalUserId), ct);
         row.MarkPosted(entryId, command.CategoryAccountId, clock.UtcNow);
-        await postEntry.HandleAsync(new PostEntryCommand(entryId, command.LocalUserId), ct);
+        await ledger.SaveChangesAsync(ct);
         return entryId;
     }
+}
+
+/// <summary>Holds back saves and finds the entry that is not saved yet.</summary>
+internal sealed class SingleSaveLedger(ILedgerStore inner) : ILedgerStore
+{
+    private JournalEntry? _added;
+
+    public Task AddEntryAsync(JournalEntry entry, CancellationToken ct = default)
+    {
+        _added = entry;
+        return inner.AddEntryAsync(entry, ct);
+    }
+
+    public Task<JournalEntry?> FindEntryAsync(Guid id, CancellationToken ct = default)
+        => _added?.Id == id ? Task.FromResult<JournalEntry?>(_added) : inner.FindEntryAsync(id, ct);
+
+    public Task<Period?> FindPeriodAsync(Guid id, CancellationToken ct = default)
+        => inner.FindPeriodAsync(id, ct);
+
+    public Task<Period?> FindPeriodForDateAsync(DateOnly date, CancellationToken ct = default)
+        => inner.FindPeriodForDateAsync(date, ct);
+
+    public Task<IReadOnlyList<AccountBalance>> GetAccountBalancesAsync(CancellationToken ct = default)
+        => inner.GetAccountBalancesAsync(ct);
+
+    public Task AppendAuditAsync(LedgerAuditRecord record, CancellationToken ct = default)
+        => inner.AppendAuditAsync(record, ct);
+
+    public Task SaveChangesAsync(CancellationToken ct = default) => Task.CompletedTask;
 }

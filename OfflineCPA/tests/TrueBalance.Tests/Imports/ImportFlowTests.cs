@@ -51,7 +51,7 @@ public sealed class ImportFlowTests : IDisposable
     {
         var ledger = new EfLedgerStore(db);
         var clock = new SystemClock();
-        return new PostStagedRow(new EfImportStore(db), ledger, new CreateDraftEntry(ledger, clock), new PostEntry(ledger, clock), clock);
+        return new PostStagedRow(new EfImportStore(db), ledger, clock);
     }
 
     [Fact]
@@ -103,9 +103,10 @@ public sealed class ImportFlowTests : IDisposable
         await Assert.ThrowsAsync<LedgerRuleException>(() => Poster(db).HandleAsync(command));
         await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => Poster(stale).HandleAsync(command));
         using var check = NewDb();
-        var posted = Assert.Single(check.JournalEntries.Include(e => e.Postings)
-            .Where(e => e.Status == JournalEntryStatus.Posted));
-        Assert.Equal(entryId, posted.Id);
+        // The rejected stale save still leaves data behind in memory (no rollback), so
+        // look the entry up by id.
+        var posted = check.JournalEntries.Include(e => e.Postings).Single(e => e.Id == entryId);
+        Assert.Equal(JournalEntryStatus.Posted, posted.Status);
         Assert.Equal(2000m, posted.Postings.Single(p => p.AccountId == _bank.Id).Amount);
         Assert.Equal(-2000m, posted.Postings.Single(p => p.AccountId == _category.Id).Amount);
         var row = check.StagedRows.Single(r => r.Id == rowId);
@@ -113,6 +114,47 @@ public sealed class ImportFlowTests : IDisposable
         Assert.Equal(entryId, row.JournalEntryId);
         // Same payee, next time: the last used category is suggested.
         Assert.Equal(_category.Id, await new EfImportStore(check).LastPostedCategoryAsync(row.MatchKey));
+    }
+
+    // The in-memory provider has no transactions, so this proves what a real one
+    // relies on: the draft, the post and the row travel in a single save.
+    [Fact]
+    public async Task Posting_saves_the_entry_and_the_row_in_one_call()
+    {
+        using var db = NewDb();
+        await ImportAsync(db);
+        var rowId = db.StagedRows.Single(r => r.RowNumber == 3).Id;
+        var saves = new List<string[]>();
+        db.SavingChanges += (_, _) => saves.Add(db.ChangeTracker.Entries()
+            .Where(e => e.State is EntityState.Added or EntityState.Modified)
+            .Select(e => $"{e.State} {e.Entity.GetType().Name}").ToArray());
+
+        await Poster(db).HandleAsync(new PostStagedRowCommand(rowId, _category.Id, false, false, "local"));
+
+        var only = Assert.Single(saves);
+        Assert.Contains("Added JournalEntry", only);
+        Assert.Contains("Modified StagedRow", only);
+        Assert.Equal(JournalEntryStatus.Posted, Assert.Single(db.JournalEntries).Status);
+    }
+
+    [Fact]
+    public async Task A_failed_batch_can_be_imported_again()
+    {
+        using var db = NewDb();
+        var store = new EfImportStore(db);
+        var id = await new QueueImport(store, new SystemClock()).HandleAsync(Guid.NewGuid(), ".csv");
+        var useCase = new ImportStatement(store, new PathVault(_path),
+            new IStatementImporter[] { new CsvStatementImporter() }, new MaskingPiiMasker());
+        var command = new ImportStatementCommand(id, _bank.Id, null);
+        await File.WriteAllTextAsync(_path, "wrong,headers\n1,2\n");
+        await Assert.ThrowsAsync<LedgerRuleException>(() => useCase.HandleAsync(command));
+
+        await File.WriteAllTextAsync(_path, Csv);
+
+        Assert.Equal(3, await useCase.HandleAsync(command));
+        var batch = db.ImportBatches.Single();
+        Assert.Equal(ImportBatchStatus.Staged, batch.Status);
+        Assert.Null(batch.FailureReason);
     }
 
     [Theory]

@@ -13,7 +13,6 @@ public class LocalFileProcessorService : BackgroundService
     private readonly ILogger<LocalFileProcessorService> _logger;
     private readonly string _inputDirectory;
     private readonly IServiceProvider _serviceProvider;
-    private readonly HashSet<(string, DateTime)> _queued = new();
 
     public LocalFileProcessorService(ILogger<LocalFileProcessorService> logger, IConfiguration configuration, IServiceProvider serviceProvider)
     {
@@ -31,6 +30,11 @@ public class LocalFileProcessorService : BackgroundService
             _logger.LogWarning("Input directory does not exist. Creating it at: {Directory}", _inputDirectory);
             Directory.CreateDirectory(_inputDirectory);
         }
+
+        // A crash mid-queue leaves files here. Say so; a person decides what to do.
+        var processing = Path.Combine(_inputDirectory, "processing");
+        if (Directory.Exists(processing) && Directory.GetFiles(processing).Length is var left and > 0)
+            _logger.LogWarning("{Count} file(s) are left in the processing folder; move them back to retry.", left);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -73,28 +77,31 @@ public class LocalFileProcessorService : BackgroundService
 
             try
             {
-                // Remembered in case the move below fails, so one file is queued once.
-                var stamp = (file, File.GetLastWriteTimeUtc(file));
-                if (!_queued.Contains(stamp))
+                var vault = scope.ServiceProvider.GetRequiredService<IDocumentVault>();
+                var queue = scope.ServiceProvider.GetRequiredService<QueueImport>();
+
+                // Claimed on disk before queueing: subfolders are never scanned, so a
+                // failure later cannot queue the file twice, even after a restart.
+                var claimed = Move(file, "processing");
+                try
                 {
-                    var vault = scope.ServiceProvider.GetRequiredService<IDocumentVault>();
-                    var queue = scope.ServiceProvider.GetRequiredService<QueueImport>();
                     StoredUpload stored;
-                    await using (var content = File.OpenRead(file))
+                    await using (var content = File.OpenRead(claimed))
                     {
                         stored = await vault.SaveAsync(content, content.Length, Path.GetFileName(file), null, stoppingToken);
                     }
 
                     await queue.HandleAsync(stored.Id, stored.Extension, stoppingToken);
-                    _queued.Add(stamp);
-                    _logger.LogInformation("Queued file {FileId} for import", fileId);
+                }
+                catch
+                {
+                    // Not queued, so hand it back for the next scan.
+                    if (!File.Exists(file)) File.Move(claimed, file);
+                    throw;
                 }
 
-                var processedDir = Path.Combine(_inputDirectory, "processed");
-                if (!Directory.Exists(processedDir)) Directory.CreateDirectory(processedDir);
-                var destPath = Path.Combine(processedDir, Path.GetFileName(file));
-                if (File.Exists(destPath)) File.Delete(destPath);
-                File.Move(file, destPath);
+                _logger.LogInformation("Queued file {FileId} for import", fileId);
+                Move(claimed, "processed", Path.GetFileName(file));
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -102,5 +109,19 @@ public class LocalFileProcessorService : BackgroundService
                 _logger.LogError("Could not queue file {FileId}: {ErrorType}", fileId, ex.GetType().Name);
             }
         }
+    }
+
+    /// <summary>Moves a file into a subfolder of the input folder and never overwrites one.</summary>
+    private string Move(string file, string folder, string? name = null)
+    {
+        var directory = Path.Combine(_inputDirectory, folder);
+        Directory.CreateDirectory(directory);
+        name ??= Path.GetFileName(file);
+        var destination = Path.Combine(directory, name);
+        if (File.Exists(destination))
+            destination = Path.Combine(directory,
+                $"{Path.GetFileNameWithoutExtension(name)}-{Guid.NewGuid():N}{Path.GetExtension(name)}");
+        File.Move(file, destination);
+        return destination;
     }
 }

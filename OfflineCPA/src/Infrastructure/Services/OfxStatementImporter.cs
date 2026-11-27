@@ -17,6 +17,10 @@ public sealed class OfxStatementImporter : IStatementImporter
     public async Task<ParsedStatement> ParseAsync(string filePath, CsvColumnMap? map, CancellationToken cancellationToken = default)
     {
         var text = await File.ReadAllTextAsync(filePath, cancellationToken);
+        // One file is imported into one bank account, so mixed accounts are refused.
+        if (Regex.Count(text, "<(CC)?STMTRS>", RegexOptions.IgnoreCase) > 1)
+            throw new StatementParseException("The file holds more than one account; export one account at a time.");
+
         var blocks = Regex.Split(text, "<STMTTRN>", RegexOptions.IgnoreCase);
         var rows = new List<ParsedRow>();
         for (var i = 1; i < blocks.Length; i++)

@@ -30,4 +30,9 @@ public sealed class StatementParseException : Exception
         : base($"Row {rowNumber}, column '{column}': the value could not be read.")
     {
     }
+
+    /// <param name="reason">A fixed sentence. Never anything read from the file.</param>
+    public StatementParseException(string reason) : base(reason)
+    {
+    }
 }

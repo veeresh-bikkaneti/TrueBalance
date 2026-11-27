@@ -20,22 +20,24 @@ public class ImportBatch
     public static ImportBatch Queue(Guid documentId, string extension, DateTime nowUtc)
         => new() { DocumentId = documentId, Extension = extension.ToLowerInvariant(), CreatedAtUtc = nowUtc };
 
-    public void EnsureQueued()
+    /// <summary>A Failed batch may be tried again, for example after fixing a column mapping.</summary>
+    public void EnsureImportable()
     {
-        if (Status != ImportBatchStatus.Queued)
-            throw new LedgerRuleException($"Only a Queued batch can be imported; this batch is {Status}.");
+        if (Status == ImportBatchStatus.Staged)
+            throw new LedgerRuleException("This batch is already imported.");
     }
 
     public void MarkStaged()
     {
-        EnsureQueued();
+        EnsureImportable();
         Status = ImportBatchStatus.Staged;
+        FailureReason = null;
     }
 
     /// <param name="reason">Must not quote anything read from the file.</param>
     public void MarkFailed(string reason)
     {
-        EnsureQueued();
+        EnsureImportable();
         Status = ImportBatchStatus.Failed;
         FailureReason = reason;
     }

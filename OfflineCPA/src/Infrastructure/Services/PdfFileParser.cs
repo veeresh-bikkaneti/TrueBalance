@@ -11,7 +11,7 @@ namespace Infrastructure.Services;
 public class PdfFileParser : IStatementImporter
 {
     private static readonly Regex Line = new(
-        @"^\s*(\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{4})\s+(.+?)\s+(\(?-?\$?[\d,]+\.\d{2}\)?)\s*$",
+        @"^\s*(\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{4})\s+(.+?)\s+(\(?-?\$?[\d,]+\.\d{2}\)?)(?:\s+(\(?-?\$?[\d,]+\.\d{2}\)?))?\s*$",
         RegexOptions.Compiled);
 
     public bool SupportsExtension(string extension)
@@ -57,7 +57,8 @@ public class PdfFileParser : IStatementImporter
                 StatementValues.Date(match.Groups[1].Value, null, number, "date"),
                 match.Groups[2].Value,
                 StatementValues.Amount(match.Groups[3].Value, number, "amount"),
-                null));
+                // A second trailing number is the running balance.
+                match.Groups[4].Success ? StatementValues.Amount(match.Groups[4].Value, number, "balance") : null));
         }
         return new ParsedStatement(rows, true);
     }

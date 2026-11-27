@@ -26,7 +26,7 @@ public sealed class ImportStatement(
     {
         var batch = await store.FindBatchAsync(command.BatchId, ct)
             ?? throw new LedgerRuleException("The import batch does not exist.");
-        batch.EnsureQueued();
+        batch.EnsureImportable();
         if (!await store.AccountExistsAsync(command.BankAccountId, ct))
             throw new LedgerRuleException("The bank account does not exist.");
         var map = await FindMapAsync(command.BankName, ct);
