@@ -85,6 +85,8 @@ public class PiiGapTests
     [InlineData("Transfer 500 from savings via online banking")]
     [InlineData("Paid 1200 rent for the park space")]
     [InlineData("Paid 100 for the union dues")]
+    [InlineData("Paid 50 a court fee")]
+    [InlineData("Gas 40 a gallon")]
     public void Leaves_ordinary_memos_readable(string memo)
     {
         Assert.Equal(memo, Mask(memo));
@@ -98,6 +100,8 @@ public class PiiGapTests
     [InlineData("1600 PENNSYLVANIA AVE", " NW")]
     [InlineData("Rural Route 2 Box 15", "")]
     [InlineData("PO Box 12 Apt 4", "")]
+    [InlineData("100 A Street", "")]
+    [InlineData("1234 A St", "")]
     [InlineData("742 Example Street, Apt 4", "")]
     public void Still_masks_a_street_line(string address, string readableTail)
     {

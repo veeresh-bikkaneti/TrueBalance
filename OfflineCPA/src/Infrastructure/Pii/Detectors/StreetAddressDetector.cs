@@ -6,7 +6,8 @@ namespace Infrastructure.Pii.Detectors;
 /// <summary>
 /// Detects US-style street addresses: a house number, one to five name words
 /// (ordinals such as "5th" included, common English function words such as
-/// "the", "for" or "via" excluded), then a street suffix, rural and highway
+/// "the", "for" or "via" excluded; a capital "A" directly before the suffix
+/// counts, for lettered streets), then a street suffix, rural and highway
 /// contract routes with a box number, and PO boxes. A unit after a street or
 /// PO box ("Apt 4") is part of the match. It is a shape check, so it can also
 /// catch a non-address that looks the same; masking too much is the safe
@@ -66,7 +67,11 @@ public sealed partial class StreetAddressDetector : IPiiDetector
     // as an initial.
     private const string FunctionWord = @"(?:a|an|the|to|for|of|at|from|via|in|on|by|with|and|or|this|that|is|was|per)\s";
 
-    private const string NameWord = @"(?!" + FunctionWord + @")(?:[A-Za-z][A-Za-z.'\u2019\-]*|[0-9]{1,3}(?:st|nd|rd|th))";
+    // "100 A Street": only a capital A, and only right before the suffix.
+    private const string LetteredStreet = @"(?-i:A)(?=\s+(?:" + Suffix + @")\b)";
+
+    private const string NameWord = @"(?:" + LetteredStreet + @"|(?!" + FunctionWord
+        + @")(?:[A-Za-z][A-Za-z.'\u2019\-]*|[0-9]{1,3}(?:st|nd|rd|th)))";
 
     private const string Route = @"(?:Rural\s+Route|R\.?R\.?|Highway\s+Contract(?:\s+Route)?|H\.?C\.?)";
 
