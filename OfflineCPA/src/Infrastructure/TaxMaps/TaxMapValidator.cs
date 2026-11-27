@@ -56,7 +56,7 @@ public static partial class TaxMapValidator
                     errors.Add($"account code '{entry.Name}' must be four digits.");
                 }
 
-                var target = entry.Value.GetString();
+                var target = entry.Value.ValueKind == JsonValueKind.String ? entry.Value.GetString() : null;
                 if (target is null || !lineIds.Contains(target))
                 {
                     errors.Add($"account {entry.Name} points at unknown line '{target}'.");

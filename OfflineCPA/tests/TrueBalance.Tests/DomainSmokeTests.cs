@@ -1,5 +1,4 @@
 using Domain.Entities;
-using Domain.Enums;
 
 namespace TrueBalance.Tests;
 
@@ -12,7 +11,8 @@ public class DomainSmokeTests
 
         Assert.Equal(string.Empty, account.Name);
         Assert.Equal(string.Empty, account.Code);
-        Assert.Equal(TaxLineItem.None, account.TaxFormLine);
+        Assert.Null(account.TaxLineId);
+        Assert.False(account.IsMeals);
         Assert.True(account.IsActive);
         Assert.Empty(account.Postings);
     }

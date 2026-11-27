@@ -9,5 +9,7 @@ public sealed class DataModule : IAdapterModule
     {
         services.AddScoped<ILedgerStore, EfLedgerStore>();
         services.AddScoped<IImportStore, EfImportStore>();
+        services.AddScoped<IBookSettingsStore, EfBookSettingsStore>();
+        services.AddScoped<IMileageLogStore, EfMileageLogStore>();
     }
 }

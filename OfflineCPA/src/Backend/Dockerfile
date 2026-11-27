@@ -6,6 +6,7 @@ COPY ["Domain/Domain.csproj", "Domain/"]
 COPY ["Infrastructure/Infrastructure.csproj", "Infrastructure/"]
 RUN dotnet restore "Backend/Backend.csproj"
 COPY . .
+COPY --from=taxmaps . /tax-maps
 WORKDIR "/src/Backend"
 RUN dotnet build "Backend.csproj" -c Release -o /app/build
 

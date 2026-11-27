@@ -50,13 +50,13 @@ public class ChartSeedTests
         Assert.All(seed.Accounts, account =>
         {
             Assert.True(Enum.TryParse<AccountType>(account.Type, out _), $"Bad type '{account.Type}' on {account.Code}");
-            Assert.True(Enum.TryParse<TaxLineItem>(account.TaxFormLine, out _), $"Bad tax line '{account.TaxFormLine}' on {account.Code}");
+            Assert.False(string.IsNullOrWhiteSpace(account.TaxLineId), $"No tax line on {account.Code}");
         });
     }
 
     [Fact]
     public void Supported_kinds_are_the_three_charts()
     {
-        Assert.Equal(Kinds.OrderBy(k => k), new JsonChartOfAccountsSeeder(null!).SupportedKinds.OrderBy(k => k));
+        Assert.Equal(Kinds.OrderBy(k => k), new JsonChartOfAccountsSeeder(null!, null!).SupportedKinds.OrderBy(k => k));
     }
 }

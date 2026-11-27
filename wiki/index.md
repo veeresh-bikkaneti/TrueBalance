@@ -14,6 +14,7 @@ Catalog of all wiki pages. Updated on every ingest and analysis.
 - [[uploads]] — Upload store, PDF parser, folder watcher, and their tests.
 - [[pii-masking]] — The 04b masking core: policy, port, detectors, redaction, and the no-leak gate.
 - [[charts-of-accounts]] — Seed JSON, seeder, and `/api/books/setup`.
+- [[tax-maps]] — Versioned line maps, yearly figures, and the mileage log.
 - [[data-and-migrations]] — DbContext, migrations, triggers, and the snapshot test.
 - [[backend-host]] — Program wiring, `.env` loading, errors, and compose.
 - [[network-gate]] — Ports, the default-deny network gate, and adapter registration.

@@ -15,7 +15,7 @@ public class TaxMapTests
     private static string RepoRoot()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null && !Directory.Exists(Path.Combine(dir.FullName, "tax-maps")))
+        while (dir is not null && !Directory.Exists(Path.Combine(dir.FullName, "OfflineCPA", "src")))
         {
             dir = dir.Parent;
         }
@@ -43,17 +43,26 @@ public class TaxMapTests
         {
             var code = account.GetProperty("code").GetString()!;
             Assert.True(accounts.TryGetProperty(code, out var lineId), $"{chart} account {code} has no entry in {mapFile}.");
+            Assert.Equal(lineId.GetString(), account.GetProperty("taxLineId").GetString());
             Assert.Contains(lineId.GetString(), lineIds);
         }
     }
 
-    [Theory]
-    [MemberData(nameof(MapFiles))]
-    public void Map_file_passes_schema_check(string mapFile)
+    // CI runs this on its own (--filter Category=TaxMapSchema). It reads every map file in tax-maps/.
+    [Fact]
+    [Trait("Category", "TaxMapSchema")]
+    public void Every_tax_map_file_passes_the_schema_check()
     {
-        using var map = JsonDocument.Parse(File.ReadAllText(MapPath(mapFile)));
+        var directory = Environment.GetEnvironmentVariable("TAX_MAPS_DIR") ?? Path.Combine(RepoRoot(), "tax-maps");
+        var files = Directory.GetFiles(directory, "*.json");
 
-        Assert.Empty(TaxMapValidator.Validate(map.RootElement));
+        Assert.NotEmpty(files);
+        Assert.All(files, file =>
+        {
+            using var map = JsonDocument.Parse(File.ReadAllText(file));
+            var errors = TaxMapValidator.Validate(map.RootElement);
+            Assert.True(errors.Count == 0, $"{Path.GetFileName(file)}: {string.Join(" ", errors)}");
+        });
     }
 
     [Fact]
@@ -78,6 +87,4 @@ public class TaxMapTests
     }
 
     public static IEnumerable<object[]> ChartMapPairs() => ChartMaps.Select(p => new object[] { p.Chart, p.MapFile });
-
-    public static IEnumerable<object[]> MapFiles() => ChartMaps.Select(p => new object[] { p.MapFile });
 }
