@@ -66,6 +66,18 @@ public class SecureUploadStore : IDocumentVault
         return new StoredUpload(id, safeFileName, safeOriginalName, extension, length, fullPath);
     }
 
+    public string? FindPath(Guid documentId, string extension)
+    {
+        // Only allow-listed extensions, so a stored value cannot steer the path.
+        if (!_options.AllowedExtensions.Contains(extension))
+        {
+            return null;
+        }
+
+        var path = Path.Combine(_rootFullPath, documentId.ToString("N") + extension);
+        return File.Exists(path) ? path : null;
+    }
+
     internal static string SanitizeFileName(string fileName)
     {
         var name = Path.GetFileName((fileName ?? string.Empty).Replace('\0', '_'));

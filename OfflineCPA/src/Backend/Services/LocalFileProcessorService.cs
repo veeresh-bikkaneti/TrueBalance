@@ -1,9 +1,13 @@
+using Application.Imports;
 using Application.Interfaces;
-using Domain.Entities;
-using Infrastructure.Data;
+using Application.Uploads;
 
 namespace Backend.Services;
 
+/// <summary>
+/// Watches the input folder. Each supported file is stored in the vault and
+/// queued for import; it is never parsed or posted here.
+/// </summary>
 public class LocalFileProcessorService : BackgroundService
 {
     private readonly ILogger<LocalFileProcessorService> _logger;
@@ -27,6 +31,11 @@ public class LocalFileProcessorService : BackgroundService
             Directory.CreateDirectory(_inputDirectory);
         }
 
+        // A crash mid-queue leaves files here. Say so; a person decides what to do.
+        var processing = Path.Combine(_inputDirectory, "processing");
+        if (Directory.Exists(processing) && Directory.GetFiles(processing).Length is var left and > 0)
+            _logger.LogWarning("{Count} file(s) are left in the processing folder; move them back to retry.", left);
+
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -35,7 +44,7 @@ public class LocalFileProcessorService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while processing files.");
+                _logger.LogError("Error occurred while processing files: {ErrorType}", ex.GetType().Name);
             }
 
             // Minimum delay before next scan
@@ -58,42 +67,61 @@ public class LocalFileProcessorService : BackgroundService
             _logger.LogInformation("Processing file {FileId}", fileId);
 
             using var scope = _serviceProvider.CreateScope();
-            var importer = scope.ServiceProvider.GetRequiredService<IStatementImporter>();
-            var extension = Path.GetExtension(file);
+            var extension = Path.GetExtension(file).ToLowerInvariant();
 
-            if (!importer.SupportsExtension(extension))
+            if (!scope.ServiceProvider.GetServices<IStatementImporter>().Any(i => i.SupportsExtension(extension)))
             {
                 _logger.LogWarning("Unsupported file type {FileId}", fileId);
                 continue;
             }
 
-            var dbContext = scope.ServiceProvider.GetRequiredService<OfflineCPADbContext>();
-            var text = await importer.ExtractTextAsync(file, stoppingToken);
-
-            // The transaction references only the generated id; the file name
-            // and the full path stay out of the database (ADR 0010).
-            var transaction = new Transaction
+            try
             {
-                Description = $"Auto-imported file {fileId}",
-                Date = DateTime.UtcNow,
-                ReferenceDocumentPath = fileId
-            };
+                var vault = scope.ServiceProvider.GetRequiredService<IDocumentVault>();
+                var queue = scope.ServiceProvider.GetRequiredService<QueueImport>();
 
-            // TODO: Further basic NLP mapping based on text.
+                // Claimed on disk before queueing: subfolders are never scanned, so a
+                // failure later cannot queue the file twice, even after a restart.
+                var claimed = Move(file, "processing");
+                try
+                {
+                    StoredUpload stored;
+                    await using (var content = File.OpenRead(claimed))
+                    {
+                        stored = await vault.SaveAsync(content, content.Length, Path.GetFileName(file), null, stoppingToken);
+                    }
 
-            dbContext.Transactions.Add(transaction);
-            await dbContext.SaveChangesAsync(stoppingToken);
+                    await queue.HandleAsync(stored.Id, stored.Extension, stoppingToken);
+                }
+                catch
+                {
+                    // Not queued, so hand it back for the next scan.
+                    if (!File.Exists(file)) File.Move(claimed, file);
+                    throw;
+                }
 
-            _logger.LogInformation("Successfully processed file {FileId}", fileId);
-
-            // Move or delete file after processing
-            var processedDir = Path.Combine(_inputDirectory, "processed");
-            if (!Directory.Exists(processedDir)) Directory.CreateDirectory(processedDir);
-
-            var destPath = Path.Combine(processedDir, Path.GetFileName(file));
-            if (File.Exists(destPath)) File.Delete(destPath);
-
-            File.Move(file, destPath);
+                _logger.LogInformation("Queued file {FileId} for import", fileId);
+                Move(claimed, "processed", Path.GetFileName(file));
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                // Type name only: exception messages can quote file names and paths.
+                _logger.LogError("Could not queue file {FileId}: {ErrorType}", fileId, ex.GetType().Name);
+            }
         }
+    }
+
+    /// <summary>Moves a file into a subfolder of the input folder and never overwrites one.</summary>
+    private string Move(string file, string folder, string? name = null)
+    {
+        var directory = Path.Combine(_inputDirectory, folder);
+        Directory.CreateDirectory(directory);
+        name ??= Path.GetFileName(file);
+        var destination = Path.Combine(directory, name);
+        if (File.Exists(destination))
+            destination = Path.Combine(directory,
+                $"{Path.GetFileNameWithoutExtension(name)}-{Guid.NewGuid():N}{Path.GetExtension(name)}");
+        File.Move(file, destination);
+        return destination;
     }
 }

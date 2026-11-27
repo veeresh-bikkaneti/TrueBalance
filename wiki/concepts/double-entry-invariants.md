@@ -3,18 +3,18 @@ checked:
   OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs: 80a26042df5de3cd4363a4e97018b372a2b36ba6
   OfflineCPA/src/Domain/Entities/Posting.cs: 53956565729f8b7d009c0bcc9997481f9ea6e4f5
   OfflineCPA/src/Domain/Ledger/Money.cs: a2a10d99251e73d37eedc059e1b804a57e1e3f36
-  OfflineCPA/src/Infrastructure/Data/OfflineCPADbContext.cs: 79af2ba8029ac2126a5a2367c395c30dc210b3ab
+  OfflineCPA/src/Infrastructure/Data/OfflineCPADbContext.cs: 3722c8129033d5fa805f1277b55c83cde13a5c91
   OfflineCPA/src/Domain/Entities/JournalEntry.cs: 60a5b3d1e5b424ba8d60bd599e5a6072b3de7e87
   OfflineCPA/src/Infrastructure/Data/EfLedgerStore.cs: 4cd65b156acdb9137bc2e5656d1663c61fb300fa
   OfflineCPA/src/Domain/Entities/Period.cs: bcc4fe128753b85180c4567b93e875337cb7df6c
   OfflineCPA/src/Domain/Ledger/LedgerRuleException.cs: 17a075cde4cb15a500cb0ad2a16db76dda06ab7a
-  OfflineCPA/src/Backend/Program.cs: 153e78f333ac9b25969edaef934534cbb64e786b
+  OfflineCPA/src/Backend/Program.cs: 5920314cf077d57e19e50ecbccca205469ef7085
   OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerTests.cs: 32143217f410c0b14792b66a476804be626dbab6
   docs/ledger.md: 2eba6c35c8c780c81a1572e5362ff66584445921
 ---
 # Double-entry invariants
 
-A posting amount is a signed `decimal`. Positive is a debit and negative is a credit. There is no side column (repo: OfflineCPA/src/Domain/Entities/Posting.cs#L5-L11). Zero amounts are rejected, and amounts with more than two decimal places are rejected without rounding (repo: OfflineCPA/src/Domain/Entities/Posting.cs#L22-L31) (repo: OfflineCPA/src/Domain/Ledger/Money.cs#L3-L19). The column type is `numeric(18,2)` (repo: OfflineCPA/src/Infrastructure/Data/OfflineCPADbContext.cs#L66-L69).
+A posting amount is a signed `decimal`. Positive is a debit and negative is a credit. There is no side column (repo: OfflineCPA/src/Domain/Entities/Posting.cs#L5-L11). Zero amounts are rejected, and amounts with more than two decimal places are rejected without rounding (repo: OfflineCPA/src/Domain/Entities/Posting.cs#L22-L31) (repo: OfflineCPA/src/Domain/Ledger/Money.cs#L3-L19). The column type is `numeric(18,2)` (repo: OfflineCPA/src/Infrastructure/Data/OfflineCPADbContext.cs#L72-L75).
 
 ## Draft, post, reverse
 

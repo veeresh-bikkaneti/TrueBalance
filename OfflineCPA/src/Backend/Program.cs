@@ -51,6 +51,10 @@ builder.Services.AddScoped<PostEntry>();
 builder.Services.AddScoped<ReverseEntry>();
 builder.Services.AddScoped<LockPeriod>();
 builder.Services.AddScoped<GetAccountBalances>();
+builder.Services.AddScoped<Application.Imports.QueueImport>();
+builder.Services.AddScoped<Application.Imports.ImportStatement>();
+builder.Services.AddScoped<Application.Imports.SaveCsvProfile>();
+builder.Services.AddScoped<PostStagedRow>();
 builder.Services.Configure<UploadOptions>(builder.Configuration.GetSection(UploadOptions.SectionName));
 builder.Services.Configure<PiiOptions>(builder.Configuration.GetSection(PiiOptions.SectionName));
 // Anchor the fingerprint key to the app content root, not the process
@@ -129,6 +133,7 @@ app.MapGet("/api/export", async (IReportExporter exporter, CancellationToken can
 .WithOpenApi();
 
 app.MapLedgerEndpoints();
+app.MapImportEndpoints();
 
 // Auto-migrate on startup for ease of deployment
 using (var scope = app.Services.CreateScope())

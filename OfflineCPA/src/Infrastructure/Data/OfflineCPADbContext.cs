@@ -15,10 +15,16 @@ public class OfflineCPADbContext : DbContext
     public DbSet<Period> Periods { get; set; } = null!;
     public DbSet<Posting> Postings { get; set; } = null!;
     public DbSet<LedgerAuditRecord> LedgerAuditRecords { get; set; } = null!;
+    public DbSet<ImportBatch> ImportBatches { get; set; } = null!;
+    public DbSet<StagedRow> StagedRows { get; set; } = null!;
+    public DbSet<CsvMappingProfile> CsvMappingProfiles { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.ApplyConfiguration(new ImportBatchConfiguration());
+        modelBuilder.ApplyConfiguration(new StagedRowConfiguration());
+        modelBuilder.ApplyConfiguration(new CsvMappingProfileConfiguration());
 
         modelBuilder.Entity<Account>(entity =>
         {

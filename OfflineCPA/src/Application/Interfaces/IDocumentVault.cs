@@ -14,4 +14,7 @@ public interface IDocumentVault
         string originalFileName,
         string? contentType,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Local path of a stored document, or null when it is not there.</summary>
+    string? FindPath(Guid documentId, string extension);
 }

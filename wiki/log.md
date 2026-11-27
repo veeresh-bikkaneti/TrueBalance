@@ -20,3 +20,5 @@ Parse recent entries with: `grep "^## \[" wiki/log.md | tail -5`
 - Added [[pii-masking]]: domain `PiiPolicy` behind `IPiiMasker`, four local detectors, last-4 plus HMAC token, masked console logs and upload error bodies, id-only transaction references.
 - Moved the upload route to `UploadEndpoints`; the folder watcher stores the generated id instead of the name and path.
 - Added `docs/privacy/masking-coverage.md` and the no-leak test that gates prompt 05. Refreshed the checked hashes on every page citing changed files.
+
+## [2026-11-26] ingest | Statement import (prompt 05)

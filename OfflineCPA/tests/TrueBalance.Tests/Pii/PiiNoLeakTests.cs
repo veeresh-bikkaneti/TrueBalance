@@ -28,10 +28,11 @@ public class PiiNoLeakTests
         builder.WebHost.UseTestServer();
 
         var masker = new MaskingPiiMasker();
-        var importer = new StubImporter(FakePii.SampleStatementText());
 
         builder.Services.AddSingleton<Application.Interfaces.IDocumentVault>(new FakeVault());
-        builder.Services.AddSingleton<Application.Interfaces.IStatementImporter>(importer);
+        builder.Services.AddSingleton<Application.Interfaces.IStatementImporter, Infrastructure.Services.CsvStatementImporter>();
+        builder.Services.AddSingleton<Application.Interfaces.IStatementImporter, Infrastructure.Services.OfxStatementImporter>();
+        builder.Services.AddSingleton<Application.Interfaces.IStatementImporter, Infrastructure.Services.PdfFileParser>();
         builder.Services.AddSingleton<Application.Interfaces.IPiiMasker>(masker);
         var databaseName = $"pii-no-leak-{Guid.NewGuid():N}";
         builder.Services.AddDbContext<OfflineCPADbContext>(options => options.UseInMemoryDatabase(databaseName));
@@ -48,6 +49,9 @@ public class PiiNoLeakTests
         builder.Services.AddScoped<Application.Ledger.ReverseEntry>();
         builder.Services.AddScoped<Application.Ledger.LockPeriod>();
         builder.Services.AddScoped<Application.Ledger.GetAccountBalances>();
+
+        builder.Services.AddScoped<Application.Interfaces.IImportStore, Infrastructure.Data.EfImportStore>();
+        builder.Services.AddScoped<Application.Imports.QueueImport>();
 
         var app = builder.Build();
         app.MapUploadEndpoints();
@@ -133,24 +137,10 @@ public class PiiNoLeakTests
                 Assert.DoesNotContain(raw, body, StringComparison.Ordinal);
             }
 
-            var transactions = db.Transactions.ToList();
-            Assert.True(transactions.Count == 1, $"transaction count {transactions.Count}; response body: {body}");
-            var transaction = transactions[0];
-            foreach (var raw in FakePii.LeakTargets())
-            {
-                Assert.DoesNotContain(raw, transaction.Description, StringComparison.Ordinal);
-                Assert.DoesNotContain(raw, transaction.ReferenceDocumentPath ?? "", StringComparison.Ordinal);
-            }
-
-            // Non-destructive: the display name keeps its shape with tokens in place.
-            Assert.StartsWith("Uploaded file ", transaction.Description, StringComparison.Ordinal);
-            Assert.Contains("ACCT ****", transaction.Description, StringComparison.Ordinal);
-            Assert.Matches(
-                @"^Uploaded file [0-9a-f-]{36} \(statement for \[SSN \*\*\*\*\d{4} fp:[0-9a-f]{16}\] \[ACCT \*\*\*\*\d{4} fp:[0-9a-f]{16}\]\.pdf\)$",
-                transaction.Description);
-
-            // The stored reference is the vault id, not a file path.
-            Assert.False(Path.IsPathRooted(transaction.ReferenceDocumentPath ?? ""));
+            // The upload only queues: no transaction, and the batch holds no file name.
+            Assert.Empty(db.Transactions);
+            var batch = Assert.Single(db.ImportBatches);
+            Assert.Equal(".pdf", batch.Extension);
         }
         finally
         {

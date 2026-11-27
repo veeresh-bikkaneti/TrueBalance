@@ -55,7 +55,7 @@ public class FolderWatchLogTests : IDisposable
     {
         public bool SupportsExtension(string extension) => false;
 
-        public Task<string> ExtractTextAsync(string filePath, CancellationToken cancellationToken = default)
+        public Task<ParsedStatement> ParseAsync(string filePath, CsvColumnMap? map, CancellationToken cancellationToken = default)
         {
             throw new InvalidOperationException("This parser does not read files.");
         }

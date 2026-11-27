@@ -8,5 +8,6 @@ public sealed class DataModule : IAdapterModule
     public void Register(IServiceCollection services)
     {
         services.AddScoped<ILedgerStore, EfLedgerStore>();
+        services.AddScoped<IImportStore, EfImportStore>();
     }
 }

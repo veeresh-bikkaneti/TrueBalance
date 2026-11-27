@@ -1,5 +1,6 @@
 ---
 checked:
+  OfflineCPA/tests/TrueBalance.Tests/Imports/ImportNoLeakTests.cs: 341c560b952f101d7159ef78735d2a55b23cf4f4
   docs/adr/0010-pii-masking-before-import.md: 99d7139b39965aef01e0ff0e94963e7b5e5db733
   OfflineCPA/src/Domain/Pii/PiiPolicy.cs: 19d634138951366ef7e865386baf4dc99c078b39
   OfflineCPA/src/Application/Interfaces/IPiiMasker.cs: c5a61065c626451d907e20e5f30172d52478ddaf
@@ -11,10 +12,10 @@ checked:
   OfflineCPA/src/Infrastructure/Pii/Detectors/AbaRoutingNumberDetector.cs: 9c7f47fe4ea374f862ae466ca2c7b4a57742c962
   OfflineCPA/src/Infrastructure/Pii/Detectors/BankAccountNumberDetector.cs: b84a06f41470aa290fbfc33b08ee52b2426547d6
   OfflineCPA/src/Backend/Extensions/PiiRedactionLoggerProvider.cs: 50ff20605e62fc05011c5f6a16392eeb23aeb600
-  OfflineCPA/src/Backend/Program.cs: 153e78f333ac9b25969edaef934534cbb64e786b
-  OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs: 404f93eb7df6a91fd45c0087b80953bf0b8c3e9f
+  OfflineCPA/src/Backend/Program.cs: 5920314cf077d57e19e50ecbccca205469ef7085
+  OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs: 5c7efd00e3d56a2163cfaacab57769403ea3d8e3
   OfflineCPA/tests/TrueBalance.Tests/Pii/Fixtures/FakePii.cs: fb3e9924da8c85022fa73680ea2d9ed11c5b99fb
-  OfflineCPA/tests/TrueBalance.Tests/Pii/PiiNoLeakTests.cs: 457dbad3d59331637b6efc9dbd05fde74a5659fb
+  OfflineCPA/tests/TrueBalance.Tests/Pii/PiiNoLeakTests.cs: 847b2efdf07f975305c68bdf7c07c5e3c8ba0eb9
 ---
 # PII masking core
 
@@ -30,13 +31,13 @@ The detectors are one class per type and register through the `PiiModule` adapte
 
 ## Logs and errors
 
-Every console log line is masked before the provider writes it; every message on the exception chain is checked, and a chain that changes under masking is rebuilt from type names and masked messages (repo: OfflineCPA/src/Backend/Extensions/PiiRedactionLoggerProvider.cs#L14-L142). `Program.cs` clears the default providers and wraps the console provider (repo: OfflineCPA/src/Backend/Program.cs#L24-L30). Upload errors quote input, so the route masks the message before returning it (repo: OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs#L44-L45).
+Every console log line is masked before the provider writes it; every message on the exception chain is checked, and a chain that changes under masking is rebuilt from type names and masked messages (repo: OfflineCPA/src/Backend/Extensions/PiiRedactionLoggerProvider.cs#L14-L142). `Program.cs` clears the default providers and wraps the console provider (repo: OfflineCPA/src/Backend/Program.cs#L24-L30). Upload errors quote input, so the route masks the message before returning it (repo: OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs#L43-L44).
 
 ## Tests and fixtures
 
 Detectors read an ASCII-digit copy of the text, so other scripts' digits mask and match like 0-9 (repo: OfflineCPA/src/Domain/Pii/PiiPolicy.cs#L57-L62). Dot, underscore and slash groupings are detected. A separated account run over 17 digits that would leave any digit readable is masked as one token (repo: OfflineCPA/src/Domain/Pii/PiiPolicy.cs#L108-L137). SSNs and ITINs may mix hyphen and space. Day-first dates and dot-grouped amounts stay unmasked. A log line is withheld when masking fails. The key store creates the file once, owner-only on Unix, and stops startup on a short or unreadable file instead of replacing it.
 
-Coverage, known false positives and negatives, and the contributor warning are in docs/privacy/masking-coverage.md. Synthetic fixture values live in one shared folder so 06 extends them (repo: OfflineCPA/tests/TrueBalance.Tests/Pii/Fixtures/FakePii.cs#L11-L58). The no-leak gate: fake values pass through the masker and a stub importer path, then the test asserts none of them appear in any database text column, captured logs, or an error body (repo: OfflineCPA/tests/TrueBalance.Tests/Pii/PiiNoLeakTests.cs#L23-L227). Statement import (prompt 05) cannot merge until it passes.
+Coverage, known false positives and negatives, and the contributor warning are in docs/privacy/masking-coverage.md. Synthetic fixture values live in one shared folder so 06 extends them (repo: OfflineCPA/tests/TrueBalance.Tests/Pii/Fixtures/FakePii.cs#L11-L58). The no-leak gate: fake values pass through the masker and a stub importer path, then the test asserts none of them appear in any database text column, captured logs, or an error body (repo: OfflineCPA/tests/TrueBalance.Tests/Pii/PiiNoLeakTests.cs#L23-L217). `ImportNoLeakTests` repeats the check through the real importers (repo: OfflineCPA/tests/TrueBalance.Tests/Imports/ImportNoLeakTests.cs#L14-L19). Statement import (prompt 05) cannot merge until it passes.
 
 ## Change it safely
 
