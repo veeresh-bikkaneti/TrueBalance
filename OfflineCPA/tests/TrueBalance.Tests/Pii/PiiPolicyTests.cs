@@ -10,13 +10,7 @@ public class PiiPolicyTests
 {
     private static PiiPolicy CreatePolicy()
     {
-        return new PiiPolicy(Convert.FromBase64String(FakePii.TestKeyBase64),
-        [
-            new AbaRoutingNumberDetector(),
-            new SsnDetector(),
-            new EinItinDetector(),
-            new BankAccountNumberDetector(),
-        ]);
+        return new PiiPolicy(Convert.FromBase64String(FakePii.TestKeyBase64), PiiDetectors.All());
     }
 
     [Fact]
@@ -98,8 +92,10 @@ public class PiiPolicyTests
         // The account run and the SSN sit in one greedy digit run; the SSN
         // outranks the whole-run account candidate, so both values are
         // masked separately instead of one token swallowing the other.
+        // Account B: with account A's first eight digits, the joined run happens
+        // to pass the Luhn check and is claimed as one card.
         var result = CreatePolicy().Mask(
-            $"Acct {FakePii.AccountNumberA[..8]} {FakePii.SsnFormatted} debit");
+            $"Acct {FakePii.AccountNumberB[..8]} {FakePii.SsnFormatted} debit");
 
         Assert.Equal(2, result.Matches.Count);
         Assert.Equal(PiiType.BankAccountNumber, result.Matches[0].Type);

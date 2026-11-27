@@ -61,6 +61,8 @@ public sealed class MaskingPiiMasker : IPiiMasker
 {
     private readonly PiiMasker _masker;
 
+    public IReadOnlyList<Domain.Pii.IPiiDetector> Detectors { get; } = PiiDetectors.All();
+
     public MaskingPiiMasker()
     {
         var options = Microsoft.Extensions.Options.Options.Create(
@@ -68,13 +70,7 @@ public sealed class MaskingPiiMasker : IPiiMasker
             {
                 FingerprintKey = Fixtures.FakePii.TestKeyBase64,
             });
-        _masker = new PiiMasker(options,
-        [
-            new AbaRoutingNumberDetector(),
-            new SsnDetector(),
-            new EinItinDetector(),
-            new BankAccountNumberDetector(),
-        ]);
+        _masker = new PiiMasker(options, Detectors);
     }
 
     public string Mask(string text) => _masker.Mask(text);

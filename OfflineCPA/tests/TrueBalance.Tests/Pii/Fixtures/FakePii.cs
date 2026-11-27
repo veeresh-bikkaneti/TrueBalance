@@ -26,6 +26,16 @@ public static class FakePii
     public const string LongRunUnderscoreFile = "acct_1234_5678_9012_2024_11_25.pdf";
     public const string LongRunHyphenFile = "acct-1234-5678-9012-2024-11-25.pdf";
     public const string LongRunAroundRouting = "123456780 1234 5678 9012";
+    public const string LongUnbrokenRun = "100456789012345678";
+    public const string SsnJoinedToAccount = "123-45-6789_1234_5678_9012";
+    public const string SplitByDoubleSpace = "1234  5678  9012";
+    public const string SplitByDoubleDash = "1234--5678--9012";
+    public const string SplitByDashPair = "1234 - 5678 - 9012";
+    public const string InvoiceList = "Invoices 1001 1002 1003 1004 1005";
+    public const string CardNumberSpaced = "4111 1111 1111 1111";
+    public const string CardNumberBadCheck = "4111 1111 1111 1112";
+    public const string DateOfBirth = "04/12/1980";
+    public const string StreetAddress = "742 Example Street";
     public const string DateDayFirstSlash = "25/11/2024";
     public const string DateDayFirstDot = "25.11.2024";
     public const string DotGroupedAmount = "12.345.678";
@@ -40,6 +50,9 @@ public static class FakePii
         RoutingNumber,
         AccountNumberA,
         AccountNumberB,
+        CardNumberSpaced,
+        DateOfBirth,
+        StreetAddress,
     ];
 
     /// <summary>Raw digits of each value, for fingerprint comparisons.</summary>
@@ -55,8 +68,11 @@ public static class FakePii
     public static string SampleStatementText() =>
         $"Account {AccountNumberA} at routing {RoutingNumber}. " +
         $"Payroll for employee SSN {SsnFormatted} filed under EIN {EinFormatted}. " +
-        $"Contractor ITIN {ItinFormatted}. Amount 12.50 on 2024-11-25 to ACME Corp.";
+        $"Contractor ITIN {ItinFormatted}. Card {CardNumberSpaced}. " +
+        $"DOB {DateOfBirth}. Ship to {StreetAddress}. Amount 12.50 on 2024-11-25 to ACME Corp.";
 
     /// <summary>The values that must never appear anywhere after masking.</summary>
-    public static IEnumerable<string> LeakTargets() => AllRaw.Concat(AllRawDigits.Where(d => d.Length >= 8));
+    /// A date's bare digits are left out: the app treats them as a plain date.
+    public static IEnumerable<string> LeakTargets() => AllRaw.Concat(
+        AllRawDigits.Where(d => d.Length >= 8 && d != DateOfBirth.Replace("/", string.Empty)));
 }

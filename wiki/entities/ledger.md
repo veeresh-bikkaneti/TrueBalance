@@ -1,6 +1,6 @@
 ---
 checked:
-  OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs: 80a26042df5de3cd4363a4e97018b372a2b36ba6
+  OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs: 33c34cedec49c541cfae8e468e5484c0df8759dc
   OfflineCPA/src/Domain/Entities/JournalEntry.cs: 60a5b3d1e5b424ba8d60bd599e5a6072b3de7e87
   OfflineCPA/src/Backend/Program.cs: 452674984015389ecb7473705b58db3f8a3cbf88
   OfflineCPA/src/Domain/Entities/Posting.cs: 53956565729f8b7d009c0bcc9997481f9ea6e4f5
@@ -29,6 +29,8 @@ The ledger is the double-entry book: draft an entry, post it, reverse it, lock a
 ## Entry points
 
 Use cases are `CreateDraftEntry`, `PostEntry`, `ReverseEntry`, `LockPeriod`, and `GetAccountBalances`. Create dispatches domain events and then calls `SaveChanges`. Post, reverse, and lock do the same (repo: OfflineCPA/src/Application/Ledger/CreateDraftEntry.cs#L32-L34) (repo: OfflineCPA/src/Application/Ledger/PostEntry.cs#L29-L30) (repo: OfflineCPA/src/Application/Ledger/ReverseEntry.cs#L31-L32) (repo: OfflineCPA/src/Application/Ledger/LockPeriod.cs#L27-L28).
+
+The create and reverse endpoints mask the entry memo, and create also masks each line memo, before anything is stored (repo: OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs#L15-L50).
 
 Routes, all thin, map a rule failure to HTTP 400. Until a later prompt there is no auth, so the user id is the constant `local` (repo: OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs#L9-L71):
 

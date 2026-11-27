@@ -10,12 +10,11 @@ public sealed class PiiModule : IAdapterModule
 {
     public void Register(IServiceCollection services)
     {
-        // Detector order does not decide precedence; the domain policy ranks
-        // overlapping matches by PiiType priority.
-        services.AddSingleton<IPiiDetector, AbaRoutingNumberDetector>();
-        services.AddSingleton<IPiiDetector, SsnDetector>();
-        services.AddSingleton<IPiiDetector, EinItinDetector>();
-        services.AddSingleton<IPiiDetector, BankAccountNumberDetector>();
+        foreach (var detector in PiiDetectors.All())
+        {
+            services.AddSingleton<IPiiDetector>(detector);
+        }
+
         services.AddSingleton<IPiiMasker, PiiMasker>();
     }
 }

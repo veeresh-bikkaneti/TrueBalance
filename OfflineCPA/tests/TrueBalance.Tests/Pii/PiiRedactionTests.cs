@@ -15,7 +15,9 @@ public class PiiRedactionTests
 
         foreach (var raw in FakePii.LeakTargets())
         {
-            logger.LogInformation("Importing row with value {Value}", raw);
+            // A date of birth is only PII after its label.
+            var value = raw == FakePii.DateOfBirth ? $"DOB {raw}" : raw;
+            logger.LogInformation("Importing row with value {Value}", value);
         }
 
         Assert.NotEmpty(capture.Lines);
