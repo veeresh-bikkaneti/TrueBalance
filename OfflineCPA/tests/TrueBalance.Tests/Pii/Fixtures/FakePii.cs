@@ -21,6 +21,16 @@ public static class FakePii
     public const string AccountNumberA = "004567890123";
     public const string AccountNumberB = "998877660123";
 
+    public const string SsnMixedSeparators = "123-45 6789";
+    public const string ItinMixedSeparators = "912-70 1234";
+    public const string LongRunUnderscoreFile = "acct_1234_5678_9012_2024_11_25.pdf";
+    public const string LongRunHyphenFile = "acct-1234-5678-9012-2024-11-25.pdf";
+    public const string LongRunAroundRouting = "123456780 1234 5678 9012";
+    public const string DateDayFirstSlash = "25/11/2024";
+    public const string DateDayFirstDot = "25.11.2024";
+    public const string DotGroupedAmount = "12.345.678";
+    public const string VersionPrefixedAccount = "v.1.1234.5678.9012";
+
     public static readonly string[] AllRaw =
     [
         SsnFormatted,

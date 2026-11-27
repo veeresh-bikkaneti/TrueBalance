@@ -19,13 +19,13 @@ The HMAC key is local and stable: set `Pii:FingerprintKey` (base64; generate wit
 
 | Type | Pattern | Notes |
 | --- | --- | --- |
-| SSN | NNN-NN-NNNN (same `-`, space, `.`, `_` or `/` twice) or a bare 9-digit run | Skips area 000, 666, 9xx, group 00, serial 0000. |
+| SSN | NNN-NN-NNNN (`-` and space may mix; `.`, `_` or `/` must repeat) or a bare 9-digit run | Skips area 000, 666, 9xx, group 00, serial 0000. |
 | EIN | NN-NNNNNNN (also `.`, `_`, `/`) | The formatted Employer ID shape. |
 | ITIN | 9NN-NN-NNNN (4th–5th digits 50–65, 70–88, 90–92, 94–99) and the bare 9xx equivalents | Middle-digit ranges as published by the IRS (IRS Publication 1915: a nine-digit number beginning with 9, fourth and fifth digits from 50–65, 70–88, 90–92, or 94–99 [High 3/3] https://www.irs.gov/pub/irs-pdf/p1915.pdf). |
 | ABA routing number | Bare 9-digit run passing the check digit | Weights 3,7,1,3,7,1,3,7,1 with a weighted sum divisible by 10 (Apache Commons Validator ABANumberCheckDigit [High 3/3] https://commons.apache.org/proper/commons-validator/apidocs/org/apache/commons/validator/routines/checkdigit/ABANumberCheckDigit.html). Checksum-valid runs outrank SSN reads. |
-| Bank account number | 8–17 digit run, optionally grouped by hyphens or spaces, or by one of `.` `_` `/` used at least twice | The least certain detector; exclusions below. |
+| Bank account number | 8–17 digit run, optionally grouped by hyphens or spaces, or by one of `.` `_` `/` used at least twice; a separated run over 17 digits is masked whole | The least certain detector; exclusions below. |
 
-Bank-account exclusions: phone-shaped 3-3-4 numbers, YYYYMMDD, YYYY-MM-DD and MM/DD/YYYY dates (same separators), currency amounts (a `$` before the run, or a decimal `.`+digit neighbor), and 9-digit values shaped like an SSN or EIN that failed their own validation (they stay untouched rather than being relabeled). Overlapping matches resolve by type: routing (check digit) first, then SSN, EIN/ITIN, then account number.
+Bank-account exclusions: phone-shaped 3-3-4 numbers, YYYYMMDD, YYYY-MM-DD, MM/DD/YYYY, DD/MM/YYYY and DD.MM.YYYY dates (same separators), dot-grouped amounts (`12.345.678`), currency amounts (a `$` before the run, or a decimal `.`+digit neighbor), and 9-digit values shaped like an SSN or EIN that failed their own validation (they stay untouched rather than being relabeled). Overlapping matches resolve by type: routing (check digit) first, then SSN, EIN/ITIN, then account number.
 
 ## Known false positives (masked even though they are not account numbers)
 
@@ -41,6 +41,9 @@ Masking these is non-destructive (last 4 digits and fingerprint stay), but expec
 - Account numbers with only one `.`, `_` or `/` separator (`1234.56789`), or mixing those separators.
 - `.`, `_` or `/` grouped numbers followed by `,` and a digit (read as an amount).
 - 8-digit account numbers that read as a YYYYMMDD date (for example `20151231`).
+- `1234.5678.9012,5` (read as an amount because of the trailing `,5`).
+- `123_456_7890` (read as a phone number).
+- `2024-11 25` (mixed separators; its 8 digits read as a YYYYMMDD date).
 - Digits outside the Basic Multilingual Plane (such as mathematical digit symbols).
 - Routing numbers printed with separators (rare) are not detected.
 - Card numbers, dates of birth, street addresses, emails, phone numbers as text: prompt 06.

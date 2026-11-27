@@ -8,9 +8,9 @@ namespace Infrastructure.Pii.Detectors;
 /// into groups by single hyphens or spaces. Because there is no check digit,
 /// this is the least certain detector: it excludes phone-shaped numbers,
 /// YYYYMMDD-style dates, currency amounts, tax-id shapes, and longer runs
-/// that belong to other detectors. When a digit run is too long to be one
-/// account number, its separator-delimited chunks are evaluated instead,
-/// so two adjacent values are not masked as one missed span. Known false
+/// that belong to other detectors. A separated run longer than 17 digits is
+/// offered whole, and <see cref="PiiPolicy"/> masks all of it if any digit
+/// would otherwise stay readable. Known false
 /// positives (order or invoice numbers with eight or more digits) are
 /// documented in docs/privacy/masking-coverage.md.
 /// </summary>
@@ -65,7 +65,7 @@ public sealed partial class BankAccountNumberDetector : IPiiDetector
 
             // "12.345.678,90" is a European-style amount.
             var isAmount = end + 1 < text.Length && text[end] == ',' && char.IsAsciiDigit(text[end + 1]);
-            if (digits.Length is >= MinDigits and <= MaxDigits
+            if (digits.Length >= MinDigits
                 && !isAmount
                 && IsPlausibleAccountNumber(text, match.Value, match.Index))
             {
@@ -79,13 +79,14 @@ public sealed partial class BankAccountNumberDetector : IPiiDetector
         var digits = PiiText.OnlyDigits(run);
         var hasSeparators = run.Any(c => c is ' ' or '-');
 
-        // The whole run is the account number when it fits: grouped
+        // The whole run is the candidate when it fits, or when it is a
+        // separated run too long to be one value: grouped
         // accounts ("1234 5678 9012") rely on this candidate. Chunks are
         // also offered, so values pushed together ("12345678 123-45-6789")
         // are still masked per value when a higher-priority detector claims
         // its span and the policy drops the whole-run candidate. Overlap
         // resolution keeps at most one of them.
-        if (digits.Length is >= MinDigits and <= MaxDigits)
+        if (digits.Length >= MinDigits && (digits.Length <= MaxDigits || hasSeparators))
         {
             yield return (run, 0);
         }
@@ -163,6 +164,11 @@ public sealed partial class BankAccountNumberDetector : IPiiDetector
             return false;
         }
 
+        if (DotGroupedAmount().IsMatch(candidate))
+        {
+            return false;
+        }
+
         if (DateShape().IsMatch(candidate) || (digits.Length == 8 && IsBareDate(digits)))
         {
             return false;
@@ -171,8 +177,12 @@ public sealed partial class BankAccountNumberDetector : IPiiDetector
         return true;
     }
 
-    // ISO or US date shape: 2024-11-25, 2024/11/25, 11.25.2024.
-    [GeneratedRegex(@"^(?:(18|19|20|21)[0-9]{2}(?<a>[- ._/])(0[1-9]|1[0-2])\k<a>(0[1-9]|[12][0-9]|3[01])|(0[1-9]|1[0-2])(?<b>[- ._/])(0[1-9]|[12][0-9]|3[01])\k<b>(18|19|20|21)[0-9]{2})$")]
+    // 12.345.678: dot-grouped thousands.
+    [GeneratedRegex(@"^[0-9]{1,3}(?:\.[0-9]{3}){2,}$")]
+    private static partial Regex DotGroupedAmount();
+
+    // ISO, US or day-first date shape: 2024-11-25, 11.25.2024, 25/11/2024.
+    [GeneratedRegex(@"^(?:(18|19|20|21)[0-9]{2}(?<a>[- ._/])(0[1-9]|1[0-2])\k<a>(0[1-9]|[12][0-9]|3[01])|(0[1-9]|1[0-2])(?<b>[- ._/])(0[1-9]|[12][0-9]|3[01])\k<b>(18|19|20|21)[0-9]{2}|(0[1-9]|[12][0-9]|3[01])(?<c>[./])(0[1-9]|1[0-2])\k<c>(18|19|20|21)[0-9]{2})$")]
     private static partial Regex DateShape();
 
     private static char PrecedingNonWhitespace(string text, int index)

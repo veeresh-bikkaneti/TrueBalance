@@ -14,6 +14,7 @@ namespace Domain.Pii;
 public sealed class PiiPolicy
 {
     private const int FingerprintTokenLength = 16;
+    private const int LongestSingleValue = 17;
 
     // Lower priority number wins an overlapping span. Routing numbers have
     // a check digit, so they outrank a plain nine-digit read; bank account
@@ -80,6 +81,7 @@ public sealed class PiiPolicy
             spans.Add((candidate.Match.Start, end));
         }
 
+        CoverLongRuns(text, claimed, candidates.Select(c => c.Match));
         claimed.Sort((a, b) => a.Start.CompareTo(b.Start));
 
         var masked = new StringBuilder(text.Length);
@@ -100,6 +102,37 @@ public sealed class PiiPolicy
 
         masked.Append(text[cursor..]);
         return new PiiMaskingResult(masked.ToString(), matches);
+    }
+
+    // A separated run too long to be one value may overlap shorter claims.
+    // If those leave any of its digits readable, one token replaces them all,
+    // widened to cover any claim that sticks out past the run.
+    private static void CoverLongRuns(string text, List<PiiMatch> claimed, IEnumerable<PiiMatch> candidates)
+    {
+        var longRuns = candidates.Where(m =>
+            m.Type == PiiType.BankAccountNumber && DigitsOf(m.RawValue).Length > LongestSingleValue);
+
+        foreach (var run in longRuns)
+        {
+            var start = run.Start;
+            var end = start + run.Length;
+            var exposed = Enumerable.Range(start, run.Length).Any(i =>
+                char.IsDigit(text[i]) && !claimed.Any(c => i >= c.Start && i < c.Start + c.Length));
+            if (!exposed)
+            {
+                continue;
+            }
+
+            var overlapping = claimed.Where(c => c.Start < end && c.Start + c.Length > run.Start).ToList();
+            foreach (var match in overlapping)
+            {
+                start = Math.Min(start, match.Start);
+                end = Math.Max(end, match.Start + match.Length);
+                claimed.Remove(match);
+            }
+
+            claimed.Add(new PiiMatch(run.Type, text[start..end], start, end - start));
+        }
     }
 
     /// <summary>HMAC-SHA256 over the digits only, so "123-45-6789" and

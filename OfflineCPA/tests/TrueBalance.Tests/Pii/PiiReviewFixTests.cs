@@ -59,9 +59,45 @@ public class PiiReviewFixTests
     [InlineData("2024.11.25")]
     [InlineData("11/25/2024")]
     [InlineData("2024/11/25")]
+    [InlineData(FakePii.DateDayFirstSlash)]
+    [InlineData(FakePii.DateDayFirstDot)]
+    [InlineData(FakePii.DotGroupedAmount)]
     public void Amounts_and_dates_stay_unmasked(string value)
     {
         Assert.Equal($"Paid {value} ok", new MaskingPiiMasker().Mask($"Paid {value} ok"));
+    }
+
+    [Theory]
+    [InlineData(FakePii.SsnMixedSeparators, "[SSN ****6789 ")]
+    [InlineData(FakePii.ItinMixedSeparators, "[EIN ****1234 ")]
+    public void Mixed_hyphen_and_space_tax_ids_are_masked(string value, string token)
+    {
+        var masked = new MaskingPiiMasker().Mask($"ID {value} ok");
+
+        Assert.Contains(token, masked, StringComparison.Ordinal);
+        Assert.DoesNotContain(value, masked, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(FakePii.LongRunUnderscoreFile, "****1125 fp:")]
+    [InlineData(FakePii.LongRunHyphenFile, "****1125 fp:")]
+    [InlineData(FakePii.LongRunAroundRouting, "****9012 fp:")]
+    public void Separated_runs_over_17_digits_are_masked_whole(string text, string token)
+    {
+        var masked = new MaskingPiiMasker().Mask(text);
+
+        Assert.Contains(token, masked, StringComparison.Ordinal);
+        Assert.DoesNotContain("1234", masked.Split(" fp:")[0], StringComparison.Ordinal);
+        Assert.DoesNotContain("5678", masked.Split(" fp:")[0], StringComparison.Ordinal);
+        Assert.Single(new MaskingPiiMasker().MaskDetailed(text).Matches);
+    }
+
+    [Fact]
+    public void Version_prefixed_account_stays_masked()
+    {
+        var masked = new MaskingPiiMasker().Mask(FakePii.VersionPrefixedAccount);
+
+        Assert.Contains("****9012 fp:", masked, StringComparison.Ordinal);
     }
 
     private sealed class ThrowingMasker : IPiiMasker

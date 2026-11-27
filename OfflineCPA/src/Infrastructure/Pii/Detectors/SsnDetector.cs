@@ -11,8 +11,8 @@ namespace Infrastructure.Pii.Detectors;
 /// </summary>
 public sealed partial class SsnDetector : IPiiDetector
 {
-    // Separator forms only: the same one of - space . _ / between the groups.
-    [GeneratedRegex(@"(?<![0-9-])[0-9]{3}([- ._/])[0-9]{2}\1[0-9]{4}(?![0-9-])")]
+    // Hyphen and space may mix; . _ and / must repeat within one value.
+    [GeneratedRegex(@"(?<![0-9-])[0-9]{3}(?:[- ][0-9]{2}[- ]|([._/])[0-9]{2}\1)[0-9]{4}(?![0-9-])")]
     private static partial Regex FormattedSsn();
 
     [GeneratedRegex(@"(?<![0-9-])[0-9]{9}(?![0-9-])")]
