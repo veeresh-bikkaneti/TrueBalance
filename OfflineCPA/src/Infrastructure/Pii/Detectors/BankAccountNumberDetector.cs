@@ -45,6 +45,11 @@ public sealed partial class BankAccountNumberDetector : IPiiDetector
     {
         foreach (Match match in DigitRun().Matches(text))
         {
+            if (IsLabeledList(text, match))
+            {
+                continue;
+            }
+
             foreach (var (candidate, offset) in CandidatesFor(match.Value))
             {
                 var start = match.Index + offset;
@@ -90,10 +95,15 @@ public sealed partial class BankAccountNumberDetector : IPiiDetector
         }
     }
 
-    // Space-only groups, five or more: a list of numbers ("Invoices 1001 1002
-    // 1003 1004 1005"), not one account, so the whole run is not offered.
-    private static bool IsSpaceList(string run) =>
-        run.Contains(' ') && !run.Contains("  ") && !run.Contains('-') && run.Split(' ').Length > 4;
+    // Space-grouped digits are masked by default. A run stays readable only as
+    // a list: its label sits directly before it ("Invoices 1001 1002 1003")
+    // and every group is 3 to 6 digits.
+    [GeneratedRegex(@"\b(?:inv ?# *|(?:invoices?|inv|checks?|chk|orders?) +)$", RegexOptions.IgnoreCase | RegexOptions.RightToLeft)]
+    private static partial Regex ListLabel();
+
+    private static bool IsLabeledList(string text, Match run) =>
+        run.Value.Split(' ').All(g => g.Length is >= 3 and <= 6 && g.All(char.IsAsciiDigit))
+        && ListLabel().IsMatch(text[..run.Index]);
 
     // Double spaces, "--" or " - " break a run apart.
     private static bool IsBrokenRun(string candidate) =>
@@ -115,7 +125,7 @@ public sealed partial class BankAccountNumberDetector : IPiiDetector
         // are still masked per value when a higher-priority detector claims
         // its span and the policy drops the whole-run candidate. Overlap
         // resolution keeps at most one of them.
-        if (digits.Length >= MinDigits && (digits.Length <= MaxDigits || !IsSpaceList(run)))
+        if (digits.Length >= MinDigits)
         {
             yield return (run, 0);
         }

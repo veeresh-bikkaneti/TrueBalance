@@ -30,6 +30,8 @@ The ledger is the double-entry book: draft an entry, post it, reverse it, lock a
 
 Use cases are `CreateDraftEntry`, `PostEntry`, `ReverseEntry`, `LockPeriod`, and `GetAccountBalances`. Create dispatches domain events and then calls `SaveChanges`. Post, reverse, and lock do the same (repo: OfflineCPA/src/Application/Ledger/CreateDraftEntry.cs#L32-L34) (repo: OfflineCPA/src/Application/Ledger/PostEntry.cs#L29-L30) (repo: OfflineCPA/src/Application/Ledger/ReverseEntry.cs#L31-L32) (repo: OfflineCPA/src/Application/Ledger/LockPeriod.cs#L27-L28).
 
+The create and reverse endpoints mask the entry memo, and create also masks each line memo, before anything is stored (repo: OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs#L15-L50).
+
 Routes, all thin, map a rule failure to HTTP 400. Until a later prompt there is no auth, so the user id is the constant `local` (repo: OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs#L9-L71):
 
 - `POST /api/ledger/entries`

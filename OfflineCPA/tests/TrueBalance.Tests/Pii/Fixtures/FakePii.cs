@@ -50,6 +50,9 @@ public static class FakePii
         RoutingNumber,
         AccountNumberA,
         AccountNumberB,
+        CardNumberSpaced,
+        DateOfBirth,
+        StreetAddress,
     ];
 
     /// <summary>Raw digits of each value, for fingerprint comparisons.</summary>
@@ -65,8 +68,11 @@ public static class FakePii
     public static string SampleStatementText() =>
         $"Account {AccountNumberA} at routing {RoutingNumber}. " +
         $"Payroll for employee SSN {SsnFormatted} filed under EIN {EinFormatted}. " +
-        $"Contractor ITIN {ItinFormatted}. Amount 12.50 on 2024-11-25 to ACME Corp.";
+        $"Contractor ITIN {ItinFormatted}. Card {CardNumberSpaced}. " +
+        $"DOB {DateOfBirth}. Ship to {StreetAddress}. Amount 12.50 on 2024-11-25 to ACME Corp.";
 
     /// <summary>The values that must never appear anywhere after masking.</summary>
-    public static IEnumerable<string> LeakTargets() => AllRaw.Concat(AllRawDigits.Where(d => d.Length >= 8));
+    /// A date's bare digits are left out: the app treats them as a plain date.
+    public static IEnumerable<string> LeakTargets() => AllRaw.Concat(
+        AllRawDigits.Where(d => d.Length >= 8 && d != DateOfBirth.Replace("/", string.Empty)));
 }

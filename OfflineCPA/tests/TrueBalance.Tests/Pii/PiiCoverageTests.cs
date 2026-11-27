@@ -1,5 +1,8 @@
+using System.Text.RegularExpressions;
 using Domain.Pii;
+using Infrastructure.Pii;
 using Infrastructure.Pii.Detectors;
+using Microsoft.Extensions.DependencyInjection;
 using TrueBalance.Tests.Pii.Fixtures;
 
 namespace TrueBalance.Tests.Pii;
@@ -106,5 +109,86 @@ public class PiiCoverageTests
 
         Assert.DoesNotContain(FakePii.StreetAddress, masked);
         Assert.Contains("[ADDR fp:", masked);
+    }
+
+    [Theory]
+    [InlineData("Acct 1234 5678 9012 3456 78")]
+    [InlineData("Wire to 9876 5432 1098 7654 3210")]
+    [InlineData("Acct 123 456 789 012 345 678")]
+    [InlineData("1234 5678 9012 3456 7890 1234")]
+    [InlineData("Paid 1001 1002 1003 1004 1005")]
+    [InlineData("Reorder 1001 1002 1003 1004 1005")]
+    [InlineData("Invoice total 1001 1002 1003 1004 1005")]
+    [InlineData("Invoices 12345678 90123456 78901234")]
+    public void Masks_space_grouped_numbers_without_a_list_label(string text)
+    {
+        var masked = Policy.Mask(text).MaskedText;
+
+        var outsideTokens = Regex.Replace(masked, @"\[[^\]]*\]", string.Empty);
+        Assert.DoesNotMatch("[0-9]", outsideTokens);
+    }
+
+    [Theory]
+    [InlineData("invoice 1001 1002 1003 1004 1005")]
+    [InlineData("INV 1001 1002 1003 1004 1005")]
+    [InlineData("Inv # 1001 1002 1003 1004 1005")]
+    [InlineData("Check 1001 1002 1003")]
+    [InlineData("Checks 1001 1002 1003 1004 1005")]
+    [InlineData("Chk 100123 100124 100125 100126")]
+    [InlineData("Order 1001 1002 1003 1004 1005")]
+    [InlineData("Orders 1001 1002 1003 1004 1005")]
+    public void Leaves_a_labeled_number_list_readable(string text)
+    {
+        Assert.Equal(text, Policy.Mask(text).MaskedText);
+    }
+
+    [Theory]
+    [InlineData("born 04/12/1980")]
+    [InlineData("Birth date 1980-04-12")]
+    [InlineData("birthdate: 04/12/1980")]
+    [InlineData("Date of birth 04/12/1980")]
+    public void Masks_a_date_after_any_birth_label(string text)
+    {
+        var masked = Policy.Mask(text).MaskedText;
+
+        Assert.Contains("[DOB fp:", masked);
+        Assert.DoesNotContain("1980", masked);
+    }
+
+    [Fact]
+    public void Leaves_a_statement_date_readable()
+    {
+        const string text = "Statement date 04/12/2026";
+
+        Assert.Equal(text, Policy.Mask(text).MaskedText);
+    }
+
+    [Theory]
+    [InlineData("742 Evergreen Terrace")]
+    [InlineData("PO Box 1234")]
+    [InlineData("P.O. Box 1234")]
+    [InlineData("742 Example Street, Apt 4")]
+    [InlineData("742 Example St. Suite 4B")]
+    [InlineData("742 Example Road Ste 12")]
+    [InlineData("742 Example Lane, Unit B")]
+    [InlineData("742 Example Drive #4")]
+    public void Masks_the_whole_address_including_the_unit(string address)
+    {
+        var masked = Policy.Mask($"Ship to {address} today").MaskedText;
+
+        Assert.Matches(@"^Ship to \[ADDR fp:[0-9a-f]+\] today$", masked);
+    }
+
+    [Fact]
+    public void App_and_test_maskers_register_the_same_detectors()
+    {
+        var services = new ServiceCollection();
+        new PiiModule().Register(services);
+        using var provider = services.BuildServiceProvider();
+
+        var app = provider.GetServices<IPiiDetector>().Select(d => d.GetType().Name).Order();
+        var test = new MaskingPiiMasker().Detectors.Select(d => d.GetType().Name).Order();
+
+        Assert.Equal(app, test);
     }
 }
