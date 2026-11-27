@@ -11,9 +11,9 @@ public sealed class CsvStatementImporter : IStatementImporter
 
     public bool SupportsExtension(string extension) => extension.Equals(".csv", StringComparison.OrdinalIgnoreCase);
 
-    public async Task<ParsedStatement> ParseAsync(string filePath, CsvColumnMap? map, CancellationToken cancellationToken = default)
+    public async Task<ParsedStatement> ParseAsync(Stream content, CsvColumnMap? map, CancellationToken cancellationToken = default)
     {
-        var records = Read(await File.ReadAllTextAsync(filePath, cancellationToken));
+        var records = Read(await StatementValues.TextAsync(content, cancellationToken));
         if (records.Count == 0) return new ParsedStatement(Array.Empty<ParsedRow>(), false);
         var header = records[0].Select(h => h.Trim()).ToList();
 

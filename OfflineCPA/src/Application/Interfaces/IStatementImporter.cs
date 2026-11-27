@@ -3,7 +3,7 @@ using Domain.Enums;
 namespace Application.Interfaces;
 
 /// <summary>
-/// Port for a statement file importer. An adapter turns one local file into
+/// Port for a statement file importer. An adapter turns one file's content into
 /// rows for staging; it never opens a network connection. Row text is raw:
 /// the caller masks it before it is stored or logged.
 /// </summary>
@@ -12,7 +12,7 @@ public interface IStatementImporter
     bool SupportsExtension(string extension);
 
     /// <exception cref="StatementParseException">The file could not be read as a statement.</exception>
-    Task<ParsedStatement> ParseAsync(string filePath, CsvColumnMap? map, CancellationToken cancellationToken = default);
+    Task<ParsedStatement> ParseAsync(Stream content, CsvColumnMap? map, CancellationToken cancellationToken = default);
 }
 
 /// <summary>One statement line. Amount is signed: money in is positive.</summary>

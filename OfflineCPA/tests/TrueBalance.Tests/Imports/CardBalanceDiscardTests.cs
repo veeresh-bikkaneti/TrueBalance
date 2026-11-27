@@ -203,6 +203,8 @@ public sealed class CardBalanceDiscardTests : IDisposable
         public Task<Application.Uploads.StoredUpload> SaveAsync(Stream content, long length, string originalFileName,
             string? contentType, CancellationToken cancellationToken = default) => throw new NotSupportedException();
 
-        public string? FindPath(Guid documentId, string extension) => path;
+        public bool IsUnlocked => true;
+        public Task<Stream?> OpenReadAsync(Guid documentId, string extension, CancellationToken cancellationToken = default)
+            => Task.FromResult<Stream?>(File.OpenRead(path));
     }
 }

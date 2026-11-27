@@ -34,7 +34,9 @@ public class WatcherQueueTests
             using var provider = services.BuildServiceProvider();
             var watcher = new LocalFileProcessorService(NullLogger<LocalFileProcessorService>.Instance, config, provider);
 
+            await provider.GetRequiredService<IVaultControl>().UnlockAsync("fake passphrase for tests");
             await watcher.ProcessFilesAsync(CancellationToken.None);
+            await provider.GetRequiredService<IVaultControl>().UnlockAsync("fake passphrase for tests");
             await watcher.ProcessFilesAsync(CancellationToken.None);
 
             using var scope = provider.CreateScope();
@@ -42,7 +44,7 @@ public class WatcherQueueTests
             Assert.Empty(db.Transactions);
             var batch = Assert.Single(db.ImportBatches);
             Assert.Empty(db.StagedRows);
-            Assert.NotNull(scope.ServiceProvider.GetRequiredService<IDocumentVault>().FindPath(batch.DocumentId, batch.Extension));
+            Assert.NotNull(await scope.ServiceProvider.GetRequiredService<IDocumentVault>().OpenReadAsync(batch.DocumentId, batch.Extension));
         }
         finally
         {

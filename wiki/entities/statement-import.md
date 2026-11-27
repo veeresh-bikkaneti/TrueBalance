@@ -1,18 +1,18 @@
 ---
 checked:
-  OfflineCPA/tests/TrueBalance.Tests/Imports/CardBalanceDiscardTests.cs: 7417606fbc5232ec841d43fb587cda5b5e98a2c5
+  OfflineCPA/tests/TrueBalance.Tests/Imports/CardBalanceDiscardTests.cs: 1a57495e86ce8fe4af358a22abdf44e4f7ff8b92
   OfflineCPA/src/Domain/Entities/ImportBatch.cs: ed8dea2449750155438c18427a33473863c7f83d
   OfflineCPA/src/Application/Ledger/DiscardStagedBatch.cs: 05d1968589c9e9fbbce4a99cc5316a406f19063e
   OfflineCPA/src/Domain/Ledger/RunningBalance.cs: 7a503963374e18376d00fbeebd049f72a72bd08c
-  OfflineCPA/tests/TrueBalance.Tests/Imports/SignLayoutTests.cs: ca0f219d9031d42504ed26f462de2ba165497579
-  OfflineCPA/src/Infrastructure/Services/CsvStatementImporter.cs: f50a111b1a468fffa2641b95d54a90856271e449
-  OfflineCPA/src/Application/Imports/ImportUseCases.cs: 61de92abe8652d347414f0c56a67adb4c567c2eb
+  OfflineCPA/tests/TrueBalance.Tests/Imports/SignLayoutTests.cs: d96e04f415ed8271a750271207945e899142348f
+  OfflineCPA/src/Infrastructure/Services/CsvStatementImporter.cs: 694dde98371cc72074c90d97a415fe5f7d300d80
+  OfflineCPA/src/Application/Imports/ImportUseCases.cs: ebf042aa23c3d06c4bc0876ef6687a4ff6c544f5
   OfflineCPA/src/Application/Ledger/PostStagedRow.cs: dbe439fe628be79db3f66feafa128bced70f0ed7
-  OfflineCPA/src/Application/Interfaces/IStatementImporter.cs: 1257e035bcc803dd116492123dcd5bd7ff30a565
+  OfflineCPA/src/Application/Interfaces/IStatementImporter.cs: 815216298b5b0524f1ab804254586bce3abc1586
   OfflineCPA/src/Backend/Endpoints/ImportEndpoints.cs: 95871dd1b17a55b0f6591570d2e097c6c93d823e
   OfflineCPA/src/Domain/Entities/StagedRow.cs: ac9b99c78eb91a6da2ac50ca72891c2781ac0f51
-  OfflineCPA/tests/TrueBalance.Tests/Imports/ImportFlowTests.cs: f877403b27212b2c5e220134491fdbbf164b7a65
-  OfflineCPA/tests/TrueBalance.Tests/Imports/ImportNoLeakTests.cs: 2ae563b07bca5b4676ef9be31ac73824c010c9ee
+  OfflineCPA/tests/TrueBalance.Tests/Imports/ImportFlowTests.cs: 2f74c659589216c4f7a3d2c8938022e364bee7cb
+  OfflineCPA/tests/TrueBalance.Tests/Imports/ImportNoLeakTests.cs: ca30e071a437dffe0c14cac59d577daddc43ba12
 ---
 # Statement import
 
@@ -22,19 +22,23 @@ Think of it as a waiting room: a statement file is queued, parsed into staged ro
 
 A batch goes Queued, then Staged or Failed; a Failed batch can be tried again, and a discarded one returns to Queued. A row starts Pending or Duplicate and ends Posted or Discarded.
 
-`QueueImport` records a stored document. `ImportStatement` parses it, masks each description, and stages rows without touching the ledger (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L8-L87). A parse failure marks the batch Failed with a reason that holds no file value (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L43-L64). A bank's CSV column mapping is saved by `SaveCsvProfile` (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L131-L199).
+`QueueImport` records a stored document. `ImportStatement` parses it, masks each description, and stages rows without touching the ledger (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L9-L89). A parse failure marks the batch Failed with a reason that holds no file value (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L45-L63). A bank's CSV column mapping is saved by `SaveCsvProfile` (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L133-L200).
 
 All three importers share `IStatementImporter`; PDF results are marked experimental (repo: OfflineCPA/src/Application/Interfaces/IStatementImporter.cs#L10-L22). Row rules live on the entity (repo: OfflineCPA/src/Domain/Entities/StagedRow.cs#L1-L81).
 
+## Vault
+
+Import and preview refuse with "Unlock the books first." while the vault is locked, and the batch stays Queued (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L35). Importers read a decrypted stream held in memory (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L49-L52). See [[uploads]].
+
 ## Sign layouts
 
-A CSV file never decides its own signs. The bank profile holds one of four layouts and a confirmed flag, and `ImportStatement` refuses an unconfirmed CSV batch before parsing it; a layout sent with the request is saved as confirmed (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L97-L121). `SaveCsvProfile` validates and masks the columns and takes any confirmation back (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L131-L199). `PreviewCsvLayout` proposes a layout and writes nothing (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L207-L287).
+A CSV file never decides its own signs. The bank profile holds one of four layouts and a confirmed flag, and `ImportStatement` refuses an unconfirmed CSV batch before parsing it; a layout sent with the request is saved as confirmed (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L99-L123). `SaveCsvProfile` validates and masks the columns and takes any confirmation back (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L133-L200). `PreviewCsvLayout` proposes a layout and writes nothing (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L209-L288).
 
 The running balance is checked in both file orders; any row without a balance, or a file that fits both signs, means not available (repo: OfflineCPA/src/Domain/Ledger/RunningBalance.cs#L5-L32). A failed check makes every row of the batch need review before posting (repo: OfflineCPA/src/Domain/Entities/StagedRow.cs#L60-L72).
 
 ## Balance meaning
 
-A balance column counts money available (previous plus amount) or an amount owed (previous minus amount). The meaning is confirmed with the sign layout and saved on the profile, and a later confirmation that omits it keeps the saved one; `FromAccountType` reads a liability account, such as a credit card, as owed (repo: OfflineCPA/src/Domain/Ledger/RunningBalance.cs#L5-L32). When the check fails but the other meaning would pass, the batch reason says so. That is the same arithmetic as reversed signs, so the reason names both (repo: OfflineCPA/src/Domain/Entities/ImportBatch.cs#L38-L52). The preview takes an optional `bankAccountId`; without one it reads the balance as available and says so (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L207-L287).
+A balance column counts money available (previous plus amount) or an amount owed (previous minus amount). The meaning is confirmed with the sign layout and saved on the profile, and a later confirmation that omits it keeps the saved one; `FromAccountType` reads a liability account, such as a credit card, as owed (repo: OfflineCPA/src/Domain/Ledger/RunningBalance.cs#L5-L32). When the check fails but the other meaning would pass, the batch reason says so. That is the same arithmetic as reversed signs, so the reason names both (repo: OfflineCPA/src/Domain/Entities/ImportBatch.cs#L38-L52). The preview takes an optional `bankAccountId`; without one it reads the balance as available and says so (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L209-L288).
 
 ## Discard and import again
 
@@ -42,7 +46,7 @@ A balance column counts money available (previous plus amount) or an amount owed
 
 ## Duplicates
 
-A row is flagged when an earlier batch on the same account has the same date, amount, and match key, built from the masked description. Identical rows inside one file are left alone (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L69-L74).
+A row is flagged when an earlier batch on the same account has the same date, amount, and match key, built from the masked description. Identical rows inside one file are left alone (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L71-L76).
 
 ## Posting
 

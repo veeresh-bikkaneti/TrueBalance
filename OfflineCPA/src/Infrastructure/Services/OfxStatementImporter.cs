@@ -14,9 +14,9 @@ public sealed class OfxStatementImporter : IStatementImporter
         => extension.Equals(".ofx", StringComparison.OrdinalIgnoreCase)
            || extension.Equals(".qfx", StringComparison.OrdinalIgnoreCase);
 
-    public async Task<ParsedStatement> ParseAsync(string filePath, CsvColumnMap? map, CancellationToken cancellationToken = default)
+    public async Task<ParsedStatement> ParseAsync(Stream content, CsvColumnMap? map, CancellationToken cancellationToken = default)
     {
-        var text = await File.ReadAllTextAsync(filePath, cancellationToken);
+        var text = await StatementValues.TextAsync(content, cancellationToken);
         // One file is imported into one bank account, so mixed accounts are refused.
         if (Regex.Count(text, "<(CC)?STMTRS>", RegexOptions.IgnoreCase) > 1)
             throw new StatementParseException("The file holds more than one account; export one account at a time.");

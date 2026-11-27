@@ -19,14 +19,14 @@ public class PdfFileParser : IStatementImporter
         return extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase);
     }
 
-    public async Task<ParsedStatement> ParseAsync(string filePath, CsvColumnMap? map, CancellationToken cancellationToken = default)
-        => ParseText(await ExtractTextAsync(filePath, cancellationToken));
+    public async Task<ParsedStatement> ParseAsync(Stream content, CsvColumnMap? map, CancellationToken cancellationToken = default)
+        => ParseText(await ExtractTextAsync(content, cancellationToken));
 
-    public Task<string> ExtractTextAsync(string filePath, CancellationToken cancellationToken = default)
+    public Task<string> ExtractTextAsync(Stream content, CancellationToken cancellationToken = default)
     {
         return Task.Run(() =>
         {
-            using var document = PdfDocument.Open(filePath);
+            using var document = PdfDocument.Open(content);
             var text = new System.Text.StringBuilder();
 
             foreach (var page in document.GetPages())

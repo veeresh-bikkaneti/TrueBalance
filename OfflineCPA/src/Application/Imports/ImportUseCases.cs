@@ -1,4 +1,5 @@
 using Application.Interfaces;
+using Application.Uploads;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.Ledger;
@@ -31,6 +32,7 @@ public sealed class ImportStatement(
     /// <returns>The number of staged rows.</returns>
     public async Task<int> HandleAsync(ImportStatementCommand command, CancellationToken ct = default)
     {
+        vault.EnsureUnlocked();
         var batch = await store.FindBatchAsync(command.BatchId, ct)
             ?? throw new LedgerRuleException("The import batch does not exist.");
         batch.EnsureImportable();
@@ -44,16 +46,16 @@ public sealed class ImportStatement(
         try
         {
             var importer = importers.FirstOrDefault(i => i.SupportsExtension(batch.Extension));
-            var path = vault.FindPath(batch.DocumentId, batch.Extension);
-            if (importer is null || path is null)
+            await using var content = await vault.OpenReadAsync(batch.DocumentId, batch.Extension, ct);
+            if (importer is null || content is null)
                 return await FailAsync(batch, "The stored file is missing or its type is not supported.", ct);
-            parsed = await importer.ParseAsync(path, map, ct);
+            parsed = await importer.ParseAsync(content, map, ct);
         }
         catch (StatementParseException ex)
         {
             return await FailAsync(batch, ex.Message, ct);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (ex is not OperationCanceledException and not VaultLockedException)
         {
             // Library messages may quote the file, so none of them is kept.
             return await FailAsync(batch, "The file could not be read.", ct);
@@ -211,6 +213,7 @@ public sealed class PreviewCsvLayout(
     public async Task<CsvLayoutPreview> HandleAsync(Guid batchId, string? bankName, Guid? bankAccountId = null,
         CancellationToken ct = default)
     {
+        vault.EnsureUnlocked();
         var batch = await store.FindBatchAsync(batchId, ct)
             ?? throw new LedgerRuleException("The import batch does not exist.");
         if (batch.Extension != ".csv")
@@ -268,17 +271,17 @@ public sealed class PreviewCsvLayout(
         try
         {
             var importer = importers.FirstOrDefault(i => i.SupportsExtension(batch.Extension));
-            var path = vault.FindPath(batch.DocumentId, batch.Extension);
-            if (importer is null || path is null)
+            await using var content = await vault.OpenReadAsync(batch.DocumentId, batch.Extension, ct);
+            if (importer is null || content is null)
                 throw new LedgerRuleException("The stored file is missing or its type is not supported.");
-            var parsed = await importer.ParseAsync(path, map, ct);
+            var parsed = await importer.ParseAsync(content, map, ct);
             return parsed.Rows.Count > 0 ? parsed : throw new LedgerRuleException("No statement rows were found.");
         }
         catch (StatementParseException ex)
         {
             throw new LedgerRuleException(ex.Message);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException and not LedgerRuleException)
+        catch (Exception ex) when (ex is not OperationCanceledException && ex is not LedgerRuleException)
         {
             // Library messages may quote the file, so none of them is kept.
             throw new LedgerRuleException("The file could not be read.");

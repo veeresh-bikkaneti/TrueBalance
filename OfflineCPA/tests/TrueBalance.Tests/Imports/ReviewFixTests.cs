@@ -37,7 +37,9 @@ public sealed class ReviewFixTests : IDisposable
             new Infrastructure.Options.UploadOptions { Directory = Path.Combine(_root, "vault") }));
         services.AddInfrastructureAdapterModules();
         services.AddScoped<Application.Imports.QueueImport>();
-        return services.BuildServiceProvider();
+        var provider = services.BuildServiceProvider();
+        provider.GetRequiredService<IVaultControl>().UnlockAsync("fake passphrase for tests").GetAwaiter().GetResult();
+        return provider;
     }
 
     private LocalFileProcessorService Watcher(IServiceProvider provider) => new(
@@ -65,7 +67,7 @@ public sealed class ReviewFixTests : IDisposable
     }
 
     [Fact]
-    public async Task A_second_file_with_the_same_name_keeps_the_first_one()
+    public async Task A_second_file_with_the_same_name_is_stored_beside_the_first()
     {
         using var provider = Services();
         var watcher = Watcher(provider);
@@ -74,7 +76,15 @@ public sealed class ReviewFixTests : IDisposable
         Drop("second");
         await watcher.ProcessFilesAsync(CancellationToken.None);
 
-        var kept = Directory.GetFiles(Path.Combine(_input, "processed")).Select(File.ReadAllText).Order();
+        using var scope = provider.CreateScope();
+        var vault = provider.GetRequiredService<IDocumentVault>();
+        var kept = new List<string>();
+        foreach (var batch in scope.ServiceProvider.GetRequiredService<OfflineCPADbContext>().ImportBatches.ToList())
+        {
+            await using var content = await vault.OpenReadAsync(batch.DocumentId, batch.Extension);
+            kept.Add(await new StreamReader(content!).ReadToEndAsync());
+        }
+        kept.Sort(StringComparer.Ordinal);
         Assert.Equal(new[] { "first", "second" }, kept);
     }
 
@@ -96,7 +106,7 @@ public sealed class ReviewFixTests : IDisposable
     public async Task Negative_debits_follow_the_file_convention(string body, double[] expected)
     {
         var path = Write("d.csv", "date,description,debit,credit\n" + body);
-        var parsed = await new CsvStatementImporter().ParseAsync(path, null);
+        var parsed = await new CsvStatementImporter().ParseAsync(new MemoryStream(File.ReadAllBytes(path)), null);
         Assert.Equal(expected.Select(v => (decimal)v), parsed.Rows.Select(r => r.Amount));
     }
 
@@ -105,6 +115,6 @@ public sealed class ReviewFixTests : IDisposable
     {
         const string One = "<STMTRS><STMTTRN><DTPOSTED>20260615<TRNAMT>1.00</STMTTRN></STMTRS>";
         var path = Write("m.ofx", One + One.Replace("STMTRS", "CCSTMTRS"));
-        await Assert.ThrowsAsync<StatementParseException>(() => new OfxStatementImporter().ParseAsync(path, null));
+        await Assert.ThrowsAsync<StatementParseException>(() => new OfxStatementImporter().ParseAsync(new MemoryStream(File.ReadAllBytes(path)), null));
     }
 }

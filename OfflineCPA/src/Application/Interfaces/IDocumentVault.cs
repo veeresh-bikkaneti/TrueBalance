@@ -15,6 +15,15 @@ public interface IDocumentVault
         string? contentType,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Local path of a stored document, or null when it is not there.</summary>
-    string? FindPath(Guid documentId, string extension);
+    /// <summary>False until the owner's passphrase opens the books.</summary>
+    bool IsUnlocked { get; }
+
+    /// <exception cref="VaultLockedException">The vault is locked.</exception>
+    void EnsureUnlocked()
+    {
+        if (!IsUnlocked) throw new VaultLockedException();
+    }
+
+    /// <summary>Decrypted content held in memory, or null when the document is not there.</summary>
+    Task<Stream?> OpenReadAsync(Guid documentId, string extension, CancellationToken cancellationToken = default);
 }

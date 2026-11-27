@@ -78,6 +78,13 @@ public class LocalFileProcessorService : BackgroundService
             try
             {
                 var vault = scope.ServiceProvider.GetRequiredService<IDocumentVault>();
+                if (!vault.IsUnlocked)
+                {
+                    // Left where it is until the owner unlocks.
+                    _logger.LogWarning("Unlock the books first. File {FileId} is waiting.", fileId);
+                    continue;
+                }
+
                 var queue = scope.ServiceProvider.GetRequiredService<QueueImport>();
 
                 // Claimed on disk before queueing: subfolders are never scanned, so a
@@ -101,7 +108,8 @@ public class LocalFileProcessorService : BackgroundService
                 }
 
                 _logger.LogInformation("Queued file {FileId} for import", fileId);
-                Move(claimed, "processed", Path.GetFileName(file));
+                // The vault holds the only copy now, so the plain staging file goes.
+                File.Delete(claimed);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -112,11 +120,11 @@ public class LocalFileProcessorService : BackgroundService
     }
 
     /// <summary>Moves a file into a subfolder of the input folder and never overwrites one.</summary>
-    private string Move(string file, string folder, string? name = null)
+    private string Move(string file, string folder)
     {
         var directory = Path.Combine(_inputDirectory, folder);
         Directory.CreateDirectory(directory);
-        name ??= Path.GetFileName(file);
+        var name = Path.GetFileName(file);
         var destination = Path.Combine(directory, name);
         if (File.Exists(destination))
             destination = Path.Combine(directory,
