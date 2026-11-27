@@ -150,6 +150,8 @@ public sealed class SignLayoutTests : IDisposable
     [InlineData("2026-06-16,b,-5,105\n2026-06-15,a,10,110\n", BalanceCheck.Passed)]
     [InlineData("2026-06-15,a,10,110\n2026-06-16,b,-5,999\n", BalanceCheck.Failed)]
     [InlineData("2026-06-15,a,10,\n2026-06-16,b,-5,105\n", BalanceCheck.NotAvailable)]
+    // Two equal fees fit both signs (one per file order), so the balance proves neither.
+    [InlineData("2026-06-15,a,10,90\n2026-06-16,b,10,80\n", BalanceCheck.NotAvailable)]
     public async Task Balance_check_is_stored_on_the_batch(string body, BalanceCheck expected)
     {
         using var db = NewDb();

@@ -1,7 +1,7 @@
 ---
 checked:
-  OfflineCPA/src/Domain/Ledger/RunningBalance.cs: 141afc5101731ab7b252d8ad24fb8d752ca46dc2
-  OfflineCPA/tests/TrueBalance.Tests/Imports/SignLayoutTests.cs: 6fc0b498ce37a79c47cd882d8a6dc76f55485242
+  OfflineCPA/src/Domain/Ledger/RunningBalance.cs: 4d6ec2151dcf301ec52c67c635707527c063f9e8
+  OfflineCPA/tests/TrueBalance.Tests/Imports/SignLayoutTests.cs: 45c8318eed2fa2b6fa0d9577dc6f87e6b3c7e034
   OfflineCPA/src/Infrastructure/Services/CsvStatementImporter.cs: f50a111b1a468fffa2641b95d54a90856271e449
   OfflineCPA/src/Application/Imports/ImportUseCases.cs: 4afc02ee6c7742aac272ea13f94d550df852a2d8
   OfflineCPA/src/Application/Ledger/PostStagedRow.cs: dbe439fe628be79db3f66feafa128bced70f0ed7
@@ -27,7 +27,7 @@ All three importers share `IStatementImporter`; PDF results are marked experimen
 
 A CSV file never decides its own signs. The bank profile holds one of four layouts and a confirmed flag, and `ImportStatement` refuses an unconfirmed CSV batch before parsing it; a layout sent with the request is saved as confirmed (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L95-L118). `SaveCsvProfile` validates and masks the columns and takes any confirmation back (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L127-L193). `PreviewCsvLayout` proposes a layout and writes nothing (repo: OfflineCPA/src/Application/Imports/ImportUseCases.cs#L199-L266).
 
-The running balance is checked in both file orders; any row without a balance means not available (repo: OfflineCPA/src/Domain/Ledger/RunningBalance.cs#L5-L16). A failed check makes every row of the batch need review before posting (repo: OfflineCPA/src/Domain/Entities/StagedRow.cs#L55-L68). The check assumes money in raises the balance, so a credit card statement that lists the amount owed will fail it.
+The running balance is checked in both file orders; any row without a balance, or a file that fits both signs, means not available (repo: OfflineCPA/src/Domain/Ledger/RunningBalance.cs#L5-L18). A failed check makes every row of the batch need review before posting (repo: OfflineCPA/src/Domain/Entities/StagedRow.cs#L55-L68). The check assumes money in raises the balance, so a credit card statement that lists the amount owed will fail it.
 
 ## Duplicates
 
