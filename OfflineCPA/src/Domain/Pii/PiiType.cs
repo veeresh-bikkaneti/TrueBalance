@@ -2,7 +2,7 @@ namespace Domain.Pii;
 
 /// <summary>
 /// The kinds of personally identifying values the masking core recognizes.
-/// Prompt 06 extends this list (cards, dates of birth, addresses).
+/// Cards, dates of birth and street addresses were added in prompt 06.
 /// </summary>
 public enum PiiType
 {
