@@ -6,11 +6,12 @@ Everyone forgets a passphrase sooner or later. The recovery code is the spare ke
 
 Your documents are locked with a random data key. Your passphrase locks that key. A recovery code is a second lock on the same key, so either one can open your books.
 
-- Make a code while the books are unlocked: `POST /api/vault/recovery-code` with the body `{"confirm": true}`.
+- Make a code while the books are unlocked: `POST /api/vault/recovery-code` with the body `{"passphrase": "..."}`. It asks for your passphrase, so someone passing your unlocked computer can't make one.
 - The code looks like eight groups of four characters. The app shows it once. It does not save it, so it cannot show it again.
 - Forgot the passphrase? Send the code and a new passphrase to `POST /api/vault/recover`. The books unlock and your files stay as they are. Capital letters, dashes and spaces don't matter.
 - Making a new code switches the old one off.
-- A code stays valid after you use it, and after you change your passphrase. If someone else may have seen it, make a new one.
+- A code works once. After you use it, make a new one right away.
+- Changing your passphrase keeps your code. If someone else may have seen it, make a new one.
 
 ## Where to keep it
 

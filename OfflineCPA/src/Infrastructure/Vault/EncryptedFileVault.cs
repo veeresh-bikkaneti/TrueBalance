@@ -91,14 +91,14 @@ public sealed class EncryptedFileVault : IDocumentVault, IVaultControl
         }
     }
 
-    public async Task<string> CreateRecoveryCodeAsync(CancellationToken cancellationToken = default)
+    public async Task<string> CreateRecoveryCodeAsync(string passphrase, CancellationToken cancellationToken = default)
     {
         await _unlocking.WaitAsync(cancellationToken);
         try
         {
-            var dataKey = Key();
+            Key(); // Unlocked only, and the passphrase is asked for again.
             var path = Path.Combine(_root, SettingsFile);
-            var settings = File.Exists(path) ? await ReadSettingsAsync(path, cancellationToken) : null;
+            var (settings, dataKey) = File.Exists(path) ? await OpenAsync(path, passphrase, cancellationToken) : default;
             if (settings is not { Version: 2 })
             {
                 throw new VaultException(Damaged);
@@ -142,7 +142,7 @@ public sealed class EncryptedFileVault : IDocumentVault, IVaultControl
             // People type the code by hand, so case, dashes and spaces do not matter.
             var code = new string((recoveryCode ?? string.Empty).Where(char.IsAsciiLetterOrDigit).ToArray()).ToUpperInvariant();
             var dataKey = Unwrap(settings.Recovery, code, settings.Iterations, RecoveryWrap);
-            await WriteSettingsAsync(path, Rewrap(settings, dataKey, newPassphrase), cancellationToken);
+            await WriteSettingsAsync(path, Rewrap(settings, dataKey, newPassphrase) with { Recovery = null }, cancellationToken);
             return await OpenWithAsync(dataKey, cancellationToken);
         }
         finally

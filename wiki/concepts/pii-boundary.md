@@ -2,7 +2,7 @@
 checked:
   docs/adr/0005-pii-minimize-mask-encrypt-ai-boundary.md: b071a1a1f40b6d0aa214dd317a314873c9213604
   docs/adr/0010-pii-masking-before-import.md: 99d7139b39965aef01e0ff0e94963e7b5e5db733
-  OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs: 25555efe955066ce7e89bb2ae445793cc60b8677
+  OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs: 9a4bc32f73a924aadef0424b4a421cf2f514689d
   OfflineCPA/src/Backend/Services/LocalFileProcessorService.cs: 386a38d5ea989a34871a17c5bc3c26a2d4626304
   OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs: 8eebefad33f134ade84e8f918dda3c647dbe3be3
   OfflineCPA/src/Backend/Extensions/SecureErrorHandling.cs: e57f61396acc5f925a3b7e45d170ed977a741596

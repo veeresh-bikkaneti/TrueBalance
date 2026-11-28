@@ -7,7 +7,7 @@ checked:
   OfflineCPA/src/Infrastructure/Networking/LocalNetworkGate.cs: 9b776c957e947fa9159fe6cc21371dfa74ae1058
   OfflineCPA/src/Infrastructure/AdapterModuleRegistration.cs: 98f6f27b02c94a2298b2860b84e40a66d8f1b56c
   OfflineCPA/src/Application/Interfaces/IStatementImporter.cs: 815216298b5b0524f1ab804254586bce3abc1586
-  OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs: 25555efe955066ce7e89bb2ae445793cc60b8677
+  OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs: 9a4bc32f73a924aadef0424b4a421cf2f514689d
   OfflineCPA/src/Infrastructure/Services/JsonChartOfAccountsSeeder.cs: dfc92b704f4cd8693ce88715c6d40fdf2884d201
   OfflineCPA/src/Infrastructure/Data/OfflineCPADbContext.cs: 8382eb3de930dd971227f05a0cabefa92b192d8a
   OfflineCPA/src/Infrastructure/Migrations/20261124120000_InitialCreate.cs: eb9d9a85324ec58feec91a70cb926d375c48342b

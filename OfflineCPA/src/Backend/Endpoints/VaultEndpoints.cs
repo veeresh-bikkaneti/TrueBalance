@@ -5,7 +5,7 @@ namespace Backend.Endpoints;
 
 public sealed record UnlockRequest(string Passphrase);
 public sealed record ChangePassphraseRequest(string CurrentPassphrase, string NewPassphrase);
-public sealed record RecoveryCodeRequest(bool Confirm);
+public sealed record RecoveryCodeRequest(string Passphrase);
 public sealed record RecoverRequest(string RecoveryCode, string NewPassphrase);
 public sealed record PurgeRequest(bool Confirm);
 
@@ -43,15 +43,10 @@ public static class VaultEndpoints
         // The only response that ever holds the code. The JSON body keeps other web pages from replacing it.
         app.MapPost("/api/vault/recovery-code", async (RecoveryCodeRequest request, HttpResponse response, IVaultControl vault, CancellationToken ct) =>
         {
-            if (!request.Confirm)
-            {
-                return Results.BadRequest(new { error = "Confirm to make a new code. The old code stops working." });
-            }
-
             try
             {
                 response.Headers.CacheControl = "no-store";
-                return Results.Ok(new { recoveryCode = await vault.CreateRecoveryCodeAsync(ct) });
+                return Results.Ok(new { recoveryCode = await vault.CreateRecoveryCodeAsync(request.Passphrase, ct) });
             }
             catch (VaultException ex)
             {
@@ -64,7 +59,7 @@ public static class VaultEndpoints
             try
             {
                 var encrypted = await vault.RecoverAsync(request.RecoveryCode, request.NewPassphrase, ct);
-                return Results.Ok(new { unlocked = true, plainFilesEncrypted = encrypted });
+                return Results.Ok(new { unlocked = true, plainFilesEncrypted = encrypted, makeNewCode = true });
             }
             catch (VaultException ex)
             {
