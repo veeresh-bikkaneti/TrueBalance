@@ -81,7 +81,7 @@ public class NetworkSentinelTests
         foreach (var account in LedgerTestData.FiveAccounts())
             store.AddAccount(account);
 
-        var create = new CreateDraftEntry(store, clock);
+        var create = new CreateDraftEntry(store, clock, new TrueBalance.Tests.Pii.MaskingPiiMasker());
         var post = new PostEntry(store, clock);
         var balances = new GetAccountBalances(store);
         var gateLog = new LedgerNetworkAttemptLog(store);

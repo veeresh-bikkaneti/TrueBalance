@@ -16,10 +16,8 @@ public static class LedgerEndpoints
         {
             try
             {
-                // Free-text memos are masked before they reach the ledger.
-                var lines = request.Lines.Select(l => new DraftPostingLine(l.AccountId, l.Amount, l.Memo is null ? null : masker.Mask(l.Memo))).ToList();
-                var memo = request.Memo is null ? null : masker.Mask(request.Memo);
-                var id = await useCase.HandleAsync(new CreateDraftEntryCommand(request.Date, memo, request.PeriodId, lines, LocalUserId), ct);
+                var lines = request.Lines.Select(l => new DraftPostingLine(l.AccountId, l.Amount, l.Memo)).ToList();
+                var id = await useCase.HandleAsync(new CreateDraftEntryCommand(request.Date, request.Memo ?? string.Empty, request.PeriodId, lines, LocalUserId), ct);
                 return Results.Ok(new { id });
             }
             catch (LedgerRuleException ex) { return Results.BadRequest(new { error = masker.Mask(ex.Message) }); }
@@ -43,7 +41,7 @@ public static class LedgerEndpoints
         {
             try
             {
-                var reversalId = await useCase.HandleAsync(new ReverseEntryCommand(id, request.ReversalDate, masker.Mask(request.Memo ?? string.Empty), LocalUserId), ct);
+                var reversalId = await useCase.HandleAsync(new ReverseEntryCommand(id, request.ReversalDate, request.Memo ?? string.Empty, LocalUserId), ct);
                 return Results.Ok(new { id = reversalId });
             }
             catch (LedgerRuleException ex) { return Results.BadRequest(new { error = masker.Mask(ex.Message) }); }

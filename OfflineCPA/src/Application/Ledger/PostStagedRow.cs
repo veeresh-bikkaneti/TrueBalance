@@ -1,6 +1,7 @@
 using Application.Interfaces;
 using Domain.Entities;
 using Domain.Ledger;
+using Domain.Pii;
 
 namespace Application.Ledger;
 
@@ -28,7 +29,7 @@ public sealed class PostStagedRow(IImportStore imports, ILedgerStore ledger, ICl
         // Both ledger use cases run against one buffered store, so the draft, the
         // post and the row are saved together or not at all.
         var once = new SingleSaveLedger(ledger);
-        var entryId = await new CreateDraftEntry(once, clock).HandleAsync(new CreateDraftEntryCommand(row.Date, memo, period.Id,
+        var entryId = await new CreateDraftEntry(once, clock, new AlreadyMasked()).HandleAsync(new CreateDraftEntryCommand(row.Date, memo, period.Id,
             new[]
             {
                 new DraftPostingLine(row.BankAccountId, row.Amount, null),
@@ -40,6 +41,18 @@ public sealed class PostStagedRow(IImportStore imports, ILedgerStore ledger, ICl
         await ledger.SaveChangesAsync(ct);
         return entryId;
     }
+}
+
+/// <summary>
+/// A staged description went through the masker when it was imported. A second pass
+/// can read digits inside a token's fingerprint as an account number, so this one
+/// hands the text through unchanged.
+/// </summary>
+internal sealed class AlreadyMasked : IPiiMasker
+{
+    public string Mask(string text) => text;
+
+    public PiiMaskingResult MaskDetailed(string text) => new(text, []);
 }
 
 /// <summary>Holds back saves and finds the entry that is not saved yet.</summary>

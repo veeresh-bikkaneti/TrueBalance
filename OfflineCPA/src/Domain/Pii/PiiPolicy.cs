@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Domain.Pii;
 
@@ -181,12 +182,18 @@ public sealed class PiiPolicy
     /// "123456789" produce the same fingerprint and still match.</summary>
     public string Fingerprint(string rawValue) => Hmac(DigitsOf(ToAsciiDigits(rawValue)));
 
-    // An email is matched on its lowercased text: its digits alone would give
-    // most addresses the same fingerprint.
-    private string FingerprintOf(PiiMatch match) =>
-        match.Type == PiiType.Email
-            ? Hmac(match.RawValue.ToLowerInvariant())
-            : Fingerprint(match.RawValue);
+    // Emails and street addresses are matched on their lowercased text: digits
+    // alone would give unrelated values the same fingerprint.
+    private string FingerprintOf(PiiMatch match) => match.Type switch
+    {
+        PiiType.Email => Hmac(match.RawValue.ToLowerInvariant()),
+        PiiType.StreetAddress => Hmac(NormalizeAddress(match.RawValue)),
+        _ => Fingerprint(match.RawValue),
+    };
+
+    // Case, spacing and punctuation vary between statements for one address.
+    private static string NormalizeAddress(string value) =>
+        Regex.Replace(ToAsciiDigits(value).ToLowerInvariant(), @"[\s\p{P}]+", " ").Trim();
 
     private string Hmac(string value)
     {
