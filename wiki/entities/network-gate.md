@@ -18,7 +18,7 @@ checked:
   OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs: c241452235c4fd1d5dbe64d134c98008fc5cf610
   OfflineCPA/tests/TrueBalance.Tests/Ledger/TypeNameHelper.cs: f04a70cc2a904c6be3bc1426315b5f50a10bf8d4
   OfflineCPA/tests/TrueBalance.Tests/Ledger/TypeNameHelperTests.cs: 6670dbca3b10d74c40588d8ce761a84a9e0642ad
-  OfflineCPA/tests/TrueBalance.Tests/Networking/NetworkSentinelTests.cs: 44ae0f1d9141c5e0252c3e7657f9fe3af688cf42
+  OfflineCPA/tests/TrueBalance.Tests/Networking/NetworkSentinelTests.cs: d662a71e331fb6b9ad2ddb065946e30671fd2cd7
 ---
 # Network gate
 
