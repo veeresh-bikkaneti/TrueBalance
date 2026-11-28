@@ -2,16 +2,16 @@
 checked:
   OfflineCPA/frontend/src/main.tsx: 3d7150da80e43e3650342aa4758fa8b74e95d6d6
   OfflineCPA/frontend/src/App.tsx: 0586494bd4d8b86970a1f26bcdaa1420af6bdafa
+  AGENTS.md: d4872b7b8ff1b9704748aee4d5756e10b01624ae
+  OfflineCPA/frontend/src/shared/route.ts: 6ea11953515bb220b71f990017860e4496ab4c4e
+  OfflineCPA/frontend/src/features/home/route.tsx: cb99d97eb74140f42391fea28fb5c6d69c274529
   OfflineCPA/frontend/src/shell/Shell.tsx: 1670dc645d0062a0bb3453e285e362fc9cfa2e42
   OfflineCPA/frontend/src/shell/useHashPath.ts: 10cd8757d2da966c2282cc5f5398ee38a244e586
-  OfflineCPA/frontend/src/shared/route.ts: 6ea11953515bb220b71f990017860e4496ab4c4e
   OfflineCPA/frontend/src/shared/api.ts: 8b9911d2b890a3811ff67d722890c963f44e7f5c
-  OfflineCPA/frontend/src/features/home/route.tsx: cb99d97eb74140f42391fea28fb5c6d69c274529
-  OfflineCPA/frontend/.eslintrc.cjs: 7281998d21914d95333a5a66791b2665c5069a1d
-  OfflineCPA/frontend/package.json: e9913ccdfda1bbf0be37a488b8be9b3d29d5c813
   OfflineCPA/frontend/vite.config.ts: c080a07efb89148943871f19f5e05bf14ea32cdb
+  OfflineCPA/frontend/.eslintrc.cjs: ce2ca463a55b5470104563a55db8ef1b3e1fa13e
+  OfflineCPA/frontend/package.json: 1837c712445ce0b8458f4f0575c47f1716126014
   docs/adr/0003-clean-architecture-ports-adapters.md: c9c7256eea1b992b1d2443ea30a1356ec0de5388
-  AGENTS.md: d4872b7b8ff1b9704748aee4d5756e10b01624ae
 ---
 # Frontend shell
 
@@ -25,7 +25,7 @@ Make a folder. That is the whole trick, and no shared file changes.
 2. Add `src/features/<name>/` with your component.
 3. Add `src/features/<name>/route.tsx` that exports `route`: `path`, `label`, `order` and `component` (repo: OfflineCPA/frontend/src/shared/route.ts#L4-L13). Copy Home (repo: OfflineCPA/frontend/src/features/home/route.tsx#L1-L4).
 
-`App` finds the file with `import.meta.glob('./features/*/route.tsx', { eager: true })` (repo: OfflineCPA/frontend/src/App.tsx#L4-L6). Vite replaces that call at build time, and the pattern has to be a literal string ([Vite 5 glob import docs](https://github.com/vitejs/vite/blob/v5.4.21/docs/guide/features.md#glob-import-caveats)) [High 1/1]. Pick an unused `path`, and leave gaps in `order` so the next screen fits. Home is `/` at order 0.
+`App` finds the file with `import.meta.glob('./features/*/route.tsx', { eager: true })` (repo: OfflineCPA/frontend/src/App.tsx#L4-L6). Vite replaces that call at build time, and the pattern has to be a literal string ([Vite 6 glob import docs](https://github.com/vitejs/vite/blob/v6.4.5/docs/guide/features.md#glob-import-caveats)) [High 1/1]. Pick an unused `path`, and leave gaps in `order` so the next screen fits. Home is `/` at order 0.
 
 ## Shell
 
@@ -37,7 +37,7 @@ Use `api()` from `shared/api.ts`. It is the one place that calls `fetch`, adds `
 
 ## Import boundaries
 
-ESLint's `no-restricted-imports` keeps features apart: inside a feature, import your own files with `./` and shared code with `../../shared/...`. Keep shared imports in files at the top of your feature folder, because a deeper `../../../shared` path is rejected too. `shared/` may not import `shell/` or `features/` (repo: OfflineCPA/frontend/.eslintrc.cjs#L19-L43). The rule reads `import` and `export ... from` lines, so don't sneak around it with `import()`.
+ESLint's `no-restricted-imports` keeps features apart: inside a feature, import your own files with `./` and shared code with `../../shared/...`. Keep shared imports in files at the top of your feature folder, because a deeper `../../../shared` path is rejected too. `shared/` may not import `shell/` or `features/` (repo: OfflineCPA/frontend/.eslintrc.cjs#L30-L55). The rule reads `import` and `export ... from` lines, so don't sneak around it with `import()`. ESLint stays on version 8, and one extra override keeps our rule set steady on top of the `typescript-eslint` 8 preset (repo: OfflineCPA/frontend/.eslintrc.cjs#L18-L29).
 
 ## Tests
 

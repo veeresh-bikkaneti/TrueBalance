@@ -15,8 +15,19 @@ module.exports = {
       { allowConstantExport: true },
     ],
   },
-  // Import boundaries, so screens can be built side by side without tangling.
   overrides: [
+    // typescript-eslint 8 reshuffled its recommended preset. This keeps our rule set
+    // where it was. It sits in an override because the preset uses overrides too.
+    {
+      files: ['**/*.{ts,tsx}'],
+      rules: {
+        'no-class-assign': 'error',
+        'no-with': 'error',
+        '@typescript-eslint/no-unused-expressions': 'off',
+        '@typescript-eslint/prefer-namespace-keyword': 'off',
+      },
+    },
+    // Import boundaries, so screens can be built side by side without tangling.
     {
       files: ['src/features/**/*.{ts,tsx}'],
       rules: {
