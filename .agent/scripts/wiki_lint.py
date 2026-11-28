@@ -7,7 +7,8 @@ end, missing checked hashes, stale blob hashes, and forbidden paths.
 
     python3 .agent/scripts/wiki_lint.py
     python3 .agent/scripts/wiki_lint.py <fixture-root>
-    python3 .agent/scripts/wiki_lint.py --refresh <page>
+    python3 .agent/scripts/wiki_lint.py --refresh          # stale hashes only, all pages
+    python3 .agent/scripts/wiki_lint.py --refresh <page>   # rebuild one page's checked: block
 """
 import re
 import subprocess
@@ -259,14 +260,49 @@ def refresh_page(page_arg: str) -> int:
     return 0
 
 
+def refresh_stale() -> int:
+    """Rewrites stale checked: hashes and nothing else: no anchors, no prose."""
+    if not WIKI_DIR.exists():
+        print("FAIL: wiki/ directory not found.")
+        return 1
+    changed = 0
+    for page in sorted(WIKI_DIR.rglob("*.md")):
+        # Bytes in and out, so the page keeps its line endings.
+        text = page.read_bytes().decode("utf-8")
+        front = re.match(r"---\r?\n.*?\r?\n---", text, re.DOTALL)
+        if front is None:
+            continue
+        block = front.group(0)
+        for path, recorded in parse_checked(text.replace("\r\n", "\n")).items():
+            target = ROOT / path
+            if forbidden_reason(path) is not None or not target.is_file():
+                continue  # plain lint reports these; there is nothing safe to write
+            current = blob_sha(target)
+            if recorded == current:
+                continue
+            line = rf"(?m)^([ \t]+{re.escape(path)}:[ \t]*){re.escape(recorded)}(?=[ \t]*\r?$)"
+            block, count = re.subn(line, rf"\g<1>{current}", block)
+            if count:
+                changed += 1
+                print(f"refreshed {page.relative_to(ROOT).as_posix()}: {path} {recorded} -> {current}")
+        if block != front.group(0):
+            page.write_bytes((block + text[front.end():]).encode("utf-8"))
+    print(f"{changed} hash(es) refreshed" if changed else "nothing to refresh")
+    return 0
+
+
 def main() -> int:
     global ROOT, WIKI_DIR
     args = sys.argv[1:]
     if args and args[0] == "--refresh":
-        if len(args) != 2:
-            print("usage: wiki_lint.py --refresh <page>")
+        if len(args) > 2:
+            print("usage: wiki_lint.py --refresh [<page>]")
             return 2
-        return refresh_page(args[1])
+        if len(args) == 2:
+            return refresh_page(args[1])
+        ROOT = Path.cwd().resolve()
+        WIKI_DIR = ROOT / "wiki"
+        return refresh_stale()
     if len(args) > 1:
         print("usage: wiki_lint.py [<fixture-root>]")
         return 2
