@@ -8,7 +8,7 @@ checked:
   OfflineCPA/src/Infrastructure/Data/EfLedgerStore.cs: 4cd65b156acdb9137bc2e5656d1663c61fb300fa
   OfflineCPA/src/Domain/Entities/Period.cs: bcc4fe128753b85180c4567b93e875337cb7df6c
   OfflineCPA/src/Domain/Ledger/LedgerRuleException.cs: 92027b237a61fba254c7ea8da00f866c1ecf3788
-  OfflineCPA/src/Backend/Program.cs: 4000a270a06e4648a68e0d0b9f83186ef7776106
+  OfflineCPA/src/Backend/Program.cs: 742bc67ef2e99c040cdbdaba2b50a1fcda30bf82
   OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerTests.cs: 094152355e64803d029e1610bc57122fb4c7211a
   docs/ledger.md: 2eba6c35c8c780c81a1572e5362ff66584445921
 ---

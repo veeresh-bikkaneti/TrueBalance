@@ -11,7 +11,7 @@ checked:
   OfflineCPA/src/Application/Ai/IAiAssist.cs: b32faecea493216c82c0db7e88de674f29554945
   OfflineCPA/src/Infrastructure/IAdapterModule.cs: d8fef4533ad154804d873af75694525f05154305
   OfflineCPA/src/Infrastructure/AdapterModuleRegistration.cs: 98f6f27b02c94a2298b2860b84e40a66d8f1b56c
-  OfflineCPA/src/Backend/Program.cs: 4000a270a06e4648a68e0d0b9f83186ef7776106
+  OfflineCPA/src/Backend/Program.cs: 742bc67ef2e99c040cdbdaba2b50a1fcda30bf82
   OfflineCPA/tests/TrueBalance.Tests/Networking/NetworkGateTests.cs: 9462be3d36fd4af7a920053bc0c86173e91c2ad1
   OfflineCPA/tests/TrueBalance.Tests/Networking/AdapterModuleTests.cs: bf24343ea96b0d6db9f4d9cb8bafc1b3a434e3f7
   OfflineCPA/tests/TrueBalance.Tests/Networking/GateLogIsolationTests.cs: 6fc0135e933a05e783edb15705f3b48891f0e462
@@ -35,7 +35,7 @@ checked:
 
 ## Adapter registration
 
-Each adapter folder in Infrastructure has one `IAdapterModule` class; `AddInfrastructureAdapterModules` finds them by reflection and registers their adapters, so adding one needs no core edit (repo: OfflineCPA/src/Infrastructure/IAdapterModule.cs#L3-L12) (repo: OfflineCPA/src/Infrastructure/AdapterModuleRegistration.cs#L8-L22). The host calls it once (repo: OfflineCPA/src/Backend/Program.cs#L35-L38). The module list: `Infrastructure.Data`, `Infrastructure.Services`, `Infrastructure.Networking`, `Infrastructure.Reporting` (repo: OfflineCPA/src/Infrastructure/Networking/NetworkingModule.cs#L8-L15).
+Each adapter folder in Infrastructure has one `IAdapterModule` class; `AddInfrastructureAdapterModules` finds them by reflection and registers their adapters, so adding one needs no core edit (repo: OfflineCPA/src/Infrastructure/IAdapterModule.cs#L3-L12) (repo: OfflineCPA/src/Infrastructure/AdapterModuleRegistration.cs#L8-L22). The host calls it once (repo: OfflineCPA/src/Backend/Program.cs#L44-L47). The module list: `Infrastructure.Data`, `Infrastructure.Services`, `Infrastructure.Networking`, `Infrastructure.Reporting` (repo: OfflineCPA/src/Infrastructure/Networking/NetworkingModule.cs#L8-L15).
 
 ## Tests
 

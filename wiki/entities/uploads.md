@@ -9,7 +9,7 @@ checked:
   OfflineCPA/src/Backend/Endpoints/VaultEndpoints.cs: 0e32606ea344fef6069f397fcae116a3dd0ba694
   OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs: 8eebefad33f134ade84e8f918dda3c647dbe3be3
   OfflineCPA/src/Application/Uploads/PurgeOriginals.cs: 0be9488eb3fbae8596b74925e8332eb09fe16df1
-  OfflineCPA/src/Backend/Program.cs: 4000a270a06e4648a68e0d0b9f83186ef7776106
+  OfflineCPA/src/Backend/Program.cs: 742bc67ef2e99c040cdbdaba2b50a1fcda30bf82
   OfflineCPA/src/Infrastructure/Services/PdfFileParser.cs: b269b192cbf46fbd51d256ac9404d0be8f8b31df
   OfflineCPA/src/Backend/Services/LocalFileProcessorService.cs: 386a38d5ea989a34871a17c5bc3c26a2d4626304
   OfflineCPA/tests/TrueBalance.Tests/SecureUploadStoreTests.cs: 1466e7c579a91cd7d48c19b61ff6db726aed373b
@@ -46,7 +46,7 @@ Routes: `POST /api/vault/unlock`, `POST /api/vault/change-passphrase`, `POST /ap
 
 ## Entry points
 
-`POST /api/upload` stores the file through the vault and, when an importer supports the extension, queues an import batch (repo: OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs#L16-L52). Form bodies stay in memory so no plain temporary file is written (repo: OfflineCPA/src/Backend/Program.cs#L73-L78).
+`POST /api/upload` stores the file through the vault and, when an importer supports the extension, queues an import batch (repo: OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs#L16-L52). Form bodies stay in memory so no plain temporary file is written (repo: OfflineCPA/src/Backend/Program.cs#L73-L81).
 
 `LocalFileProcessorService` scans `Bookkeeping:InputDirectory` every 30 seconds. While the vault is locked it leaves files where they are. Otherwise it moves a file to `processing`, saves a vault copy, queues a batch, and deletes the staging file. If queueing fails the file goes back (repo: OfflineCPA/src/Backend/Services/LocalFileProcessorService.cs#L57-L117).
 
