@@ -224,7 +224,7 @@ public sealed class VaultPassphraseTests : IDisposable
         });
     }
 
-    private sealed class CapturingLog : ILoggerProvider, ILogger
+    internal sealed class CapturingLog : ILoggerProvider, ILogger
     {
         public System.Collections.Concurrent.ConcurrentQueue<string> Lines { get; } = new();
         public ILogger CreateLogger(string categoryName) => this;
