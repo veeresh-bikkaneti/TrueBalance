@@ -1,33 +1,12 @@
+import type { Route } from './shared/route';
+import { Shell } from './shell/Shell';
 
-import Dashboard from './components/Dashboard';
-import { BookOpen, FolderSync, ShieldCheck } from 'lucide-react';
-import './index.css';
+// Vite finds every feature at build time, so adding a screen means adding a folder.
+const found = import.meta.glob<{ route: Route }>('./features/*/route.tsx', { eager: true });
+const routes = Object.values(found).map((module) => module.route);
 
 function App() {
-  return (
-    <div className="app-container">
-      {/* Sidebar Navigation */}
-      <aside className="sidebar">
-        <div className="brand">
-          <BookOpen size={24} color="var(--primary)" />
-          OfflineCPA
-        </div>
-        <nav className="nav-links">
-          <a className="nav-link active">
-            <FolderSync size={18} />
-            1120-S Dashboard
-          </a>
-          <a className="nav-link">
-            <ShieldCheck size={18} />
-            Security Rules
-          </a>
-        </nav>
-      </aside>
-
-      {/* Main Content Area */}
-      <Dashboard />
-    </div>
-  );
+  return <Shell routes={routes} />;
 }
 
 export default App;

@@ -15,4 +15,30 @@ module.exports = {
       { allowConstantExport: true },
     ],
   },
+  // Import boundaries, so screens can be built side by side without tangling.
+  overrides: [
+    {
+      files: ['src/features/**/*.{ts,tsx}'],
+      rules: {
+        'no-restricted-imports': ['error', {
+          patterns: [{
+            // From a feature, the only way up is to ../../shared.
+            group: ['../*', '!../../', '../../*', '!../../shared', '**/features', '**/shell'],
+            message: 'A feature imports its own files (./) and ../../shared only.',
+          }],
+        }],
+      },
+    },
+    {
+      files: ['src/shared/**/*.{ts,tsx}'],
+      rules: {
+        'no-restricted-imports': ['error', {
+          patterns: [{
+            group: ['**/shell', '**/features'],
+            message: 'shared/ must not import shell/ or features/.',
+          }],
+        }],
+      },
+    },
+  ],
 }
