@@ -45,6 +45,8 @@ builder.Services.AddDbContext<OfflineCPADbContext>(options =>
 // Infrastructure has one module class, found by convention, so adding an
 // adapter needs no edit here.
 builder.Services.AddInfrastructureAdapterModules();
+// Route groups register themselves the same way, one module class each.
+builder.Services.AddEndpointModules();
 builder.Services.AddHostedService<LocalFileProcessorService>();
 builder.Services.AddScoped<CreateDraftEntry>();
 builder.Services.AddScoped<PostEntry>();
@@ -109,41 +111,7 @@ app.UseSecureErrorHandling();
 app.MapUploadEndpoints();
 app.MapVaultEndpoints();
 
-app.MapPost("/api/books/setup", async (SetupBooksRequest request, IChartOfAccountsSeeder seeder, IPiiMasker masker) =>
-{
-    if (!seeder.SupportedKinds.Contains(request.Kind, StringComparer.OrdinalIgnoreCase))
-    {
-        return Results.BadRequest(new { error = masker.Mask($"Unknown books kind '{request.Kind}'. Supported kinds: {string.Join(", ", seeder.SupportedKinds)}.") });
-    }
-
-    try
-    {
-        var added = await seeder.SeedAsync(request.Kind);
-        return Results.Ok(new { kind = request.Kind.Trim().ToLowerInvariant(), accountsAdded = added });
-    }
-    catch (ArgumentException ex)
-    {
-        return Results.BadRequest(new { error = masker.Mask(ex.Message) });
-    }
-})
-.WithName("SetupBooks")
-.WithOpenApi();
-
-app.MapGet("/api/transactions", async (OfflineCPADbContext db) =>
-{
-    return await db.Transactions.OrderByDescending(t => t.Date).ToListAsync();
-})
-.WithName("GetTransactions")
-.WithOpenApi();
-
-app.MapGet("/api/export", async (IReportExporter exporter, CancellationToken cancellationToken) =>
-{
-    var bytes = await exporter.ExportTransactionLogAsync(cancellationToken);
-    return Results.File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"OfflineCPA_Export_{DateTime.Now:yyyyMMdd}.xlsx");
-})
-.WithName("ExportToExcel")
-.WithOpenApi();
-
+app.MapEndpointModules();
 app.MapLedgerEndpoints();
 app.MapImportEndpoints();
 
@@ -156,7 +124,6 @@ using (var scope = app.Services.CreateScope())
 
 app.Run();
 
-public record SetupBooksRequest(string Kind);
 public record LedgerLineRequest(Guid AccountId, decimal Amount, string? Memo);
 public record CreateEntryRequest(DateOnly Date, string Memo, Guid PeriodId, List<LedgerLineRequest> Lines);
 public record ReverseEntryRequest(DateOnly ReversalDate, string Memo);

@@ -3,9 +3,10 @@ checked:
   OfflineCPA/src/Infrastructure/Seed/household.json: 603fc448b8da598e21a8e99942e64fe4013f49e1
   OfflineCPA/src/Infrastructure/Services/JsonChartOfAccountsSeeder.cs: dfc92b704f4cd8693ce88715c6d40fdf2884d201
   OfflineCPA/src/Infrastructure/Data/OfflineCPADbContext.cs: 8382eb3de930dd971227f05a0cabefa92b192d8a
-  OfflineCPA/src/Backend/Program.cs: 4000a270a06e4648a68e0d0b9f83186ef7776106
+  OfflineCPA/src/Backend/Program.cs: 742bc67ef2e99c040cdbdaba2b50a1fcda30bf82
   OfflineCPA/tests/TrueBalance.Tests/ChartSeedTests.cs: b7688286f2722f0bcad02c6a22c5e4ad1fc918af
   OfflineCPA/src/Domain/Entities/Account.cs: 5b21ac6013a9220715e09ff0d27c2f1d48372295
+  OfflineCPA/src/Backend/Endpoints/BookEndpoints.cs: a6197c0c20fbe76149e530d6bb394b98e8c8c09e
 ---
 # Charts of accounts
 
@@ -15,7 +16,7 @@ Three seed files ship with the app: `household.json`, `sole-proprietor.json`, an
 
 `JsonChartOfAccountsSeeder` loads `Seed/<kind>.json` from the app base directory with a case-insensitive JSON reader (repo: OfflineCPA/src/Infrastructure/Services/JsonChartOfAccountsSeeder.cs#L30-L42). `SeedAsync` takes the tax year from the book settings, or the newest map for a new set of books. It skips codes that already exist, refuses a line ID that the map does not have, and writes the book settings once (repo: OfflineCPA/src/Infrastructure/Services/JsonChartOfAccountsSeeder.cs#L50-L99). Account codes are unique in the database (repo: OfflineCPA/src/Infrastructure/Data/OfflineCPADbContext.cs#L31-L36).
 
-`POST /api/books/setup` rejects an unknown kind and otherwise returns the kind plus `accountsAdded` (repo: OfflineCPA/src/Backend/Program.cs#L112-L130). The seeder is registered as `IChartOfAccountsSeeder` (repo: OfflineCPA/src/Backend/Program.cs#L39).
+`POST /api/books/setup` rejects an unknown kind and otherwise returns the kind plus `accountsAdded` (repo: OfflineCPA/src/Backend/Endpoints/BookEndpoints.cs#L13-L31). The seeder is registered as `IChartOfAccountsSeeder` (repo: OfflineCPA/src/Backend/Program.cs#L47).
 
 ## Tests
 

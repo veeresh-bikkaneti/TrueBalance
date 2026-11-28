@@ -8,7 +8,7 @@ checked:
   OfflineCPA/src/Infrastructure/Migrations/20261124120000_InitialCreate.cs: eb9d9a85324ec58feec91a70cb926d375c48342b
   OfflineCPA/src/Infrastructure/Migrations/20261125000000_LedgerCore.cs: e9a88657b2bea914a76921239982eba4df689c19
   OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs: c241452235c4fd1d5dbe64d134c98008fc5cf610
-  OfflineCPA/src/Backend/Program.cs: 4000a270a06e4648a68e0d0b9f83186ef7776106
+  OfflineCPA/src/Backend/Program.cs: 742bc67ef2e99c040cdbdaba2b50a1fcda30bf82
   docs/ledger.md: 2eba6c35c8c780c81a1572e5362ff66584445921
 ---
 # Data and migrations
@@ -21,7 +21,7 @@ checked:
 
 `CardBalanceAndDiscard` only adds columns: the balance meaning on a bank profile (0 is `FromAccountType`, so old profiles keep working) and the reset count and time on an import batch (repo: OfflineCPA/src/Infrastructure/Migrations/20261127135749_CardBalanceAndDiscard.cs#L12-L31).
 
-`Ledger_model_matches_the_snapshot` asserts `HasPendingModelChanges()` is false. The comment says it does not open a database (repo: OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs#L133-L142). Startup calls `Database.Migrate()` (repo: OfflineCPA/src/Backend/Program.cs#L150-L155).
+`Ledger_model_matches_the_snapshot` asserts `HasPendingModelChanges()` is false. The comment says it does not open a database (repo: OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerArchitectureTests.cs#L133-L142). Startup calls `Database.Migrate()` (repo: OfflineCPA/src/Backend/Program.cs#L118-L123).
 
 `StatementImport` adds the tables for import batches, staged rows, and CSV mapping profiles (repo: OfflineCPA/src/Infrastructure/Migrations/20261127054233_StatementImport.cs#L1-L20); their EF configuration lives in its own file (repo: OfflineCPA/src/Infrastructure/Data/ImportConfigurations.cs#L1-L56). See [[statement-import]].
 
