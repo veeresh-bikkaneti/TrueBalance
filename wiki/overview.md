@@ -1,6 +1,6 @@
 ---
 checked:
-  OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs: 33c34cedec49c541cfae8e468e5484c0df8759dc
+  OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs: 01685af3dfbc1a4547ff17a824dbafdc08d9afdd
   docs/adr/0011-local-modular-monolith.md: 4792ef60fdc033c952b3dc6d252ba9138881bb26
   OfflineCPA/src/Backend/Program.cs: 4000a270a06e4648a68e0d0b9f83186ef7776106
   OfflineCPA/src/Application/Networking/INetworkGate.cs: 77fab7a5d681fe7d25f236857a96c4ab8fe25914
@@ -24,7 +24,7 @@ Code map for agents. Read [[index]] first, then one module page, then only the f
 
 The app is one local process. ADR 0011 (accepted) names the modules Ledger, Import, PII/Masking, Vault, TaxMaps, Reporting, and Settings, and keeps domain events in memory (repo: docs/adr/0011-local-modular-monolith.md#L13-L16).
 
-[[ledger]] is the double-entry book: draft, post, reverse, lock, and balances (repo: OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs#L9-L71). Rules are on [[double-entry-invariants]]. The audit table is [[event-log]].
+[[ledger]] is the double-entry book: draft, post, reverse, lock, and balances (repo: OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs#L9-L72). Rules are on [[double-entry-invariants]]. The audit table is [[event-log]].
 
 [[network-gate]] is the plug-in boundary: the ports in Application, the default-deny `INetworkGate` adapter, and `IAiAssist` with no implementation. Adapters register by module scan (repo: OfflineCPA/src/Application/Networking/INetworkGate.cs#L10-L36) (repo: OfflineCPA/src/Infrastructure/Networking/LocalNetworkGate.cs#L16-L56) (repo: OfflineCPA/src/Infrastructure/AdapterModuleRegistration.cs#L8-L22). The types renamed with it: `ILocalFileParser` is now `IStatementImporter` (repo: OfflineCPA/src/Application/Interfaces/IStatementImporter.cs#L10-L16).
 

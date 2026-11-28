@@ -9,7 +9,7 @@ checked:
   OfflineCPA/src/Domain/Entities/Period.cs: bcc4fe128753b85180c4567b93e875337cb7df6c
   OfflineCPA/src/Application/Ledger/DomainEventDispatcher.cs: 493387e8d82edf09427ea1a44e1f4883283fcb2c
   OfflineCPA/src/Domain/Entities/LedgerAuditRecord.cs: a364845a8971c0d605ea46a778e09261d8f282a4
-  OfflineCPA/src/Application/Ledger/CreateDraftEntry.cs: c4828307290c306fcc5540383dea320b11c4f330
+  OfflineCPA/src/Application/Ledger/CreateDraftEntry.cs: b40f48ed88f2f9d964860b83e41cb07207e54ffa
   OfflineCPA/src/Application/Ledger/PostEntry.cs: 1a33aa5abaf015344c6996da8ccd00adcbcca53e
   OfflineCPA/src/Application/Ledger/LockPeriod.cs: 5847bbfe4d6d13869463ab78e55d4d8751fff324
   OfflineCPA/src/Infrastructure/Migrations/20261125000000_LedgerCore.cs: e9a88657b2bea914a76921239982eba4df689c19
@@ -27,7 +27,7 @@ Domain events stay in memory on the aggregate. There is no broker. ADR 0011 (acc
 
 `DomainEventDispatcher` appends one `LedgerAuditRecords` row per event. The summaries are fixed: `draft created`, `entry posted`, `entry reversed`, `period locked` (repo: OfflineCPA/src/Application/Ledger/DomainEventDispatcher.cs#L12-L29). `PeriodLocked` stores a null journal-entry id and the period id (repo: OfflineCPA/src/Application/Ledger/DomainEventDispatcher.cs#L29). The row holds a local user id, a time, an action, an event type, one entity id, and that summary (repo: OfflineCPA/src/Domain/Entities/LedgerAuditRecord.cs#L6-L16).
 
-The use case calls dispatch and then `SaveChanges`, so a thrown rule writes neither the entity nor the row (repo: OfflineCPA/src/Application/Ledger/CreateDraftEntry.cs#L32-L34) (repo: OfflineCPA/src/Application/Ledger/DomainEventDispatcher.cs#L8-L10). The same order is in post, reverse, and lock (repo: OfflineCPA/src/Application/Ledger/PostEntry.cs#L29-L30) (repo: OfflineCPA/src/Application/Ledger/LockPeriod.cs#L27-L28).
+The use case calls dispatch and then `SaveChanges`, so a thrown rule writes neither the entity nor the row (repo: OfflineCPA/src/Application/Ledger/CreateDraftEntry.cs#L37-L39) (repo: OfflineCPA/src/Application/Ledger/DomainEventDispatcher.cs#L8-L10). The same order is in post, reverse, and lock (repo: OfflineCPA/src/Application/Ledger/PostEntry.cs#L29-L30) (repo: OfflineCPA/src/Application/Ledger/LockPeriod.cs#L27-L28).
 
 `TR_LedgerAuditRecords_AppendOnly` raises on every update and delete (repo: OfflineCPA/src/Infrastructure/Migrations/20261125000000_LedgerCore.cs#L193-L205).
 

@@ -9,11 +9,13 @@ public sealed class ReverseEntry
 {
     private readonly ILedgerStore _store;
     private readonly IClock _clock;
+    private readonly IPiiMasker _masker;
 
-    public ReverseEntry(ILedgerStore store, IClock clock)
+    public ReverseEntry(ILedgerStore store, IClock clock, IPiiMasker masker)
     {
         _store = store;
         _clock = clock;
+        _masker = masker;
     }
 
     /// <returns>The id of the new reversing entry.</returns>
@@ -25,7 +27,10 @@ public sealed class ReverseEntry
             ?? throw new LedgerRuleException($"No period covers reversal date {command.ReversalDate:yyyy-MM-dd}.");
         var now = _clock.UtcNow;
 
-        var reversal = entry.Reverse(period, command.ReversalDate, command.Memo, now);
+        // Line memos are copied from the original entry, which masked them when it was drafted.
+        var memo = _masker.Mask(command.Memo ?? string.Empty);
+
+        var reversal = entry.Reverse(period, command.ReversalDate, memo, now);
 
         await _store.AddEntryAsync(reversal, ct);
         await new DomainEventDispatcher(_store).DispatchAsync(entry.PullEvents(), command.LocalUserId, now, ct);

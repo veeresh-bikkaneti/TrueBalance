@@ -4,6 +4,7 @@ using Application.Ledger;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.Ledger;
+using TrueBalance.Tests.Pii;
 using static TrueBalance.Tests.Ledger.LedgerTestData;
 
 namespace TrueBalance.Tests.Ledger;
@@ -94,7 +95,7 @@ public class LedgerTests
         var original = PostedEntry(period, 250.75m);
         await store.AddEntryAsync(original);
 
-        var reverseId = await new ReverseEntry(store, clock)
+        var reverseId = await new ReverseEntry(store, clock, new MaskingPiiMasker())
             .HandleAsync(new ReverseEntryCommand(original.Id, Day, "Fake reversal", "fake-user"));
         var reversal = await store.FindEntryAsync(reverseId);
         var balances = await new GetAccountBalances(store).HandleAsync();
@@ -183,7 +184,7 @@ public class LedgerTests
         var period = YearPeriod();
         var store = StoreWith(period, accounts);
         var clock = new FakeClock();
-        var create = new CreateDraftEntry(store, clock);
+        var create = new CreateDraftEntry(store, clock, new MaskingPiiMasker());
         var post = new PostEntry(store, clock);
         var rng = new Random(20261125);
         var expected = accounts.ToDictionary(a => a.Id, _ => 0m);
@@ -237,12 +238,12 @@ public class LedgerTests
             new(Checking().Id, -40m, null),
         };
 
-        var id = await new CreateDraftEntry(store, clock)
+        var id = await new CreateDraftEntry(store, clock, new MaskingPiiMasker())
             .HandleAsync(new CreateDraftEntryCommand(Day, "Fake Vendor 1 purchase", period.Id, lines, user));
         clock.Advance(TimeSpan.FromMinutes(1));
         await new PostEntry(store, clock).HandleAsync(new PostEntryCommand(id, user));
         clock.Advance(TimeSpan.FromMinutes(1));
-        var reverseId = await new ReverseEntry(store, clock)
+        var reverseId = await new ReverseEntry(store, clock, new MaskingPiiMasker())
             .HandleAsync(new ReverseEntryCommand(id, Day, "Fake reversal", user));
 
         var audit = store.AuditRecords;
@@ -278,7 +279,7 @@ public class LedgerTests
             new(Checking().Id, -4m, null),
         };
 
-        var id = await new CreateDraftEntry(store, clock)
+        var id = await new CreateDraftEntry(store, clock, new MaskingPiiMasker())
             .HandleAsync(new CreateDraftEntryCommand(Day, "Fake Vendor 1 purchase", period.Id, lines, "fake-user"));
 
         await Assert.ThrowsAsync<LedgerRuleException>(() =>

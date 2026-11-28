@@ -1,6 +1,6 @@
 ---
 checked:
-  OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs: 33c34cedec49c541cfae8e468e5484c0df8759dc
+  OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs: 01685af3dfbc1a4547ff17a824dbafdc08d9afdd
   OfflineCPA/src/Domain/Entities/Posting.cs: 53956565729f8b7d009c0bcc9997481f9ea6e4f5
   OfflineCPA/src/Domain/Ledger/Money.cs: a2a10d99251e73d37eedc059e1b804a57e1e3f36
   OfflineCPA/src/Infrastructure/Data/OfflineCPADbContext.cs: 8382eb3de930dd971227f05a0cabefa92b192d8a
@@ -9,7 +9,7 @@ checked:
   OfflineCPA/src/Domain/Entities/Period.cs: bcc4fe128753b85180c4567b93e875337cb7df6c
   OfflineCPA/src/Domain/Ledger/LedgerRuleException.cs: 92027b237a61fba254c7ea8da00f866c1ecf3788
   OfflineCPA/src/Backend/Program.cs: 4000a270a06e4648a68e0d0b9f83186ef7776106
-  OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerTests.cs: 32143217f410c0b14792b66a476804be626dbab6
+  OfflineCPA/tests/TrueBalance.Tests/Ledger/LedgerTests.cs: 094152355e64803d029e1610bc57122fb4c7211a
   docs/ledger.md: 2eba6c35c8c780c81a1572e5362ff66584445921
 ---
 # Double-entry invariants
@@ -30,7 +30,7 @@ A posting amount is a signed `decimal`. Positive is a debit and negative is a cr
 
 `Period.Lock` can run once. There is no unlock method (repo: OfflineCPA/src/Domain/Entities/Period.cs#L41-L49). A locked period rejects new drafts and posts (repo: OfflineCPA/src/Domain/Entities/JournalEntry.cs#L53-L54) (repo: OfflineCPA/src/Domain/Entities/JournalEntry.cs#L88-L89).
 
-Violations throw `LedgerRuleException`. The ledger routes map that failure to HTTP 400 (repo: OfflineCPA/src/Domain/Ledger/LedgerRuleException.cs#L4) (repo: OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs#L9-L71).
+Violations throw `LedgerRuleException`. The ledger routes map that failure to HTTP 400 (repo: OfflineCPA/src/Domain/Ledger/LedgerRuleException.cs#L4) (repo: OfflineCPA/src/Backend/Endpoints/LedgerEndpoints.cs#L9-L72).
 
 ## Change it safely
 

@@ -148,7 +148,7 @@ public sealed class CardBalanceDiscardTests : IDisposable
         Assert.Equal("Reverse the posted entries from this batch first. Rows still posted: 1.", ex.Message);
         Assert.Equal(ImportBatchStatus.Staged, db.ImportBatches.Single().Status);
 
-        await new ReverseEntry(new EfLedgerStore(db), new SystemClock())
+        await new ReverseEntry(new EfLedgerStore(db), new SystemClock(), new TrueBalance.Tests.Pii.MaskingPiiMasker())
             .HandleAsync(new ReverseEntryCommand(entry, LedgerTestData.Day, "Fake reversal", "local"));
         Assert.Equal(3, await DiscardAsync(db, id));
     }

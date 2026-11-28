@@ -1,13 +1,13 @@
 ---
 checked:
-  OfflineCPA/tests/TrueBalance.Tests/Imports/CardBalanceDiscardTests.cs: 1a57495e86ce8fe4af358a22abdf44e4f7ff8b92
+  OfflineCPA/tests/TrueBalance.Tests/Imports/CardBalanceDiscardTests.cs: 9772650e2ec4514dc321f0cdb35d5653e0cddf12
   OfflineCPA/src/Domain/Entities/ImportBatch.cs: ed8dea2449750155438c18427a33473863c7f83d
   OfflineCPA/src/Application/Ledger/DiscardStagedBatch.cs: 05d1968589c9e9fbbce4a99cc5316a406f19063e
   OfflineCPA/src/Domain/Ledger/RunningBalance.cs: 7a503963374e18376d00fbeebd049f72a72bd08c
   OfflineCPA/tests/TrueBalance.Tests/Imports/SignLayoutTests.cs: d96e04f415ed8271a750271207945e899142348f
   OfflineCPA/src/Infrastructure/Services/CsvStatementImporter.cs: 694dde98371cc72074c90d97a415fe5f7d300d80
   OfflineCPA/src/Application/Imports/ImportUseCases.cs: ebf042aa23c3d06c4bc0876ef6687a4ff6c544f5
-  OfflineCPA/src/Application/Ledger/PostStagedRow.cs: dbe439fe628be79db3f66feafa128bced70f0ed7
+  OfflineCPA/src/Application/Ledger/PostStagedRow.cs: 1f2480f39658c3b5a3092ea72c909fde53894ca4
   OfflineCPA/src/Application/Interfaces/IStatementImporter.cs: 815216298b5b0524f1ab804254586bce3abc1586
   OfflineCPA/src/Backend/Endpoints/ImportEndpoints.cs: 95871dd1b17a55b0f6591570d2e097c6c93d823e
   OfflineCPA/src/Domain/Entities/StagedRow.cs: ac9b99c78eb91a6da2ac50ca72891c2781ac0f51
@@ -50,7 +50,7 @@ A row is flagged when an earlier batch on the same account has the same date, am
 
 ## Posting
 
-`PostStagedRow` creates one two-line entry, bank account against the chosen category; money in debits the bank. The draft, the post and the row are saved in one call (repo: OfflineCPA/src/Application/Ledger/PostStagedRow.cs#L13-L43). Routes live under `/api/imports` (repo: OfflineCPA/src/Backend/Endpoints/ImportEndpoints.cs#L22-L71).
+`PostStagedRow` creates one two-line entry, bank account against the chosen category; money in debits the bank. The draft, the post and the row are saved in one call (repo: OfflineCPA/src/Application/Ledger/PostStagedRow.cs#L14-L44). Routes live under `/api/imports` (repo: OfflineCPA/src/Backend/Endpoints/ImportEndpoints.cs#L22-L71).
 
 ## Tests
 
