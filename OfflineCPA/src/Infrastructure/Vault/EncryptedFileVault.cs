@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -6,19 +7,24 @@ using Application.Uploads;
 using Infrastructure.Options;
 using Microsoft.Extensions.Options;
 
+[assembly: InternalsVisibleTo("TrueBalance.Tests")]
+
 namespace Infrastructure.Vault;
 
 /// <summary>
-/// The document vault. Each file is sealed with AES-256-GCM under a key derived
-/// from the owner's passphrase. The key lives only in this object's memory, so
-/// a restart locks the vault again.
+/// The document vault. Each file is sealed with AES-256-GCM under a data key.
+/// The settings file holds that key sealed by a key derived from the owner's
+/// passphrase. The plain data key lives only in this object's memory, so a restart
+/// locks the vault again.
 /// </summary>
 public sealed class EncryptedFileVault : IDocumentVault, IVaultControl
 {
     private const string SettingsFile = "vault.json";
     private const string Sealed = ".enc";
     private const string Kdf = "PBKDF2-HMAC-SHA256";
-    private const string KeyCheck = "TrueBalance vault key check";
+    // Authenticated with the wrapped key. No stored document can have this name.
+    private const string PassphraseWrap = SettingsFile + ":passphrase";
+    private const string WrongPassphrase = "That passphrase does not open the books.";
     private const int Iterations = 600_000;
     private const int MinPassphraseLength = 12;
     private const int MaxOriginalNameLength = 200;
@@ -35,7 +41,13 @@ public sealed class EncryptedFileVault : IDocumentVault, IVaultControl
         Directory.CreateDirectory(_root);
     }
 
-    private sealed record VaultSettings(int Version, string Kdf, int Iterations, byte[] Salt, byte[] Check);
+    private sealed record KeyWrap(byte[] Salt, byte[] SealedKey);
+
+    // Version 1 has Salt and Check. Version 2 has Passphrase, and Recovery stays null for now.
+    private sealed record VaultSettings(
+        int Version, string Kdf, int Iterations,
+        byte[]? Salt = null, byte[]? Check = null,
+        KeyWrap? Passphrase = null, KeyWrap? Recovery = null);
 
     public bool IsUnlocked => _key is not null;
 
@@ -46,7 +58,7 @@ public sealed class EncryptedFileVault : IDocumentVault, IVaultControl
         {
             var path = Path.Combine(_root, SettingsFile);
             var key = File.Exists(path)
-                ? await OpenAsync(path, passphrase, cancellationToken)
+                ? await OpenAndUpgradeAsync(path, passphrase, cancellationToken)
                 : await CreateAsync(path, passphrase, cancellationToken);
             var encrypted = await EncryptExistingUploadsAsync(key, cancellationToken);
             _key = key;
@@ -57,6 +69,30 @@ public sealed class EncryptedFileVault : IDocumentVault, IVaultControl
             _unlocking.Release();
         }
     }
+
+    public async Task ChangePassphraseAsync(string currentPassphrase, string newPassphrase, CancellationToken cancellationToken = default)
+    {
+        RequireLongEnough(newPassphrase);
+        await _unlocking.WaitAsync(cancellationToken);
+        try
+        {
+            var path = Path.Combine(_root, SettingsFile);
+            if (!File.Exists(path))
+            {
+                throw new VaultException(WrongPassphrase);
+            }
+
+            var (settings, dataKey) = await OpenAsync(path, currentPassphrase, cancellationToken);
+            await WriteSettingsAsync(path, Rewrap(settings, dataKey, newPassphrase), cancellationToken);
+        }
+        finally
+        {
+            _unlocking.Release();
+        }
+    }
+
+    /// <summary>Puts the finished temporary settings file in place. A test swaps it to act out a crash.</summary>
+    internal Action<string, string, bool> Replace { get; set; } = (from, to, overwrite) => File.Move(from, to, overwrite);
 
     public async Task<StoredUpload> SaveAsync(
         Stream content,
@@ -167,20 +203,28 @@ public sealed class EncryptedFileVault : IDocumentVault, IVaultControl
             throw new VaultException("Encrypted documents exist but the vault settings file is missing. Restore it from a backup.");
         }
 
-        if (passphrase is null || passphrase.Length < MinPassphraseLength)
-        {
-            throw new VaultException($"Use a passphrase of at least {MinPassphraseLength} characters.");
-        }
-
-        var salt = RandomNumberGenerator.GetBytes(16);
-        var key = Derive(passphrase, salt, Iterations);
-        var settings = new VaultSettings(1, Kdf, Iterations, salt, Seal(key, SettingsFile, Encoding.UTF8.GetBytes(KeyCheck)));
-        await File.WriteAllTextAsync(path + ".tmp", JsonSerializer.Serialize(settings), ct);
-        File.Move(path + ".tmp", path);
-        return key;
+        RequireLongEnough(passphrase);
+        var dataKey = RandomNumberGenerator.GetBytes(32);
+        await WriteSettingsAsync(path, Rewrap(new VaultSettings(2, Kdf, Iterations), dataKey, passphrase), ct, overwrite: false);
+        return dataKey;
     }
 
-    private static async Task<byte[]> OpenAsync(string path, string passphrase, CancellationToken ct)
+    /// <summary>
+    /// A version 1 vault sealed its files with the passphrase key itself. That key
+    /// becomes the data key, so no document is encrypted again.
+    /// </summary>
+    private async Task<byte[]> OpenAndUpgradeAsync(string path, string passphrase, CancellationToken ct)
+    {
+        var (settings, dataKey) = await OpenAsync(path, passphrase, ct);
+        if (settings.Version == 1)
+        {
+            await WriteSettingsAsync(path, Rewrap(settings, dataKey, passphrase), ct);
+        }
+
+        return dataKey;
+    }
+
+    private static async Task<(VaultSettings Settings, byte[] DataKey)> OpenAsync(string path, string passphrase, CancellationToken ct)
     {
         const string damaged = "The vault settings file is damaged. Restore it from a backup.";
         VaultSettings? settings;
@@ -193,22 +237,59 @@ public sealed class EncryptedFileVault : IDocumentVault, IVaultControl
             throw new VaultException(damaged);
         }
 
-        if (settings is not { Version: 1, Kdf: Kdf, Salt.Length: >= 16, Check: not null } || settings.Iterations < Iterations)
+        var complete = settings is
+            { Version: 1, Salt.Length: >= 16, Check: not null } or
+            { Version: 2, Passphrase: { Salt.Length: >= 16, SealedKey: not null } };
+        if (!complete || settings!.Kdf != Kdf || settings.Iterations < Iterations)
         {
             throw new VaultException(damaged);
         }
 
-        var key = Derive(passphrase ?? string.Empty, settings.Salt, settings.Iterations);
+        var salt = settings.Version == 1 ? settings.Salt! : settings.Passphrase!.Salt;
+        var derived = Derive(passphrase ?? string.Empty, salt, settings.Iterations);
         try
         {
-            Open(key, SettingsFile, settings.Check);
+            if (settings.Version == 2)
+            {
+                return (settings, Open(derived, PassphraseWrap, settings.Passphrase!.SealedKey));
+            }
+
+            Open(derived, SettingsFile, settings.Check!);
+            return (settings, derived);
         }
         catch (VaultException)
         {
-            throw new VaultException("That passphrase does not open the books.");
+            throw new VaultException(WrongPassphrase);
+        }
+    }
+
+    /// <summary>Version 2 settings with the data key sealed under the passphrase and a new salt.</summary>
+    private static VaultSettings Rewrap(VaultSettings settings, byte[] dataKey, string passphrase)
+    {
+        var salt = RandomNumberGenerator.GetBytes(16);
+        var sealedKey = Seal(Derive(passphrase, salt, settings.Iterations), PassphraseWrap, dataKey);
+        return settings with { Version = 2, Salt = null, Check = null, Passphrase = new KeyWrap(salt, sealedKey) };
+    }
+
+    /// <summary>Writes beside the old file, flushes to disk, then renames over it.</summary>
+    private async Task WriteSettingsAsync(string path, VaultSettings settings, CancellationToken ct, bool overwrite = true)
+    {
+        var temporary = path + ".tmp";
+        await using (var stream = new FileStream(temporary, FileMode.Create, FileAccess.Write))
+        {
+            await JsonSerializer.SerializeAsync(stream, settings, cancellationToken: ct);
+            stream.Flush(flushToDisk: true);
         }
 
-        return key;
+        Replace(temporary, path, overwrite);
+    }
+
+    private static void RequireLongEnough(string passphrase)
+    {
+        if (passphrase is null || passphrase.Length < MinPassphraseLength)
+        {
+            throw new VaultException($"Use a passphrase of at least {MinPassphraseLength} characters.");
+        }
     }
 
     /// <summary>

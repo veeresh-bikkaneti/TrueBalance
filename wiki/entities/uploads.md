@@ -4,9 +4,9 @@ checked:
   OfflineCPA/src/Application/Uploads/StoredUpload.cs: d0f89183d09d583b499dbb4352993efda461b885
   OfflineCPA/src/Application/Interfaces/IStatementImporter.cs: 815216298b5b0524f1ab804254586bce3abc1586
   OfflineCPA/src/Infrastructure/Options/UploadOptions.cs: 9ae8e83707e682d5fbaa3750ff62686ca5174e68
-  OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs: 7ece069c6c1c068bcf26fe6e7932bbd8c2551059
+  OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs: b2be1c7b992383d1cb54d4274c69d97366630c7c
   OfflineCPA/src/Infrastructure/Vault/VaultModule.cs: 7aa8b0627d4d668f174506877f24f62d8bbdc862
-  OfflineCPA/src/Backend/Endpoints/VaultEndpoints.cs: fb4cc6cf911dec518d89439b1feefe1774366600
+  OfflineCPA/src/Backend/Endpoints/VaultEndpoints.cs: 1997241a0b92cce0e433d54abab8f3bfd924594a
   OfflineCPA/src/Backend/Endpoints/UploadEndpoints.cs: 8eebefad33f134ade84e8f918dda3c647dbe3be3
   OfflineCPA/src/Application/Uploads/PurgeOriginals.cs: 0be9488eb3fbae8596b74925e8332eb09fe16df1
   OfflineCPA/src/Backend/Program.cs: 4000a270a06e4648a68e0d0b9f83186ef7776106
@@ -15,6 +15,7 @@ checked:
   OfflineCPA/tests/TrueBalance.Tests/SecureUploadStoreTests.cs: 1466e7c579a91cd7d48c19b61ff6db726aed373b
   OfflineCPA/tests/TrueBalance.Tests/FolderWatchLogTests.cs: 233e7d97e6762cc53b49014f64494eb1031c6230
   OfflineCPA/tests/TrueBalance.Tests/Vault/VaultTests.cs: 6047014d8e6f8dfd43cb0c562f10f28293a4df6e
+  OfflineCPA/tests/TrueBalance.Tests/Vault/VaultPassphraseTests.cs: 588364be55dee5ca91b9effb934312dd937fead9
 ---
 # Uploads
 
@@ -24,13 +25,19 @@ checked:
 
 ## What the vault checks
 
-Empty files and files over `MaxBytes` (default 20 MB) are rejected, by declared length and by bytes read. The extension must be in the allow list and the content type, when present, must be too (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L61-L110). The stored name is a new GUID in `N` format plus the extension, with `.enc` on disk. `SanitizeFileName` strips the directory part and null bytes; that cleaned name is data on `StoredUpload`, not the path (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L137-L147).
+Empty files and files over `MaxBytes` (default 20 MB) are rejected, by declared length and by bytes read. The extension must be in the allow list and the content type, when present, must be too (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L97-L147). The stored name is a new GUID in `N` format plus the extension, with `.enc` on disk. `SanitizeFileName` strips the directory part and null bytes; that cleaned name is data on `StoredUpload`, not the path (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L173-L184).
 
 ## Encryption and unlock
 
-Files are sealed with AES-256-GCM: nonce, tag, ciphertext, with the file name authenticated (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L253-L259). The key is PBKDF2-HMAC-SHA256 over the passphrase (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L248-L249) and stays in memory. The first unlock creates `vault.json`; missing settings beside sealed files, damaged settings and a wrong passphrase all fail closed (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L163-L180). Unlock also seals leftover plain uploads and deletes each only after it opens again (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L218-L236).
+Files are sealed with AES-256-GCM: nonce, tag, ciphertext, with the file name authenticated (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L332-L341). A random 32-byte data key seals the files, and stays in memory while the vault is unlocked. `vault.json` (version 2) holds that key sealed with AES-256-GCM by a second key, PBKDF2-HMAC-SHA256 over the passphrase with its own salt (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L329-L330) (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L266-L272). A `Recovery` slot is in the format and is null. The first unlock creates `vault.json`; missing settings beside sealed files, damaged settings and a wrong passphrase all fail closed (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L199-L264). Unlock also seals leftover plain uploads and deletes each only after it opens again (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L299-L318).
 
-Routes: `POST /api/vault/unlock` and `POST /api/vault/purge-originals` (repo: OfflineCPA/src/Backend/Endpoints/VaultEndpoints.cs#L12-L32). Purge needs a confirmation and an unlocked vault, returns an IRS retention warning, and deletes stored documents only (repo: OfflineCPA/src/Application/Uploads/PurgeOriginals.cs#L8-L19).
+## Changing the passphrase
+
+A change opens the data key with the current passphrase and seals it again under the new one, which needs at least 12 characters. No stored document is touched (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L73-L92). On the first unlock of a version 1 vault, its passphrase key becomes the data key, so no document is encrypted again (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L212-L225). `vault.json` is written to a temporary file, flushed, then renamed over the old one (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L274-L285).
+
+A change does not replace the data key. Someone who has an older copy of `vault.json` and the passphrase it was made with can still recover that key. For a vault upgraded from version 1, the old passphrase and the old salt are enough. (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L212-L225) (repo: OfflineCPA/src/Infrastructure/Vault/EncryptedFileVault.cs#L266-L272)
+
+Routes: `POST /api/vault/unlock`, `POST /api/vault/change-passphrase` and `POST /api/vault/purge-originals` (repo: OfflineCPA/src/Backend/Endpoints/VaultEndpoints.cs#L15-L52). Purge needs a confirmation and an unlocked vault, returns an IRS retention warning, and deletes stored documents only (repo: OfflineCPA/src/Application/Uploads/PurgeOriginals.cs#L8-L19).
 
 ## Entry points
 
@@ -40,7 +47,7 @@ Routes: `POST /api/vault/unlock` and `POST /api/vault/purge-originals` (repo: Of
 
 ## Tests
 
-`VaultTests` covers the round trip, wrong passphrase, tampering, locked refusals, plain-text absence, folder intake, older uploads and purge (repo: OfflineCPA/tests/TrueBalance.Tests/Vault/VaultTests.cs#L21-L65). `SecureUploadStoreTests` keeps the hostile-name and allow-list cases against the vault (repo: OfflineCPA/tests/TrueBalance.Tests/SecureUploadStoreTests.cs#L1-L40). `FolderWatchLogTests` asserts the log has no original file name (repo: OfflineCPA/tests/TrueBalance.Tests/FolderWatchLogTests.cs#L28-L51).
+`VaultTests` covers the round trip, wrong passphrase, tampering, locked refusals, plain-text absence, folder intake, older uploads and purge (repo: OfflineCPA/tests/TrueBalance.Tests/Vault/VaultTests.cs#L21-L65). `VaultPassphraseTests` covers the version 1 upgrade, the passphrase change, the interrupted write and passphrase-free logs (repo: OfflineCPA/tests/TrueBalance.Tests/Vault/VaultPassphraseTests.cs#L81-L225). `SecureUploadStoreTests` keeps the hostile-name and allow-list cases against the vault (repo: OfflineCPA/tests/TrueBalance.Tests/SecureUploadStoreTests.cs#L1-L40). `FolderWatchLogTests` asserts the log has no original file name (repo: OfflineCPA/tests/TrueBalance.Tests/FolderWatchLogTests.cs#L28-L51).
 
 ## Change it safely
 
