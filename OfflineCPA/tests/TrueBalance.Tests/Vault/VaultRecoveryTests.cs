@@ -179,6 +179,7 @@ public sealed class VaultRecoveryTests : IDisposable
         builder.Logging.ClearProviders().AddProvider(log).AddFilter<VaultPassphraseTests.CapturingLog>(null, LogLevel.Trace);
         builder.Services.AddSingleton<IVaultControl>(NewVault());
         builder.Services.AddScoped<PurgeOriginals>();
+        new ThrottleModule().Register(builder.Services);
         await using var app = builder.Build();
         app.MapVaultEndpoints();
         await app.StartAsync();
