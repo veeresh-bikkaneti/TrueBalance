@@ -4,9 +4,10 @@ using Application.Uploads;
 namespace Backend.Endpoints;
 
 public sealed record UnlockRequest(string Passphrase);
+public sealed record ChangePassphraseRequest(string CurrentPassphrase, string NewPassphrase);
 public sealed record PurgeRequest(bool Confirm);
 
-/// <summary>Vault routes. No response or log line holds the passphrase.</summary>
+/// <summary>Vault routes. No response or log line holds a passphrase or a key.</summary>
 public static class VaultEndpoints
 {
     public static void MapVaultEndpoints(this WebApplication app)
@@ -17,6 +18,19 @@ public static class VaultEndpoints
             {
                 var encrypted = await vault.UnlockAsync(request.Passphrase, ct);
                 return Results.Ok(new { unlocked = true, plainFilesEncrypted = encrypted });
+            }
+            catch (VaultException ex)
+            {
+                return Results.BadRequest(new { error = ex.Message });
+            }
+        });
+
+        app.MapPost("/api/vault/change-passphrase", async (ChangePassphraseRequest request, IVaultControl vault, CancellationToken ct) =>
+        {
+            try
+            {
+                await vault.ChangePassphraseAsync(request.CurrentPassphrase, request.NewPassphrase, ct);
+                return Results.Ok(new { changed = true });
             }
             catch (VaultException ex)
             {

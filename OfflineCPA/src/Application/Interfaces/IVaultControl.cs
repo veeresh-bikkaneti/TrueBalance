@@ -7,6 +7,9 @@ public interface IVaultControl
     /// <returns>The number of plain files that were encrypted.</returns>
     Task<int> UnlockAsync(string passphrase, CancellationToken cancellationToken = default);
 
+    /// <summary>Rewraps the data key under a new passphrase. No stored document changes.</summary>
+    Task ChangePassphraseAsync(string currentPassphrase, string newPassphrase, CancellationToken cancellationToken = default);
+
     /// <summary>Deletes stored documents. Ledger entries and staged rows are untouched.</summary>
     /// <returns>The number of files deleted.</returns>
     Task<int> PurgeOriginalsAsync(CancellationToken cancellationToken = default);
