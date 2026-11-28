@@ -8,7 +8,7 @@ checked:
   tax-maps/1120s-2026.json: cc1a37a7f8c2b194550780ee8ecf9e60421c1ae5
   tax-maps/schedule-c-2026.json: 9f4269db303deaaf3b7bbc9c2515577730b3fbb1
   tax-maps/years/2026.json: d40653e44de6195f6189ef1d0ea496ab26c34e7b
-  .github/workflows/ci.yml: 4bd09a68d11bbb723d9ea073ae422b5e2c427300
+  .github/workflows/ci.yml: fb2b2626d46ce9afdd7f3f64aae70254f9e48388
   OfflineCPA/docker-compose.yml: bf787f349e19e2ea266c10a9dc5f17cf1f114962
   OfflineCPA/src/Backend/Dockerfile: 4291a2bdceb5a78cc6b42bf0379ff01ab31da483
 ---
