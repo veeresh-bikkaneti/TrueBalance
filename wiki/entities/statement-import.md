@@ -1,5 +1,9 @@
 ---
 checked:
+  OfflineCPA/frontend/src/features/imports/ImportsScreen.tsx: f7b71732a952e7b9b381d537ff5f78148cc0b924
+  OfflineCPA/frontend/src/features/imports/api.ts: c8db175efd955f3385f0dd488ac0e4a661d459f6
+  OfflineCPA/frontend/src/features/imports/ReviewRow.tsx: a3c129aeeaa0daad6eedecdaf058252670562ee9
+  OfflineCPA/frontend/src/features/imports/ReviewStep.tsx: 1e7b59fe849406baba604f07a65234728c030542
   OfflineCPA/tests/TrueBalance.Tests/Imports/CardBalanceDiscardTests.cs: 9772650e2ec4514dc321f0cdb35d5653e0cddf12
   OfflineCPA/src/Domain/Entities/ImportBatch.cs: ed8dea2449750155438c18427a33473863c7f83d
   OfflineCPA/src/Application/Ledger/DiscardStagedBatch.cs: 05d1968589c9e9fbbce4a99cc5316a406f19063e
@@ -57,6 +61,10 @@ A row is flagged when an earlier batch on the same account has the same date, am
 `ImportFlowTests` covers signs and decimals, duplicates, single posting, and parse errors (repo: OfflineCPA/tests/TrueBalance.Tests/Imports/ImportFlowTests.cs#L58-L170). `ImportNoLeakTests` runs fake values through the real importers (repo: OfflineCPA/tests/TrueBalance.Tests/Imports/ImportNoLeakTests.cs#L14-L19). They use the EF in-memory provider, so Postgres behavior is not covered.
 
 `CardBalanceDiscardTests` covers balance meaning and discard (repo: OfflineCPA/tests/TrueBalance.Tests/Imports/CardBalanceDiscardTests.cs#L66-L199). `SignLayoutTests` covers the layouts, preview, refusal and balance check (repo: OfflineCPA/tests/TrueBalance.Tests/Imports/SignLayoutTests.cs#L17-L60).
+
+## Screen
+
+The Import screen at `#/imports` lists batches, saves CSV columns, previews them so you can confirm the sign, then shows the staged rows (repo: OfflineCPA/frontend/src/features/imports/ImportsScreen.tsx#L1-L33). It does not upload files yet: the shared request helper sends JSON only, so a statement arrives through the watched folder or the upload route ([[uploads]]). Both account pickers read `GET /api/ledger/balances`, which lists only accounts that already have a posted entry, so brand-new books have nothing to pick (repo: OfflineCPA/frontend/src/features/imports/api.ts#L1-L100). Posting a flagged duplicate needs an extra tick (repo: OfflineCPA/frontend/src/features/imports/ReviewRow.tsx#L1-L51). Discard asks for a confirm and disappears once a row is posted (repo: OfflineCPA/frontend/src/features/imports/ReviewStep.tsx#L1-L38).
 
 ## Parser limits
 

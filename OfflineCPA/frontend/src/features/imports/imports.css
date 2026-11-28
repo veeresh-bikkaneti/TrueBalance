@@ -1,0 +1,11 @@
+/* Look from docs/mockups/imports.html. Colors come from the shared ledger-book variables. */
+.imports { display: grid; gap: 12px; }
+.imports label { display: grid; gap: 2px; }
+.imports label.tick { display: flex; gap: 8px; align-items: center; }
+.imports input, .imports select, .imports button { font: inherit; padding: 6px 8px; max-width: 360px; justify-self: start; }
+.imports fieldset { border: 1px solid var(--line); border-radius: 8px; display: grid; gap: 8px; }
+.imports :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.imports [role='alert'] { color: #a12626; }
+.imports ul.rows { list-style: none; padding: 0; display: grid; gap: 10px; }
+.imports ul.rows li { border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: grid; gap: 6px; }
+@media (prefers-color-scheme: dark) { .imports [role='alert'] { color: #ff9d9d; } }
